@@ -1,0 +1,34 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
+.nodeEditor {
+    -fx-font-family: Chalkduster, Marker Felt, fantasy, Comic Sans, Cursive, Helvetica;
+    -fx-font-size: 13;
+}
+.nodeItem {
+    -fx-font-size: 11;
+}
+.nodePane {
+    -fx-fill-width: true;
+    -fx-background-radius: 12;
+}
+.outPort {
+}
+.inPort {
+
+}
+.good {
+    -fx-background-color: #DDFFDD;
+    -fx-font-size: 13;
+}
+CubicCurve {
+    -fx-fill: transparent;
+    -fx-stroke: #FF9900;
+    -fx-stroke-width: 2;
+}
+CubicCurve:hover {
+    -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.3),4,0,2,3);
+}

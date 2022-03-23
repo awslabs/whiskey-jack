@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ ! Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ ! SPDX-License-Identifier: Apache-2.0
+ !-->
+
+<?import java.net.URL?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+
+<ScrollPane fx:id="scrollPane" BorderPane.alignment="CENTER" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nighthacks.fxnodeeditor.NodeEditorController">    
+    <stylesheets>
+        <URL value="@nodeeditor.css" />
+    </stylesheets>
+    <content>
+        <AnchorPane fx:id="nodeEditor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="200.0" styleClass="nodeEditor" />
+    </content>
+   <contextMenu>
+      <ContextMenu fx:id="contextMenu" />
+   </contextMenu>
+</ScrollPane>
