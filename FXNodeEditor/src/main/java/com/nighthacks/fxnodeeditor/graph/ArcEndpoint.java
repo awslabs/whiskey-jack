@@ -4,6 +4,8 @@
  */
 package com.nighthacks.fxnodeeditor.graph;
 
+import javafx.geometry.*;
+import javafx.scene.transform.*;
 import javax.annotation.*;
 
 public class ArcEndpoint {
@@ -19,5 +21,18 @@ public class ArcEndpoint {
     public void setView(FGNode.PortView v) { view = v; }
     public FGNode.PortView getView() {
         return view;
+    }
+    public Point2D getPosition(boolean right, Transform area) {
+        try {
+            var box = container.view.isExpanded() ? view : container.view;
+            var lbl = box.getBoundsInLocal();
+            var t = box.getLocalToSceneTransform();
+            var ret = t.transform(lbl.getMinX(), lbl.getHeight() / 2);
+            if(right) ret = ret.add(lbl.getWidth(), 0);
+            return area.inverseTransform(ret);
+        } catch(NonInvertibleTransformException ex) {
+            ex.printStackTrace(System.out);
+            return new Point2D(0,0);
+        }
     }
 }

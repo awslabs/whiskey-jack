@@ -49,5 +49,9 @@ Any value defined here will override the pom.xml file value but is only applicab
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.allowConvertToStarImport>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.allowConvertToStarImport>
         <org-netbeans-spi-editor-hints-projects.text.x-java.org_2e_netbeans_2e_modules_2e_java_2e_hints_2e_perf_2e_Tiny_2e_constantIntern.enabled>true</org-netbeans-spi-editor-hints-projects.text.x-java.org_2e_netbeans_2e_modules_2e_java_2e_hints_2e_perf_2e_Tiny_2e_constantIntern.enabled>
         <org-netbeans-spi-editor-hints-projects.text.x-java.org_2e_netbeans_2e_modules_2e_java_2e_hints_2e_suggestions_2e_ConstantNameHint.enabled>false</org-netbeans-spi-editor-hints-projects.text.x-java.org_2e_netbeans_2e_modules_2e_java_2e_hints_2e_suggestions_2e_ConstantNameHint.enabled>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.sortMembersInGroups>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.sortMembersInGroups>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.sortMembersByVisibility>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.sortMembersByVisibility>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.visibilityOrder>PUBLIC;PROTECTED;DEFAULT;PRIVATE</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.visibilityOrder>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.keepGettersAndSettersTogether>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.keepGettersAndSettersTogether>
     </properties>
 </project-shared-configuration>

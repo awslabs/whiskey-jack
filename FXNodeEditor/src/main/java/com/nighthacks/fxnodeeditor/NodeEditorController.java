@@ -30,11 +30,11 @@ public class NodeEditorController implements Initializable {
     private ContextMenu contextMenu;
     @FXML
     private ScrollPane scrollPane;
-    public InArc hovered;
+    public Object hovered;
     public Node dragNode;
     double pressX, pressY;
-    public final Map<String,FGNode> nByUid = new ConcurrentHashMap<>();
-    public final Map<FGNode,Map> connections = new HashMap<>();
+    public final Map<String, FGNode> nByUid = new ConcurrentHashMap<>();
+    public final Map<FGNode, Map> connections = new HashMap<>();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -61,8 +61,9 @@ public class NodeEditorController implements Initializable {
             pressY = mouseEvent.getScreenY();
 //            System.out.println("Press " + pressX + "," + pressY);
         });
-        scrollPane.setOnKeyPressed(e->keyTyped(e));
+        scrollPane.setOnKeyPressed(e -> keyTyped(e));
         loadFile(dfltFile);
+        nodeEditor.getStyleClass().add("baseLayer");
     }
     private void add(EventHandler<ActionEvent> event, String... names) {
         var items = contextMenu.getItems();
@@ -90,21 +91,34 @@ public class NodeEditorController implements Initializable {
 //        System.out.println(name+"  "+mi);
     }
     void keyTyped(KeyEvent c) {
-        System.out.println("Typed "+c.getText()+" "+c.getCharacter()+" "+c.getCode()+"\n\t"+c);
+        System.out.println("Typed " + c.getText() + " " + c.getCharacter() + " " + c.getCode() + "\n\t" + c);
         switch(c.getCode()) {
-            default-> {return;}
-            case DELETE, BACK_SPACE-> {
-                if(hovered!=null) {
-                    System.out.println("Hovering over "+hovered);
-                    hovered.setIncoming(null);
-                } else System.out.println("Nothing to delete");
+            default -> {
+                return;
+            }
+            case DELETE, BACK_SPACE -> {
+                if(hovered != null) {
+                    System.out.println("Hovering over " + hovered);
+                    switch(hovered) {
+                        case null -> {
+                                System.out.println("Hover? NULL");
+                        }
+                        default -> {
+                                System.out.println("Hover? "+hovered);
+                        }
+                        case FGNode n -> n.delete();
+                        case InArc in ->
+                            in.setIncoming(null);
+                    }
+                } else
+                    System.out.println("Nothing to delete");
             }
         }
         c.consume();
     }
     private MenuItem mkaction(String name, EventHandler<ActionEvent> evt, KeyCode code) {
         var m = new MenuItem(name);
-        if(code!=null)
+        if(code != null)
             m.setAccelerator(new KeyCodeCombination(code, KeyCombination.META_ANY));
         m.setOnAction(evt);
         return m;
@@ -114,9 +128,9 @@ public class NodeEditorController implements Initializable {
         System.out.println("openAction");
         loadFile(dfltFile);
     };
-    EventHandler<ActionEvent> saveAction = evt-> {
-        try (var w = CommitableWriter.abandonOnClose(dfltFile)) {
-            System.out.println("Writing "+dfltFile);
+    EventHandler<ActionEvent> saveAction = evt -> {
+        try( var w = CommitableWriter.abandonOnClose(dfltFile)) {
+            System.out.println("Writing " + dfltFile);
             fileio.writeValue(w, collect());
             w.commit();
         } catch(IOException ioe) {
@@ -130,18 +144,16 @@ public class NodeEditorController implements Initializable {
         clearAll();
     };
     public void loadFile(Path p) {
-        System.out.println("Loading "+p);
+        System.out.println("Loading " + p);
         connections.clear();
-        try (var in = Files.newBufferedReader(p)) {
-            for(var n:fileio.readValue(in, Object[].class)) {
-                if(n instanceof Map m) {
+        try( var in = Files.newBufferedReader(p)) {
+            for(var n: fileio.readValue(in, Object[].class))
+                if(n instanceof Map m)
                     add(FGNode.of(m, this));
-                }
-            }
         } catch(IOException ioe) {
             ioe.printStackTrace(System.out);
         }
-        connections.forEach((n,m)->n.applyConnections(m));
+        connections.forEach((n, m) -> n.applyConnections(m));
         connections.clear();
         adjustArcs();
     }
@@ -168,17 +180,18 @@ public class NodeEditorController implements Initializable {
     }
     private final AtomicBoolean adjustQueued = new AtomicBoolean(false);
     public void adjustArcs() {
-        if(adjustQueued.getAndSet(true)) return;
-        Platform.runLater(()->{
+        if(adjustQueued.getAndSet(true))
+            return;
+        Platform.runLater(() -> {
             adjustQueued.set(false);
-//            System.out.println("Adjusting");
-            nByUid.values().forEach(n->
-                n.inputs.forEach(a->a.reposition()));
+            var t = nodeEditor.getLocalToSceneTransform();
+            nByUid.values().forEach(n
+                    -> n.inputs.forEach(a -> a.reposition(t)));
         });
     }
     public List<Map> collect() {
         var ret = new ArrayList<Map>();
-        nodeEditor.getChildren().forEach(n->{
+        nodeEditor.getChildren().forEach(n -> {
             var u = n.getUserData();
             if(u instanceof FGNode f)
                 ret.add(f.collect());
@@ -187,8 +200,8 @@ public class NodeEditorController implements Initializable {
     }
     public Node[] allFGNodes() {
         return nodeEditor.getChildren().stream()
-                .filter(n->n.getUserData() instanceof FGNode)
-                .toArray(n->new Node[n]);
+                .filter(n -> n.getUserData() instanceof FGNode)
+                .toArray(n -> new Node[n]);
     }
     public void clearAll() {
         nodeEditor.getChildren().removeAll(allFGNodes());
@@ -212,7 +225,7 @@ public class NodeEditorController implements Initializable {
 //        return parent==null||parent.isBlank() ? myName : parent+"."+myName;
 //    }
 
-    public void makeDraggable(final TitledPane tp) {
+    public void makeDraggable(final Node tp) {
         final var dragDelta = new Object() {
             double x, y;
         };
@@ -233,7 +246,7 @@ public class NodeEditorController implements Initializable {
         tp.setOnMouseDragged(mouseEvent -> {
             tp.setLayoutX(mouseEvent.getScreenX() + dragDelta.x);
             tp.setLayoutY(mouseEvent.getScreenY() + dragDelta.y);
-//            adjustArcs();
+            adjustArcs();
             mouseEvent.consume();
         });
         tp.setOnMouseEntered(mouseEvent -> {
@@ -277,12 +290,12 @@ public class NodeEditorController implements Initializable {
     }
     static ObjectMapper fileio = new ObjectMapper(
             new YAMLFactory()
-            .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-            .enable(YAMLGenerator.Feature.USE_PLATFORM_LINE_BREAKS)
-            .enable(JsonParser.Feature.ALLOW_COMMENTS)
-            .enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES)
-            .enable(JsonParser.Feature.ALLOW_YAML_COMMENTS)
-            .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
+                    .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+                    .enable(YAMLGenerator.Feature.USE_PLATFORM_LINE_BREAKS)
+                    .enable(JsonParser.Feature.ALLOW_COMMENTS)
+                    .enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES)
+                    .enable(JsonParser.Feature.ALLOW_YAML_COMMENTS)
+                    .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
     ).configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
 //    public void startDrag(Node n) {
 //        var d = dragNode;

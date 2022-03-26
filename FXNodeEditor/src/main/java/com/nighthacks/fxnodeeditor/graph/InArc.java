@@ -6,9 +6,8 @@ package com.nighthacks.fxnodeeditor.graph;
 
 import java.util.*;
 import javafx.application.*;
-import javafx.geometry.*;
-import javafx.scene.*;
 import javafx.scene.shape.*;
+import javafx.scene.transform.*;
 
 public class InArc extends ArcEndpoint {
     InArc(MNode.Port m, FGNode c, OutArc f) {
@@ -18,7 +17,7 @@ public class InArc extends ArcEndpoint {
     OutArc comesFrom;
     CubicCurve viz;
     Object value = "unknown";
-    private boolean relayout;
+//    private boolean relayout;
     public void setValue(Object v) {
         if(v instanceof Optional ov) {
             if(ov.isEmpty())
@@ -46,7 +45,7 @@ public class InArc extends ArcEndpoint {
         } else {
             comesFrom = n;
             comesFrom.goesTo.add(this);
-            relayout = true;
+//            relayout = true;
             System.out.println(n.meta.name + "->" + meta.name);
             if(viz == null) {
                 viz = new CubicCurve();
@@ -59,25 +58,25 @@ public class InArc extends ArcEndpoint {
 //            viz.setStrokeWidth(2);
             }
         }
-        Platform.runLater(() -> setView());
+        Platform.runLater(() -> setViewText());
     }
     @Override
     public void setView(FGNode.PortView v) {
         super.setView(v);
-        setView();
+        setViewText();
     }
-    private void setView() {
+    private void setViewText() {
         getView().setText(comesFrom == null
                 ? meta.name + ": " + value
                 : meta.name);
     }
-    public void reposition() {
+    public void reposition(Transform area) {
         if(viz != null)
             if(comesFrom == null)
                 System.out.println("Unexpected NULL in " + meta.name);
             else {
-                var out = getPosition(comesFrom.getView(), true);
-                var in = getPosition(getView(), false);
+                var out = comesFrom.getPosition(true, area);
+                var in = getPosition(false, area);
                 viz.setStartX(out.getX());
                 viz.setStartY(out.getY());
                 viz.setControlX1(out.getX() + 100);
@@ -86,13 +85,7 @@ public class InArc extends ArcEndpoint {
                 viz.setControlY2(in.getY());
                 viz.setEndX(in.getX());
                 viz.setEndY(in.getY());
-                relayout = false;
+//                relayout = false;
             }
-    }
-    public Point2D getPosition(Node n, boolean right) {
-        var lbl = n.getBoundsInLocal();
-        var t = n.getLocalToSceneTransform();
-        var ret = t.transform(lbl.getMinX(), lbl.getHeight() / 2);
-        return right ? ret.add(lbl.getWidth(), 0) : ret;
     }
 }

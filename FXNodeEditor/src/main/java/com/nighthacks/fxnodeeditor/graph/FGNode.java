@@ -13,89 +13,32 @@ import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.*;
 
-public class FGNode {  // flow-graph node
-    @SuppressWarnings("LeakingThisInConstructor")
-    public FGNode(MNode mn, NodeEditorController c, String u) {
-        if(u == null)
-            u = Utils.generateRandomString(16);
-        uid = u;
-        meta = mn;
-        controller = c;
-        contents = new GridPane();
-        contents.setPadding(noPadding);
-        contents.setHgap(20);
-        var left = new ColumnConstraints();
-        left.setHalignment(HPos.LEFT);
-        left.setFillWidth(true);
-        var right = new ColumnConstraints();
-        right.setHalignment(HPos.RIGHT);
-        right.setFillWidth(true);
-        contents.getColumnConstraints().addAll(left, right);
-        contents.getStyleClass().add("nodeItem");
-        view = new TitledPane(mn.group + " " + mn.name, contents);
-//        view.setAnimated(false);
-//        view.expandedProperty().addListener(b -> {
-//            controller.adjustArcs();
-//            System.out.println("expandedProperty fired");
-//        });
-//        view.clipProperty().addListener(b->controller.adjustArcs());
-//        view.localToSceneTransformProperty().addListener(b -> {
-//            controller.adjustArcs();
-//        });
-//        contents.visibleProperty().addListener(b->controller.adjustArcs());
-        view.getStyleClass().add("nodePane");
-        mn.ports.forEach(p -> {
-            int x = p.in ? 0 : 1;
-            int y = p.slot;
-            ArcEndpoint endpoint;
-            if(p.in) {
-                var in = new InArc(p, FGNode.this, null);
-                inputs.add(in);
-                endpoint = in;
-                in.setValue(p.dflt);
-            } else {
-                var out = new OutArc(p, FGNode.this);
-                outputs.add(out);
-                endpoint = out;
-            }
-            contents.add(new PortView(endpoint), x, y);
-//            System.out.println(p.name+" "+x+","+y);
-        });
-        /* WTF  this should work.  It's a mystery
-        var watch = !inputs.isEmpty() ? inputs.get(inputs.size()-1)
-                : !outputs.isEmpty() ? outputs.get(outputs.size()-1)
-                : null;
-        if(watch!=null) {
-        System.out.println("in "+meta.name+" watching "+watch.meta.name+"  "+watch.view);
-        watch.view.localToSceneTransformProperty().addListener(b -> {
-        System.out.println(watch.meta.name+" moved");
-        controller.adjustArcs();
-        });
-        }
-        else System.out.println("in "+meta.name+" nothing.to watch!!");
-        */
-        c.nByUid.put(u, this);
+public class FGNode {
+    static OutArc dragSource;
+    static final private Image closeArrow = new Image(FGNode.class.getResourceAsStream("CloseArrow.png"));
+    static final private Image cursor = new Image(FGNode.class.getResourceAsStream("DragTargetCursor.png"));
+    private static final Object dummy = new Serializable() {
+
+    };
+    private static final Insets noPadding = new Insets(0, 0, 0, 0);
+    static final private Image rightArrow = new Image(FGNode.class.getResourceAsStream("RightArrow.png"));
+    public static boolean get(Map m, String key, boolean dflt) {
+        var v = m.get(key);
+        return v == null ? dflt : Coerce.toBoolean(v);
     }
-    public Map<String, Object> collect() {
-        var ret = new HashMap<String, Object>();
-        ret.put("uid", uid);
-        ret.put("meta", meta.name);
-        var values = new HashMap();
-        var conn = new HashMap();
-        inputs.forEach(i -> {
-            values.put(i.meta.name, i.value);
-            if(i.comesFrom != null)
-                conn.put(i.meta.name, i.comesFrom.uname);
-        });
-        if(!values.isEmpty())
-            ret.put("values", values);
-        if(!conn.isEmpty())
-            ret.put("connections", conn);
-        ret.put("x", view.getLayoutX());
-        ret.put("y", view.getLayoutY());
-        ret.put("expanded", view.isExpanded());
-        return ret;
+    public static double get(Map m, String key, double dflt) {
+        var v = m.get(key);
+        return v == null ? dflt : Coerce.toDouble(v);
+    }
+    public static String get(Map m, String key, String dflt) {
+        var v = m.get(key);
+        return v == null ? dflt : Coerce.toString(v);
+    }
+    public static Map getMap(Map m, String key) {
+        var v = m.get(key);
+        return v instanceof Map vm ? vm : Map.of();
     }
     public static FGNode of(Map m, NodeEditorController c) {
         var uid = get(m, "uid", "nouid");
@@ -118,6 +61,70 @@ public class FGNode {  // flow-graph node
         ret.view.setLayoutY(y);
         return ret;
     }
+    public final GridPane contents;
+    public final NodeEditorController controller;
+    public final ArrayList<InArc> inputs = new ArrayList<>();
+    public final MNode meta;
+    public final ArrayList<OutArc> outputs = new ArrayList<>();
+    public final String uid;
+    public final NodePane view;
+    // flow-graph node
+    @SuppressWarnings("LeakingThisInConstructor")
+    public FGNode(MNode mn, NodeEditorController c, String u) {
+        if(u == null)
+            u = Utils.generateRandomString(16);
+        uid = u;
+        meta = mn;
+        controller = c;
+        contents = new GridPane();
+        contents.setPadding(noPadding);
+        contents.setHgap(20);
+        var left = new ColumnConstraints();
+        left.setHalignment(HPos.LEFT);
+        left.setFillWidth(true);
+        var right = new ColumnConstraints();
+        right.setHalignment(HPos.RIGHT);
+        right.setFillWidth(true);
+        contents.getColumnConstraints().addAll(left, right);
+        contents.getStyleClass().add("nodeItem");
+        view = new NodePane(mn.group + " " + mn.name, contents);
+        view.hoverProperty().addListener(b -> {
+            controller.hovered = view.isHover() ? this : null;
+        });
+        System.out.println("Title " + meta.name + ": " + view.lookup("#arrowRegion"));
+        view.getStyleClass().add("nodePane");
+        mn.ports.forEach(p -> {
+            int x = p.in ? 0 : 1;
+            int y = p.slot;
+            ArcEndpoint endpoint;
+            if(p.in) {
+                var in = new InArc(p, FGNode.this, null);
+                inputs.add(in);
+                endpoint = in;
+                in.setValue(p.dflt);
+            } else {
+                var out = new OutArc(p, FGNode.this);
+                outputs.add(out);
+                endpoint = out;
+            }
+            contents.add(new PortView(endpoint), x, y);
+//            System.out.println(p.name+" "+x+","+y);
+        });
+        /* WTF  this should work.  It's a mystery
+        var watch = !inputs.isEmpty() ? inputs.get(inputs.size()-1)
+        : !outputs.isEmpty() ? outputs.get(outputs.size()-1)
+        : null;
+        if(watch!=null) {
+        System.out.println("in "+meta.name+" watching "+watch.meta.name+"  "+watch.view);
+        watch.view.localToSceneTransformProperty().addListener(b -> {
+        System.out.println(watch.meta.name+" moved");
+        controller.adjustArcs();
+        });
+        }
+        else System.out.println("in "+meta.name+" nothing.to watch!!");
+         */
+        c.nByUid.put(u, this);
+    }
     public void applyConnections(Map m) {
         inputs.forEach(a -> {
             var v = m.get(a.meta.name);
@@ -138,31 +145,82 @@ public class FGNode {  // flow-graph node
             }
         });
     }
-    public static boolean get(Map m, String key, boolean dflt) {
-        var v = m.get(key);
-        return v == null ? dflt : Coerce.toBoolean(v);
+    public void delete() {
+        inputs.forEach(ia->ia.setIncoming(null));
+        var in = new ArrayList<InArc>();
+        outputs.forEach(oa->in.addAll(oa.goesTo));
+        in.forEach(n->n.setIncoming(null));
+        controller.nodeEditor.getChildren().remove(view);
+        controller.nByUid.remove(uid);
     }
-    public static double get(Map m, String key, double dflt) {
-        var v = m.get(key);
-        return v == null ? dflt : Coerce.toDouble(v);
+    public Map<String, Object> collect() {
+        var ret = new HashMap<String, Object>();
+        ret.put("uid", uid);
+        ret.put("meta", meta.name);
+        var values = new HashMap();
+        var conn = new HashMap();
+        inputs.forEach(i -> {
+            values.put(i.meta.name, i.value);
+            if(i.comesFrom != null)
+                conn.put(i.meta.name, i.comesFrom.uname);
+        });
+        if(!values.isEmpty())
+            ret.put("values", values);
+        if(!conn.isEmpty())
+            ret.put("connections", conn);
+        ret.put("x", view.getLayoutX());
+        ret.put("y", view.getLayoutY());
+        ret.put("expanded", view.isExpanded());
+        return ret;
     }
-    public static String get(Map m, String key, String dflt) {
-        var v = m.get(key);
-        return v == null ? dflt : Coerce.toString(v);
+    public class NodePane extends VBox {
+        private boolean expanded = false;
+        private final ImageView openClose;
+        private final GridPane contents;
+        private final HBox titleRegion;
+        NodePane(String title, GridPane c) {
+            contents = c;
+            var text = new Text(title);
+            openClose = new ImageView(closeArrow);
+            openClose.setFitHeight(12);
+            openClose.setPreserveRatio(true);
+            openClose.getStyleClass().add("arrow");
+            titleRegion = new HBox(openClose, text);
+            HBox.setHgrow(c, Priority.ALWAYS);
+            HBox.setHgrow(titleRegion, Priority.ALWAYS);
+            HBox.setHgrow(text, Priority.ALWAYS);
+            setFillWidth(true);
+            getStyleClass().setAll("fgpane");
+            titleRegion.getStyleClass().setAll("fgtitle");
+            text.getStyleClass().setAll("fgtitletext");
+            openClose.getStyleClass().setAll("open");
+            getChildren().setAll(titleRegion);
+            openClose.setOnMouseReleased(e -> setExpanded(!isExpanded()));
+            setExpanded(true);
+        }
+        public final void setExpanded(boolean b) {
+            if(b != expanded) {
+                expanded = b;
+                openClose.getStyleClass().setAll(expanded ? "fgopen" : "fgclosed");
+                getChildren().remove(contents);
+                if(expanded)
+                    getChildren().add(contents);
+                openClose.setRotate(expanded ? 90 : 0);
+                resize(getPrefWidth(), expanded ? getPrefHeight() : 30);
+                controller.adjustArcs();
+//                requestLayout();
+//                System.out.println("H0=" + contents.getHeight());
+//                Platform.runLater(() -> {
+//                    System.out.println("H1=" + contents.getHeight());
+//                    contents.requestLayout();
+//                });
+            }
+        }
+
+        public boolean isExpanded() {
+            return expanded;
+        }
     }
-    public static Map getMap(Map m, String key) {
-        var v = m.get(key);
-        return v instanceof Map vm ? vm : Map.of();
-    }
-    public final String uid;
-    public final MNode meta;
-    public final NodeEditorController controller;
-    public final TitledPane view;
-    public final GridPane contents;
-    static OutArc dragSource;
-    public final ArrayList<InArc> inputs = new ArrayList<>();
-    public final ArrayList<OutArc> outputs = new ArrayList<>();
-    private static final Insets noPadding = new Insets(0, 0, 0, 0);
     public class PortView extends Label {
         @Override
         public String toString() {
@@ -199,7 +257,7 @@ public class FGNode {  // flow-graph node
                             ea.setIncoming(dragSource);
                             controller.adjustArcs();
                         }
-                        var db = evt.getDragboard();
+//                        var db = evt.getDragboard();
 //                        System.out.println("OnDragDropped In " + ea.meta.name);
 //                        System.out.println("\tfrom " + db.getContent(nodeFormat));
 //                        controller.startDrag(null);
@@ -318,9 +376,4 @@ public class FGNode {  // flow-graph node
 //        }
         private static final DataFormat nodeFormat = new DataFormat("node arc");
     }
-    static final private Image cursor = new Image(FGNode.class.getResourceAsStream("DragTargetCursor.png"));
-    static final private Image rightArrow = new Image(FGNode.class.getResourceAsStream("RightArrow.png"));
-    private static final Object dummy = new Serializable() {
-
-    };
 }
