@@ -48,6 +48,7 @@ public class NodeEditorController implements Initializable {
                 mkaction("Open", openAction, KeyCode.O),
                 mkaction("Save", saveAction, KeyCode.S),
                 mkaction("New", newAction, KeyCode.N),
+                mkaction("Layout", layoutAction, KeyCode.L),
                 mkaction("Quit", quitAction, KeyCode.Q)
         );
         scrollPane.viewportBoundsProperty().addListener(b -> {
@@ -142,6 +143,9 @@ public class NodeEditorController implements Initializable {
     };
     EventHandler<ActionEvent> newAction = evt -> {
         clearAll();
+    };
+    EventHandler<ActionEvent> layoutAction = evt -> {
+        new Layout(nByUid.values()).run();
     };
     public void loadFile(Path p) {
         System.out.println("Loading " + p);
