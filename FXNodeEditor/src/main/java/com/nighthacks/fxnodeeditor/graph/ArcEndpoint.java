@@ -31,7 +31,7 @@ public class ArcEndpoint {
             if(right) ret = ret.add(lbl.getWidth(), 0);
             return area.inverseTransform(ret);
         } catch(NonInvertibleTransformException ex) {
-            ex.printStackTrace(System.out);
+            Dlg.error("getPosition error", ex);
             return new Point2D(0,0);
         }
     }

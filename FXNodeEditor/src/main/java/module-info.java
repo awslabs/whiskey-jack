@@ -11,8 +11,6 @@ module com.nighthacks.fxnodeeditor {
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.dataformat.yaml;
 
-    opens com.nighthacks.fxnodeeditor.demo to javafx.fxml;
     opens com.nighthacks.fxnodeeditor to javafx.fxml;
     exports com.nighthacks.fxnodeeditor;
-    exports com.nighthacks.fxnodeeditor.demo;
 }

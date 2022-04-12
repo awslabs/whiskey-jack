@@ -10,6 +10,7 @@ import com.fasterxml.jackson.dataformat.yaml.*;
 import com.nighthacks.fxnodeeditor.graph.*;
 import com.nighthacks.fxnodeeditor.util.*;
 import java.io.*;
+import java.lang.reflect.*;
 import java.net.*;
 import java.nio.file.*;
 import java.util.*;
@@ -23,7 +24,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 
-public class NodeEditorController implements Initializable {
+public class NodeEditorController extends Collectable implements Initializable {
     @FXML
     public AnchorPane nodeEditor;
     @FXML
@@ -35,21 +36,25 @@ public class NodeEditorController implements Initializable {
     double pressX, pressY;
     public final Map<String, FGNode> nByUid = new ConcurrentHashMap<>();
     public final Map<FGNode, Map> connections = new HashMap<>();
+    public final NodeLibrary mnodes = new NodeLibrary();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-//        System.out.println("initialized " + url + "\n\tnodeEditor=" + nodeEditor);
-        MNode.forEach(n -> add(
-                evt -> make(n),
-                new String[]{"Add", n.group, n.name}));
+        mnodes.initialize(this);
+        MNode.forAll(n -> {
+            System.out.println("    Adding "+n);
+            if(!n.isEmpty())
+                add(evt -> make(n), toStringArray("Add", n));
+        });
         var fileActions = new Menu("File");
         contextMenu.getItems().add(fileActions);
         fileActions.getItems().addAll(
-                mkaction("Open", openAction, KeyCode.O),
-                mkaction("Save", saveAction, KeyCode.S),
-                mkaction("New", newAction, KeyCode.N),
-                mkaction("Layout", layoutAction, KeyCode.L),
-                mkaction("Quit", quitAction, KeyCode.Q)
+                mkaction("Open", this::openAction, KeyCode.O),
+                mkaction("Save", this::saveAction, KeyCode.S),
+                mkaction("New", this::newAction, KeyCode.N),
+                mkaction("Layout", this::layoutAction, KeyCode.L),
+                mkaction("Export All Meta", mnodes::exportAction, KeyCode.X),
+                mkaction("Quit", this::quitAction, KeyCode.Q)
         );
         scrollPane.viewportBoundsProperty().addListener(b -> {
             var z = scrollPane.getViewportBounds();
@@ -60,13 +65,13 @@ public class NodeEditorController implements Initializable {
             // record a delta distance for the drag and drop operation.
             pressX = mouseEvent.getScreenX();
             pressY = mouseEvent.getScreenY();
-//            System.out.println("Press " + pressX + "," + pressY);
         });
         scrollPane.setOnKeyPressed(e -> keyTyped(e));
         loadFile(dfltFile);
         nodeEditor.getStyleClass().add("baseLayer");
     }
-    private void add(EventHandler<ActionEvent> event, String... names) {
+    private void add(EventHandler<ActionEvent> event, String[] names) {
+        System.out.println("Add menu: " + Arrays.toString(names));
         var items = contextMenu.getItems();
         final int limit = names.length - 1;
         for(int i = 0; i < limit; i++) {
@@ -80,7 +85,6 @@ public class NodeEditorController implements Initializable {
                 items = menu.getItems();
             } else
                 System.out.println("Menu expected at " + name);
-//            System.out.println(name+"/ "+items);
         }
         var name = names[limit];
         var mi = find(items, name);
@@ -89,7 +93,6 @@ public class NodeEditorController implements Initializable {
             items.add(mi);
         }
         mi.setOnAction(event);
-//        System.out.println(name+"  "+mi);
     }
     void keyTyped(KeyEvent c) {
         System.out.println("Typed " + c.getText() + " " + c.getCharacter() + " " + c.getCode() + "\n\t" + c);
@@ -102,12 +105,13 @@ public class NodeEditorController implements Initializable {
                     System.out.println("Hovering over " + hovered);
                     switch(hovered) {
                         case null -> {
-                                System.out.println("Hover? NULL");
+                            System.out.println("Hover? NULL");
                         }
                         default -> {
-                                System.out.println("Hover? "+hovered);
+                            System.out.println("Hover? " + hovered);
                         }
-                        case FGNode n -> n.delete();
+                        case FGNode n ->
+                            n.delete();
                         case InArc in ->
                             in.setIncoming(null);
                     }
@@ -125,11 +129,11 @@ public class NodeEditorController implements Initializable {
         return m;
     }
     private static final Path dfltFile = Exec.deTilde("~/nodes.yaml");
-    EventHandler<ActionEvent> openAction = evt -> {
+    void openAction(ActionEvent evt) {
         System.out.println("openAction");
         loadFile(dfltFile);
-    };
-    EventHandler<ActionEvent> saveAction = evt -> {
+    }
+    void saveAction(ActionEvent evt) {
         try( var w = CommitableWriter.abandonOnClose(dfltFile)) {
             System.out.println("Writing " + dfltFile);
             fileio.writeValue(w, collect());
@@ -137,16 +141,16 @@ public class NodeEditorController implements Initializable {
         } catch(IOException ioe) {
             Utils.getUltimateCause(ioe).printStackTrace(System.out);
         }
-    };
-    EventHandler<ActionEvent> quitAction = evt -> {
+    }
+    void quitAction(ActionEvent evt) {
         System.exit(0);
-    };
-    EventHandler<ActionEvent> newAction = evt -> {
+    }
+    void newAction(ActionEvent evt) {
         clearAll();
-    };
-    EventHandler<ActionEvent> layoutAction = evt -> {
-        new Layout(nByUid.values()).run();
-    };
+    }
+    void layoutAction(ActionEvent evt) {
+        new Layout(nByUid.values()).trivialLayout().apply();
+    }
     public void loadFile(Path p) {
         System.out.println("Loading " + p);
         connections.clear();
@@ -169,14 +173,12 @@ public class NodeEditorController implements Initializable {
         nodeEditor.getChildren().add(pane);
         ix++;
         var lp = nodeEditor.screenToLocal(pressX, pressY);
-//        System.out.println("lp=" + lp + "   " + pressX + "," + pressY);
         pane.setLayoutX(lp.getX());
         pane.setLayoutY(lp.getY());
         makeDraggable(pane);
         return model;
     }
     private void add(FGNode model) {
-//        System.out.println("Adding " + model);
         var pane = model.view;
         pane.setUserData(model);
         nodeEditor.getChildren().add(pane);
@@ -193,8 +195,9 @@ public class NodeEditorController implements Initializable {
                     -> n.inputs.forEach(a -> a.reposition(t)));
         });
     }
-    public List<Map> collect() {
-        var ret = new ArrayList<Map>();
+    @Override
+    public Object collect() {
+        var ret = new ArrayList<Object>();
         nodeEditor.getChildren().forEach(n -> {
             var u = n.getUserData();
             if(u instanceof FGNode f)
@@ -218,24 +221,11 @@ public class NodeEditorController implements Initializable {
                 return mi;
         return null;
     }
-//    private static String fullName(Object o) {
-//        return o instanceof MenuItem ? fullName((MenuItem) o) : String.valueOf(o);
-//    }
-//    private static String fullName(MenuItem o) {
-//        if(o==null)
-//            return null;
-//        var parent = fullName(o.getParentMenu());
-//        var myName = o.getText();
-//        return parent==null||parent.isBlank() ? myName : parent+"."+myName;
-//    }
 
     public void makeDraggable(final Node tp) {
         final var dragDelta = new Object() {
             double x, y;
         };
-//        var tp = tp.getContent();
-//        dump("root",1,byNode.getParent(), new HashSet<>());
-//        dump("arrow",1,byNode.lookup(".arrow-button"), new HashSet<>());
         tp.setOnMousePressed(mouseEvent -> {
             // record a delta distance for the drag and drop operation.
             dragDelta.x = tp.getLayoutX() - mouseEvent.getScreenX();
@@ -268,7 +258,6 @@ public class NodeEditorController implements Initializable {
         if(node != null && !skip.contains(node)) {
             skip.add(node);
             pln(depth, label + " " + node.getClass().getSimpleName());
-//            node.getProperties().forEach((k,v)->pln(depth+1,k+": "+v));
             node.lookupAll("*").forEach(n -> dump(toString(node.getStyleClass()).toString(), depth + 1, n, skip));
             if(node instanceof Parent p)
                 p.getChildrenUnmodifiable().forEach(n -> dump("*", depth + 1, n, skip));
@@ -292,7 +281,27 @@ public class NodeEditorController implements Initializable {
         });
         return sb;
     }
-    static ObjectMapper fileio = new ObjectMapper(
+    private static String[] toStringArray(Object... o) {
+        return appendTo(o, new ArrayList<>()).toArray(n -> new String[n]);
+    }
+    private static List<String> appendTo(Object o, List<String> l) {
+        if(o == null || o == MNode.root)
+            return l;
+        if(o.getClass().isArray()) {
+            int size = Array.getLength(o);
+            for(var i = 0; i < size; i++)
+                appendTo(Array.get(o, i), l);
+        } else if(o instanceof Collection c)
+            for(var e: c)
+                appendTo(e, l);
+        else if(o instanceof MNode m) {
+            appendTo(m.parent, l);
+            l.add(m.name);
+        } else
+            l.add(o.toString());
+        return l;
+    }
+    static public final ObjectMapper fileio = new ObjectMapper(
             new YAMLFactory()
                     .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
                     .enable(YAMLGenerator.Feature.USE_PLATFORM_LINE_BREAKS)
@@ -301,13 +310,4 @@ public class NodeEditorController implements Initializable {
                     .enable(JsonParser.Feature.ALLOW_YAML_COMMENTS)
                     .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
     ).configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
-//    public void startDrag(Node n) {
-//        var d = dragNode;
-//        if(d!=null) {
-//            d.setVisible(false);
-//            nodeEditor.getChildren().remove(d);
-//        }
-//        if(n!=null)
-//            nodeEditor.getChildren().add(dragNode = n);
-//    }
 }

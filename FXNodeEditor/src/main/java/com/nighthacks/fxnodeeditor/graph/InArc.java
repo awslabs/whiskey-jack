@@ -6,6 +6,7 @@ package com.nighthacks.fxnodeeditor.graph;
 
 import java.util.*;
 import javafx.application.*;
+import javafx.scene.control.*;
 import javafx.scene.shape.*;
 import javafx.scene.transform.*;
 
@@ -17,7 +18,6 @@ public class InArc extends ArcEndpoint {
     OutArc comesFrom;
     CubicCurve viz;
     Object value = "unknown";
-//    private boolean relayout;
     public void setValue(Object v) {
         if(v instanceof Optional ov) {
             if(ov.isEmpty())
@@ -45,17 +45,14 @@ public class InArc extends ArcEndpoint {
         } else {
             comesFrom = n;
             comesFrom.goesTo.add(this);
-//            relayout = true;
             System.out.println(n.meta.name + "->" + meta.name);
             if(viz == null) {
                 viz = new CubicCurve();
                 viz.hoverProperty().addListener(b -> {
                     container.controller.hovered = viz.isHover() ? InArc.this : null;
                 });
+                Tooltip.install(viz, new Tooltip(n.meta.name+"->"+meta.name));
                 container.controller.nodeEditor.getChildren().add(viz);
-//            viz.setFill(Color.TRANSPARENT);
-//            viz.setStroke(Color.ORANGE);
-//            viz.setStrokeWidth(2);
             }
         }
         Platform.runLater(() -> setViewText());
@@ -73,7 +70,7 @@ public class InArc extends ArcEndpoint {
     public void reposition(Transform area) {
         if(viz != null)
             if(comesFrom == null)
-                System.out.println("Unexpected NULL in " + meta.name);
+                Dlg.error("Unexpected NULL in " + meta.name, null);
             else {
                 var out = comesFrom.getPosition(true, area);
                 var in = getPosition(false, area);
@@ -85,7 +82,6 @@ public class InArc extends ArcEndpoint {
                 viz.setControlY2(in.getY());
                 viz.setEndX(in.getX());
                 viz.setEndY(in.getY());
-//                relayout = false;
             }
     }
 }

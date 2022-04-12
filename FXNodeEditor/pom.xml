@@ -13,22 +13,22 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>17.0.2</version>
+            <version>18</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>17.0.2</version>
+            <version>18</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>17.0.2</version>
+            <version>18</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-web</artifactId>
-            <version>17.0.2</version>
+            <version>18</version>
             <classifier>mac</classifier>
         </dependency>
         <dependency>
@@ -52,12 +52,12 @@
         <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-annotations</artifactId>
-            <version>4.3.0</version>
+            <version>4.6.0</version>
             <type>module</type>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
+            <groupId>com.fasterxml.jackson.jr</groupId>
+            <artifactId>jackson-jr-all</artifactId>
             <version>2.13.2</version>
             <type>jar</type>
         </dependency>
@@ -75,7 +75,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.nighthacks.fxnodeeditor.Main</mainClass>
+                    <mainClass>com.nighthacks.fxnodeeditor/com.nighthacks.fxnodeeditor.Main</mainClass>
                 </configuration>
                 <executions>
                     <execution>
