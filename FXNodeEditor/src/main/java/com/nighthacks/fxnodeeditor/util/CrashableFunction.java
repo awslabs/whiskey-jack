@@ -12,6 +12,5 @@ package com.nighthacks.fxnodeeditor.util;
  */
 @FunctionalInterface
 public interface CrashableFunction<T, R, E extends Exception> {
-
     R apply(T t) throws E;
 }

@@ -6,7 +6,6 @@ package com.nighthacks.fxnodeeditor.graph;
 
 import java.util.*;
 import java.util.function.*;
-import java.util.regex.*;
 
 public class MNode extends Collectable implements Comparable<MNode>  { // meta-node
     public MNode(MNode p, String n) {
@@ -28,6 +27,7 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
         return this;
     }
     public boolean isEmpty() { return in.isEmpty() && out.isEmpty(); }
+    public boolean isRoot() { return false; }
     private int nslot(boolean isIn) {
         return (isIn ? in : out).size();
     }
@@ -45,7 +45,7 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
         in.values().forEach(c);
         out.values().forEach(c);
     }
-    MNode create(String n) {
+    MNode createIfAbsent(String n) {
         if(children == null)
             children = new LinkedHashMap<>();
         System.out.println("Create "+name+"."+n);
@@ -62,13 +62,13 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
         return sb.toString();
     }
     void appendNameTo(StringBuilder sb) {
-        if(parent != null && parent != root) {
+        if(parent != null && !parent.isRoot()) {
             parent.appendNameTo(sb);
             sb.append('.');
         }
         sb.append(name);
     }
-    String fullname() {
+    final String fullname() {
         var sb = new StringBuilder();
         appendNameTo(sb);
         return sb.toString();
@@ -76,7 +76,7 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
     void dump(int depth) {
         for(var i = depth; --i >= 0;)
             System.out.print("    ");
-//        System.out.println(this);
+        System.out.println(this);
         if(children != null)
             children.forEach((n, m) -> m.dump(depth + 1));
     }
@@ -96,10 +96,6 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
 //        if(r==0) r = name.compareToIgnoreCase(o.name);
 //        return r;
         return name.compareToIgnoreCase(o.name);
-    }
-    public MNode isFlat() {
-        flatmap.put(name, this);
-        return this;
     }
     @Override
     public Object collect() {
@@ -138,60 +134,20 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
         }
         @Override
         public String toString() {
-            return tname(dflt) + " " + name;
+            return NodeLibrary.tname(dflt) + " " + name;
         }
         String fullname() {
             return MNode.this.name + (in ? "↓" : "↑") + name;
         }
     }
-    private static String tname(Object o) {
-        return o.getClass().getCanonicalName();
-    }
-    public static final MNode root = new MNode(null, "root");
-    public static final Map<String, MNode> flatmap = new HashMap<>();
-    public static MNode add(String g, String n) {
-        return root.create(g).create(n).isFlat();
-    }
-    public static MNode rootCreate(String... names) {
-        if(names.length == 1)
-            return flatmap.get(names[0]);
-        var v = root;
-        for(var name: names)
-            v = v.create(name);
-//        System.out.println(Arrays.toString(names) + ": " + v);
-        return v;
-    }
-    public static String[] expand(String s) {
-        return joiners.split(s);
-    }
-    private static final Pattern joiners = Pattern.compile(" *[.,:/] *");
-    static {
-        // stopgap
-        add("input", "constant").out("v", 0);
-        add("input", "slider").out("v", 0);
-        add("input", "sin").in("freq", 0.5).in("amp", 1).out("v", 0);
-        add("output", "chart").in("v", 0);
-        add("output", "log").in("v", 0).in("log", "node.log");
-        add("filter", "clamp").in("v", 0).in("min", 0).in("max", 100).out("v", 0);
-        add("filter", "expmean").in("v", 0).in("window", 10).out("v", 0);
-        add("filter", "boxmean").in("v", 0).in("window", 10).out("v", 0);
-        add("filter", "ratelimit").in("v", 0).in("limit", 2).out("v", 0);
-        add("math", "sum").in("a", 0).in("b", 0).out("v", 0);
-        add("math", "diff").in("a", 0).in("b", 0).out("v", 0);
-        add("math", "eval").in("a", 0).in("b", 0).in("c", 0).in("expr", "a+b").out("v", 0);
-        root.dump(0);
-    }
-    public static void forAll(Consumer<MNode> f) {
-        System.out.println("\nFA "+root.fullname());
-        root.forEach(f);
-    }
+
     public void forEach(Consumer<MNode> f) {
         System.out.println("[ FE "+fullname());
 //        new Throwable("forEach").printStackTrace();
         if(children == null)
             f.accept(this);
         else
-            children.values().forEach(f);
+            children.values().forEach(v->v.forEach(f));
         System.out.println("  FE "+fullname()+" ]");
     }
 }

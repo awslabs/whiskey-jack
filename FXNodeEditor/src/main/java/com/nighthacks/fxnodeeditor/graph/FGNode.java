@@ -42,12 +42,17 @@ public class FGNode extends Collectable {
     }
     public static FGNode of(Map m, NodeEditorController c) {
         var uid = get(m, "uid", "nouid");
+        var prev = c.nByUid.get(uid);
+        if(prev!=null) {
+            Dlg.error("Duplicate "+prev.meta.name, prev.uid);
+            return prev;
+        }
         var metan = get(m, "meta", "nometa");
         var x = get(m, "x", 0.0);
         var y = get(m, "y", 0.0);
         var expanded = get(m, "expanded", true);
         var values = getMap(m, "values");
-        var ret = new FGNode(MNode.rootCreate(MNode.expand(metan)), c, uid);
+        var ret = new FGNode(c.mnodes.createIfAbsent(metan), c, uid);
         ret.inputs.forEach(a -> {
             var v = values.get(a.meta.name);
             if(v != null)

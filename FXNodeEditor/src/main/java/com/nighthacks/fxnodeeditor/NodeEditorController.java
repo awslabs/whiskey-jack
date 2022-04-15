@@ -40,9 +40,10 @@ public class NodeEditorController extends Collectable implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        Thread.setDefaultUncaughtExceptionHandler((t, error) -> Dlg.error("In " + t.getName(), error));
         mnodes.initialize(this);
-        MNode.forAll(n -> {
-            System.out.println("    Adding "+n);
+        mnodes.forAll(n -> {
+            System.out.println("    Adding " + n);
             if(!n.isEmpty())
                 add(evt -> make(n), toStringArray("Add", n));
         });
@@ -95,7 +96,6 @@ public class NodeEditorController extends Collectable implements Initializable {
         mi.setOnAction(event);
     }
     void keyTyped(KeyEvent c) {
-        System.out.println("Typed " + c.getText() + " " + c.getCharacter() + " " + c.getCode() + "\n\t" + c);
         switch(c.getCode()) {
             default -> {
                 return;
@@ -179,10 +179,14 @@ public class NodeEditorController extends Collectable implements Initializable {
         return model;
     }
     private void add(FGNode model) {
-        var pane = model.view;
-        pane.setUserData(model);
-        nodeEditor.getChildren().add(pane);
-        makeDraggable(pane);
+        try {
+            var pane = model.view;
+            pane.setUserData(model);
+            nodeEditor.getChildren().add(pane);
+            makeDraggable(pane);
+        } catch(Throwable t) {
+            Dlg.error("Error adding node", t);
+        }
     }
     private final AtomicBoolean adjustQueued = new AtomicBoolean(false);
     public void adjustArcs() {
@@ -285,20 +289,27 @@ public class NodeEditorController extends Collectable implements Initializable {
         return appendTo(o, new ArrayList<>()).toArray(n -> new String[n]);
     }
     private static List<String> appendTo(Object o, List<String> l) {
-        if(o == null || o == MNode.root)
-            return l;
-        if(o.getClass().isArray()) {
-            int size = Array.getLength(o);
-            for(var i = 0; i < size; i++)
-                appendTo(Array.get(o, i), l);
-        } else if(o instanceof Collection c)
-            for(var e: c)
-                appendTo(e, l);
-        else if(o instanceof MNode m) {
-            appendTo(m.parent, l);
-            l.add(m.name);
-        } else
-            l.add(o.toString());
+        switch(o) {
+            case null -> { }
+            case Collection c -> {
+                for(var e: c)
+                    appendTo(e, l);
+            }
+            case MNode m -> {
+                if(!m.isRoot()) {
+                    appendTo(m.parent, l);
+                    l.add(m.name);
+                }
+            }
+            default -> {
+                if(o.getClass().isArray()) {
+                    int size = Array.getLength(o);
+                    for(var i = 0; i < size; i++)
+                        appendTo(Array.get(o, i), l);
+                } else
+                    l.add(o.toString());
+            }
+        }
         return l;
     }
     static public final ObjectMapper fileio = new ObjectMapper(
