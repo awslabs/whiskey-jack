@@ -31,21 +31,26 @@ public class NodeEditorController extends Collectable implements Initializable {
     private ContextMenu contextMenu;
     @FXML
     private ScrollPane scrollPane;
+    @FXML
+    private TreeView navTree;
     public Object hovered;
     public Node dragNode;
-    double pressX, pressY;
     public final Map<String, FGNode> nByUid = new ConcurrentHashMap<>();
     public final Map<FGNode, Map> connections = new HashMap<>();
     public final NodeLibrary mnodes = new NodeLibrary();
+    public final MNodeTreeModel mNodeTreeModel = new MNodeTreeModel();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         Thread.setDefaultUncaughtExceptionHandler((t, error) -> Dlg.error("In " + t.getName(), error));
         mnodes.initialize(this);
+        mNodeTreeModel.initialize(navTree, mnodes);
         mnodes.forAll(n -> {
             System.out.println("    Adding " + n);
-            if(!n.isEmpty())
-                add(evt -> make(n), toStringArray("Add", n));
+            if(!n.isEmpty()) {
+                var namePath = toStringArray("Add", n);
+                addMenu(n, namePath);
+            }
         });
         var fileActions = new Menu("File");
         contextMenu.getItems().add(fileActions);
@@ -64,14 +69,28 @@ public class NodeEditorController extends Collectable implements Initializable {
         });
         scrollPane.setOnMousePressed(mouseEvent -> {
             // record a delta distance for the drag and drop operation.
-            pressX = mouseEvent.getScreenX();
-            pressY = mouseEvent.getScreenY();
+            DragAssist.targetX = mouseEvent.getScreenX();
+            DragAssist.targetY = mouseEvent.getScreenY();
         });
         scrollPane.setOnKeyPressed(e -> keyTyped(e));
         loadFile(dfltFile);
         nodeEditor.getStyleClass().add("baseLayer");
+        nodeEditor.setOnDragOver(evt -> {
+            evt.acceptTransferModes(TransferMode.ANY);
+            evt.consume();
+        });
+        nodeEditor.setOnDragDropped(evt -> {
+            if(DragAssist.createNode != null) {
+                System.out.println("Create " + evt + "\n\t" + DragAssist.createNode);
+                DragAssist.targetX = evt.getScreenX();
+                DragAssist.targetY = evt.getScreenY();
+                make(DragAssist.createNode);
+            }
+            evt.setDropCompleted(true);
+            evt.consume();
+        });
     }
-    private void add(EventHandler<ActionEvent> event, String[] names) {
+    private void addMenu(MNode n, String[] names) {
         System.out.println("Add menu: " + Arrays.toString(names));
         var items = contextMenu.getItems();
         final int limit = names.length - 1;
@@ -93,7 +112,7 @@ public class NodeEditorController extends Collectable implements Initializable {
             mi = new MenuItem(name);
             items.add(mi);
         }
-        mi.setOnAction(event);
+        mi.setOnAction(evt -> make(n));
     }
     void keyTyped(KeyEvent c) {
         switch(c.getCode()) {
@@ -165,17 +184,34 @@ public class NodeEditorController extends Collectable implements Initializable {
         connections.clear();
         adjustArcs();
     }
-    private FGNode make(MNode n) {
+    public FGNode make(MNode n) {
         System.out.println("Creating " + n);
         var model = new FGNode(n, NodeEditorController.this, null);
         var pane = model.view;
         pane.setUserData(model);
         nodeEditor.getChildren().add(pane);
         ix++;
-        var lp = nodeEditor.screenToLocal(pressX, pressY);
+        if(hovered instanceof InArc in
+                && !model.outputs.isEmpty()
+                && !model.inputs.isEmpty()) {
+            var cf = in.comesFrom;
+            System.out.println("Hovering " + hovered);
+            in.setIncoming(model.outputs.get(0));
+            model.inputs.get(0).setIncoming(cf);
+            Platform.runLater(() -> layoutAction(null));
+        }
+        var lp = nodeEditor.screenToLocal(DragAssist.targetX, DragAssist.targetY);
         pane.setLayoutX(lp.getX());
         pane.setLayoutY(lp.getY());
+        var parent = pane.getParent();
+        if(parent != null) {
+            pane.getParent().applyCss();
+            pane.getParent().layout();
+            pane.setLayoutX(lp.getX() - pane.getWidth() / 2);
+            pane.setLayoutY(lp.getY() - pane.getHeight() / 2);
+        }
         makeDraggable(pane);
+        nodeEditor.requestFocus();
         return model;
     }
     private void add(FGNode model) {
@@ -290,7 +326,8 @@ public class NodeEditorController extends Collectable implements Initializable {
     }
     private static List<String> appendTo(Object o, List<String> l) {
         switch(o) {
-            case null -> { }
+            case null -> {
+            }
             case Collection c -> {
                 for(var e: c)
                     appendTo(e, l);

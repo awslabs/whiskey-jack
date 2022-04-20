@@ -6,7 +6,6 @@ package com.nighthacks.fxnodeeditor.graph;
 
 import com.nighthacks.fxnodeeditor.*;
 import com.nighthacks.fxnodeeditor.util.*;
-import java.io.*;
 import java.util.*;
 import javafx.geometry.*;
 import javafx.scene.control.*;
@@ -16,12 +15,8 @@ import javafx.scene.layout.*;
 import javafx.scene.text.*;
 
 public class FGNode extends Collectable {
-    static OutArc dragSource;
     static final private Image closeArrow = new Image(FGNode.class.getResourceAsStream("CloseArrow.png"));
     static final private Image cursor = new Image(FGNode.class.getResourceAsStream("DragTargetCursor.png"));
-    private static final Object dummy = new Serializable() {
-
-    };
     private static final Insets noPadding = new Insets(0, 0, 0, 0);
     static final private Image rightArrow = new Image(FGNode.class.getResourceAsStream("RightArrow.png"));
     public static boolean get(Map m, String key, boolean dflt) {
@@ -235,21 +230,21 @@ public class FGNode extends Collectable {
                     });
                     setOnDragDropped(evt -> {
                         getStyleClass().remove("good");
-                        if(dragSource != null) {
-                            ea.setIncoming(dragSource);
+                        if(DragAssist.createArc != null) {
+                            ea.setIncoming(DragAssist.createArc);
                             controller.adjustArcs();
                         }
                         evt.setDropCompleted(true);
                         evt.consume();
                     });
                     setOnDragOver(evt -> {
-                        if(dragSource.container != FGNode.this) {
+                        if(DragAssist.createArc!=null && DragAssist.createArc.container != FGNode.this) {
                             evt.acceptTransferModes(TransferMode.ANY);
                             evt.consume();
                         }
                     });
                     setOnDragEntered(evt -> {
-                        if(dragSource.container != FGNode.this) {
+                        if(DragAssist.createArc!=null && DragAssist.createArc.container != FGNode.this) {
                             evt.acceptTransferModes(TransferMode.ANY);
                             getStyleClass().add("good");
                             evt.consume();
@@ -264,18 +259,17 @@ public class FGNode extends Collectable {
                     setOnDragDetected(evt -> {
                         var db = startDragAndDrop(TransferMode.ANY);
                         var content = new ClipboardContent();
-                        dragSource = outa;
-                        content.put(nodeFormat, dummy);
+                        DragAssist.createArc = outa;
+                        content.put(DragAssist.draggingOutArc, DragAssist.dummy);
                         db.setContent(content);
                         evt.consume();
                         db.setDragView(cursor);
                     });
-                }
+                        }
                 case default -> {
                 }
             }
             ae.setView(this);
         }
-        private static final DataFormat nodeFormat = new DataFormat("node arc");
     }
 }

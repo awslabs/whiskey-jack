@@ -6,7 +6,9 @@ package com.nighthacks.fxnodeeditor.graph;
 
 import java.util.*;
 import javafx.application.*;
+import javafx.css.*;
 import javafx.scene.control.*;
+import javafx.scene.input.*;
 import javafx.scene.shape.*;
 import javafx.scene.transform.*;
 
@@ -15,7 +17,7 @@ public class InArc extends ArcEndpoint {
         super(m, c);
         comesFrom = f;
     }
-    OutArc comesFrom;
+    public OutArc comesFrom;
     CubicCurve viz;
     Object value = "unknown";
     public void setValue(Object v) {
@@ -51,7 +53,25 @@ public class InArc extends ArcEndpoint {
                 viz.hoverProperty().addListener(b -> {
                     container.controller.hovered = viz.isHover() ? InArc.this : null;
                 });
-                Tooltip.install(viz, new Tooltip(n.meta.name+"->"+meta.name));
+                viz.setOnDragOver(evt -> {
+                    if(DragAssist.createNode != null) {
+                        evt.acceptTransferModes(TransferMode.ANY);
+                        evt.consume();
+                    }
+                });
+                viz.setOnDragDropped(evt -> {
+                    if(DragAssist.createNode != null)
+                        System.out.println("Create " + evt + "\n\t" + DragAssist.createNode);
+                    DragAssist.targetX = evt.getScreenX();
+                    DragAssist.targetY = evt.getScreenY();
+                    container.controller.hovered = InArc.this;
+                    container.controller.make(DragAssist.createNode);
+                    evt.setDropCompleted(true);
+                    evt.consume();
+                });
+                viz.setOnDragEntered(evt->viz.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, true));
+                viz.setOnDragExited(evt->viz.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, false));
+                Tooltip.install(viz, new Tooltip(n.meta.name + "->" + meta.name));
                 container.controller.nodeEditor.getChildren().add(viz);
             }
         }
@@ -67,6 +87,7 @@ public class InArc extends ArcEndpoint {
                 ? meta.name + ": " + value
                 : meta.name);
     }
+    private static PseudoClass HOVER_PSEUDO_CLASS = PseudoClass.getPseudoClass("hover");
     public void reposition(Transform area) {
         if(viz != null)
             if(comesFrom == null)
@@ -74,11 +95,12 @@ public class InArc extends ArcEndpoint {
             else {
                 var out = comesFrom.getPosition(true, area);
                 var in = getPosition(false, area);
+                var midX = (in.getX() + out.getX()) / 2;
                 viz.setStartX(out.getX());
                 viz.setStartY(out.getY());
-                viz.setControlX1(out.getX() + 100);
+                viz.setControlX1(midX);
                 viz.setControlY1(out.getY());
-                viz.setControlX2(in.getX() - 100);
+                viz.setControlX2(midX);
                 viz.setControlY2(in.getY());
                 viz.setEndX(in.getX());
                 viz.setEndY(in.getY());
