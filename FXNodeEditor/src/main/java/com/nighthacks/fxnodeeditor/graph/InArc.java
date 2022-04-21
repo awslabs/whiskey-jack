@@ -47,7 +47,6 @@ public class InArc extends ArcEndpoint {
         } else {
             comesFrom = n;
             comesFrom.goesTo.add(this);
-            System.out.println(n.meta.name + "->" + meta.name);
             if(viz == null) {
                 viz = new CubicCurve();
                 viz.hoverProperty().addListener(b -> {
@@ -60,17 +59,17 @@ public class InArc extends ArcEndpoint {
                     }
                 });
                 viz.setOnDragDropped(evt -> {
-                    if(DragAssist.createNode != null)
-                        System.out.println("Create " + evt + "\n\t" + DragAssist.createNode);
-                    DragAssist.targetX = evt.getScreenX();
-                    DragAssist.targetY = evt.getScreenY();
-                    container.controller.hovered = InArc.this;
-                    container.controller.make(DragAssist.createNode);
+                    if(DragAssist.createNode != null) {
+                        DragAssist.targetX = evt.getScreenX();
+                        DragAssist.targetY = evt.getScreenY();
+                        container.controller.hovered = InArc.this;
+                        container.controller.make(DragAssist.createNode);
+                    }
                     evt.setDropCompleted(true);
                     evt.consume();
                 });
-                viz.setOnDragEntered(evt->viz.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, true));
-                viz.setOnDragExited(evt->viz.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, false));
+                viz.setOnDragEntered(evt -> viz.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, true));
+                viz.setOnDragExited(evt -> viz.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, false));
                 Tooltip.install(viz, new Tooltip(n.meta.name + "->" + meta.name));
                 container.controller.nodeEditor.getChildren().add(viz);
             }
@@ -87,7 +86,7 @@ public class InArc extends ArcEndpoint {
                 ? meta.name + ": " + value
                 : meta.name);
     }
-    private static PseudoClass HOVER_PSEUDO_CLASS = PseudoClass.getPseudoClass("hover");
+    private static final PseudoClass HOVER_PSEUDO_CLASS = PseudoClass.getPseudoClass("hover");
     public void reposition(Transform area) {
         if(viz != null)
             if(comesFrom == null)

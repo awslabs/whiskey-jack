@@ -18,6 +18,22 @@ public final class Coerce {
     private static final Pattern SEPARATORS = Pattern.compile(" *, *");
     private static final Pattern unwrap = Pattern.compile(" *\\[ *(.*) *\\] *");
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    public static boolean get(Map m, String key, boolean dflt) {
+        Object v = m.get(key);
+        return v == null ? dflt : Coerce.toBoolean(v);
+    }
+    public static double get(Map m, String key, double dflt) {
+        Object v = m.get(key);
+        return v == null ? dflt : Coerce.toDouble(v);
+    }
+    public static String get(Map m, String key, String dflt) {
+        Object v = m.get(key);
+        return v == null ? dflt : Coerce.toString(v);
+    }
+    public static Map getMap(Map m, String key) {
+        Object v = m.get(key);
+        return v instanceof Map vm ? vm : Map.of();
+    }
 
     private Coerce() {
     }

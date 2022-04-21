@@ -53,5 +53,6 @@ Any value defined here will override the pom.xml file value but is only applicab
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.sortMembersByVisibility>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.sortMembersByVisibility>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.visibilityOrder>PUBLIC;PROTECTED;DEFAULT;PRIVATE</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.visibilityOrder>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.keepGettersAndSettersTogether>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.keepGettersAndSettersTogether>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.preferStaticImports>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.preferStaticImports>
     </properties>
 </project-shared-configuration>

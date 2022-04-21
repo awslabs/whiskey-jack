@@ -61,7 +61,6 @@ public class Layout {
     public Layout trivialLayout() {
         if(ordered.isEmpty())
             return this;
-//        System.out.println("Columns: " + columns.length);
         double totalw = 0;
         double maxh = 0;
         for(var c: columns) {
@@ -85,7 +84,6 @@ public class Layout {
         return this;
     }
     public void apply() {
-//        dump(ordered);
         var pt = new ParallelTransition();
         for(var n: ordered)
             pt.getChildren().add(new Transition() {
@@ -153,9 +151,6 @@ public class Layout {
                     + x0 + "->" + x1 + ", " + y0 + "->" + y1;
         }
         void assignColumns(String caller, int level) {
-//            for(var i = 0; i < level; i++)
-//                System.out.print("  ");
-//            System.out.println(n.meta.name + ": " + caller);
             if(inParentChain)
                 Dlg.error("Loop involving " + n.meta.name, null);
             else {

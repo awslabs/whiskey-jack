@@ -21,7 +21,6 @@ public class CheapSet<T> {
     public boolean contains(T o) {
         return false;
     }
-//    public Iterator<T> iterator() { return emptyIterator; }
     public Object[] toArray() {
         return new Object[0];
     }
@@ -88,7 +87,6 @@ public class CheapSet<T> {
             public boolean contains(T o) {
                 return o!=null&&(o.equals(a)||o.equals(b));
             }
-//            @Override public Iterator<T> iterator() { return emptyIterator; }
             @Override
             public Object[] toArray() {
                 return new Object[0];

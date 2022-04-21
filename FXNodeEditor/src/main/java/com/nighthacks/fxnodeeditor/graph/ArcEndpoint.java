@@ -22,6 +22,7 @@ public class ArcEndpoint {
     public FGNode.PortView getView() {
         return view;
     }
+    @Override public String toString() { return container.meta.name+"."+meta.name; }
     public Point2D getPosition(boolean right, Transform area) {
         try {
             var box = container.view.isExpanded() ? view : container.view;

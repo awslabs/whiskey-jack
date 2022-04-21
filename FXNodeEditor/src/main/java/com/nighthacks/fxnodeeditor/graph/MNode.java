@@ -4,6 +4,8 @@
  */
 package com.nighthacks.fxnodeeditor.graph;
 
+import com.nighthacks.fxnodeeditor.util.*;
+import static com.nighthacks.fxnodeeditor.util.Utils.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -11,19 +13,20 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
     public MNode(MNode p, String n) {
         parent = p;
         name = n;
-        System.out.println("create "+fullname()+" in "+p);
     }
     public final MNode parent;
     public final String name;
+    public String tooltip;
+    public String description;
     Map<String, MNode> children = null;
     final Map<String,Port> in = new LinkedHashMap<>();
     final Map<String,Port> out = new LinkedHashMap<>();
     MNode in(String name, Object dflt) {
-        in.put(name, new Port(nslot(true), true, name, dflt, false));
+        in.computeIfAbsent(name, n->new Port(nslot(true), true, n, dflt, false));
         return this;
     }
     MNode out(String name, Object dflt) {
-        out.put(name, new Port(nslot(false), false, name, dflt, false));
+        out.computeIfAbsent(name, n->new Port(nslot(false), false, n, dflt, false));
         return this;
     }
     public boolean isEmpty() { return in.isEmpty() && out.isEmpty(); }
@@ -48,8 +51,19 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
     MNode createIfAbsent(String n) {
         if(children == null)
             children = new LinkedHashMap<>();
-        System.out.println("Create "+name+"."+n);
         return children.computeIfAbsent(n, nm -> new MNode(MNode.this, nm));
+    }
+    void merge(Object o) {
+        if(o instanceof Map m) merge(m);
+        else Dlg.error("While reading "+fullname(),"found unexpected value",deepToString(o));
+    }
+    void merge(Map m) {
+        System.out.println("Merge into "+fullname());
+        tooltip = Coerce.get(m, "tooltip", null);
+        description = Coerce.get(m, "description", null);
+        Coerce.getMap(m, "children").forEach((k,v)->createIfAbsent(Coerce.toString(k)).merge(v));
+        Coerce.getMap(m, "in").forEach((k,v)->in(Coerce.toString(k),v));
+        Coerce.getMap(m, "out").forEach((k,v)->out(Coerce.toString(k),v));
     }
     @Override
     public String toString() {
@@ -92,22 +106,17 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
     }
     @Override
     public int compareTo(MNode o) {
-//        int r = group.compareToIgnoreCase(o.group);
-//        if(r==0) r = name.compareToIgnoreCase(o.name);
-//        return r;
         return name.compareToIgnoreCase(o.name);
     }
     @Override
     public Object collect() {
         var m = new LinkedHashMap<String, Object>();
-//        m.put("name", name);
         if(!in.isEmpty())
             m.put("in", asObject(in));
         if(!out.isEmpty())
             m.put("out", asObject(out));
         if(children!=null && !children.isEmpty())
             m.put("children", asObject(children));
-//        System.out.println("AsObject "+name+" "+m.getClass());
         return m;
     }
     public class Port extends Collectable {
@@ -126,10 +135,8 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
         @Override
         public Object collect() {
             var m = new LinkedHashMap<String, Object>();
-//            m.put("name", name);
             m.put("default", dflt);
             if(multi) m.put("multi", multi);
-//            m.put("in", in);
             return m.size()==1 ? dflt : m;
         }
         @Override
@@ -142,12 +149,9 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
     }
 
     public void forEach(Consumer<MNode> f) {
-        System.out.println("[ FE "+fullname());
-//        new Throwable("forEach").printStackTrace();
         if(children == null)
             f.accept(this);
         else
             children.values().forEach(v->v.forEach(f));
-        System.out.println("  FE "+fullname()+" ]");
     }
 }

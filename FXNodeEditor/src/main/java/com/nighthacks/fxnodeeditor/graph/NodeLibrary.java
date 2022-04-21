@@ -6,6 +6,7 @@ package com.nighthacks.fxnodeeditor.graph;
 
 import com.nighthacks.fxnodeeditor.*;
 import com.nighthacks.fxnodeeditor.util.*;
+import static com.nighthacks.fxnodeeditor.util.Utils.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -21,7 +22,6 @@ public class NodeLibrary {
             return true;
         }
     };
-    private NodeEditorController nec;
     private Path rootPath;
     public MNode add(String group, String name) {
         var n = root.createIfAbsent(group).createIfAbsent(name);
@@ -29,13 +29,12 @@ public class NodeLibrary {
         return n;
     }
     public void forAll(Consumer<MNode> f) {
-        System.out.println("\nFA " + root.fullname());
         root.forEach(f);
     }
     public MNode createIfAbsent(String name) {
+        if(isEmpty(name) || "root".equals(name))
+            return root;
         var names = joiners.split(name);
-        if(names.length == 1)
-            return flatmap.get(names[0]);
         MNode v = root;
         for(String part: names)
             v = v.createIfAbsent(part);
@@ -45,30 +44,44 @@ public class NodeLibrary {
         return o.getClass().getCanonicalName();
     }
     public void exportAction(ActionEvent t) {
-        try( CommitableWriter out = CommitableWriter.abandonOnClose(rootPath.resolve("total.mn"))) {
+        saveAllAs(rootPath.resolve("total.mn"));
+    }
+    public void saveAllAs(Path p) {
+        try( CommitableWriter out = CommitableWriter.abandonOnClose(p)) {
             NodeEditorController.fileio.writeValue(out, Collectable.asObject(root));
             out.commit();
         } catch(IOException ioe) {
             Dlg.error("Can't save file", ioe);
         }
     }
-    public void initialize(NodeEditorController n) {
-        nec = n;
-        rootPath = Config.scanConfig("mn", (a, b) -> System.out.println("MN " + a + " " + b));
-
-        // stopgap
-        add("input", "constant").out("v", 0);
-        add("input", "slider").out("v", 0);
-        add("input", "sin").in("freq", 0.5).in("amp", 1).out("v", 0);
-        add("output", "chart").in("v", 0);
-        add("output", "log").in("v", 0).in("log", "node.log");
-        add("filter", "clamp").in("v", 0).in("min", 0).in("max", 100).out("v", 0);
-        add("filter", "expmean").in("v", 0).in("window", 10).out("v", 0);
-        add("filter", "boxmean").in("v", 0).in("window", 10).out("v", 0);
-        add("filter", "ratelimit").in("v", 0).in("limit", 2).out("v", 0);
-        add("math", "sum").in("a", 0).in("b", 0).out("v", 0);
-        add("math", "diff").in("a", 0).in("b", 0).out("v", 0);
-        add("math", "eval").in("a", 0).in("b", 0).in("c", 0).in("expr", "a+b").out("v", 0);
+    public void load(String tag, Path fn) {
+        try {
+            System.out.println("load " + tag + " " + fn);
+            CommitableReader.of(fn).read(in -> {
+                var v = NodeEditorController.fileio.readValue(in, Object.class);
+                System.out.println(Utils.deepToString(v, 80));
+                switch(v) {
+                    case Map m -> {
+                        var rootName = Coerce.get(m, "name", "");
+                        (!rootName.isEmpty() ? createIfAbsent(rootName)
+                                : !isEmpty(tag) ? createIfAbsent(tag)
+                                : root).merge(m);
+                    }
+                    default ->
+                        Dlg.error("Bad data in", fn.toString(), Utils.deepToString(v, 80));
+                }
+                return null;
+            });
+        } catch(IOException ex) {
+            Dlg.error("Couldn't load file", ex);
+        }
+    }
+    public void initialize() {
+        try {
+            rootPath = Config.scanConfig("pcat", (a, b) -> load(a, Path.of(b)));
+        } catch(Throwable t) {
+            Dlg.error("Couldn't scan parts catalog", t);
+        }
         root.dump(0);
     }
     private static final Pattern joiners = Pattern.compile(" *[.,:/] *");

@@ -33,7 +33,6 @@ public class MNodeTreeModel {
                     setEditable(false);
                     setOnDragDetected(evt->{
                         var db = startDragAndDrop(TransferMode.ANY);
-                        System.out.println("DD "+evt);
                         var content = new ClipboardContent();
                         DragAssist.createNode = getItem();
                         content.put(DragAssist.draggingMetaNode, DragAssist.dummy);

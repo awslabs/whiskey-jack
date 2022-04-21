@@ -19,41 +19,25 @@ public class FGNode extends Collectable {
     static final private Image cursor = new Image(FGNode.class.getResourceAsStream("DragTargetCursor.png"));
     private static final Insets noPadding = new Insets(0, 0, 0, 0);
     static final private Image rightArrow = new Image(FGNode.class.getResourceAsStream("RightArrow.png"));
-    public static boolean get(Map m, String key, boolean dflt) {
-        var v = m.get(key);
-        return v == null ? dflt : Coerce.toBoolean(v);
-    }
-    public static double get(Map m, String key, double dflt) {
-        var v = m.get(key);
-        return v == null ? dflt : Coerce.toDouble(v);
-    }
-    public static String get(Map m, String key, String dflt) {
-        var v = m.get(key);
-        return v == null ? dflt : Coerce.toString(v);
-    }
-    public static Map getMap(Map m, String key) {
-        var v = m.get(key);
-        return v instanceof Map vm ? vm : Map.of();
-    }
     public static FGNode of(Map m, NodeEditorController c) {
-        var uid = get(m, "uid", "nouid");
+        var uid = Coerce.get(m, "uid", "nouid");
         var prev = c.nByUid.get(uid);
-        if(prev!=null) {
-            Dlg.error("Duplicate "+prev.meta.name, prev.uid);
+        if(prev != null) {
+            Dlg.error("Duplicate " + prev.meta.name, prev.uid);
             return prev;
         }
-        var metan = get(m, "meta", "nometa");
-        var x = get(m, "x", 0.0);
-        var y = get(m, "y", 0.0);
-        var expanded = get(m, "expanded", true);
-        var values = getMap(m, "values");
+        var metan = Coerce.get(m, "meta", "nometa");
+        var x = Coerce.get(m, "x", 0.0);
+        var y = Coerce.get(m, "y", 0.0);
+        var expanded = Coerce.get(m, "expanded", true);
+        var values = Coerce.getMap(m, "values");
         var ret = new FGNode(c.mnodes.createIfAbsent(metan), c, uid);
         ret.inputs.forEach(a -> {
             var v = values.get(a.meta.name);
             if(v != null)
                 a.value = v;
         });
-        var connections = getMap(m, "connections");
+        var connections = Coerce.getMap(m, "connections");
         if(!connections.isEmpty())
             c.connections.put(ret, connections);
         ret.view.setExpanded(expanded);
@@ -108,7 +92,7 @@ public class FGNode extends Collectable {
             contents.add(new PortView(endpoint), x, y);
         });
         if(inputs.isEmpty())
-            contents.add(new Label("-"),0,0);
+            contents.add(new Label("-"), 0, 0);
         c.nByUid.put(u, this);
     }
     public void applyConnections(Map m) {
@@ -129,12 +113,19 @@ public class FGNode extends Collectable {
         });
     }
     public void delete() {
-        inputs.forEach(ia->ia.setIncoming(null));
+        var firstInput = inputs.stream().filter(i -> i.comesFrom != null).findFirst().orElse(null);
+        var out0 = firstInput != null ? firstInput.comesFrom : null;
+        var firstOutput = outputs.stream().filter(i -> !i.goesTo.isEmpty()).findFirst().orElse(null);
+        var in0 = firstOutput != null ? firstOutput.goesTo.get(0) : null;
+        inputs.forEach(ia -> ia.setIncoming(null));
         var in = new ArrayList<InArc>();
-        outputs.forEach(oa->in.addAll(oa.goesTo));
-        in.forEach(n->n.setIncoming(null));
+        outputs.forEach(oa -> in.addAll(oa.goesTo));
+        in.forEach(n -> n.setIncoming(null));
         controller.nodeEditor.getChildren().remove(view);
         controller.nByUid.remove(uid);
+        System.out.println(out0 + " => " + in0);
+        if(in0 != null && out0 != null)
+            in0.setIncoming(out0);
     }
     @Override
     public Object collect() {
@@ -238,13 +229,13 @@ public class FGNode extends Collectable {
                         evt.consume();
                     });
                     setOnDragOver(evt -> {
-                        if(DragAssist.createArc!=null && DragAssist.createArc.container != FGNode.this) {
+                        if(DragAssist.createArc != null && DragAssist.createArc.container != FGNode.this) {
                             evt.acceptTransferModes(TransferMode.ANY);
                             evt.consume();
                         }
                     });
                     setOnDragEntered(evt -> {
-                        if(DragAssist.createArc!=null && DragAssist.createArc.container != FGNode.this) {
+                        if(DragAssist.createArc != null && DragAssist.createArc.container != FGNode.this) {
                             evt.acceptTransferModes(TransferMode.ANY);
                             getStyleClass().add("good");
                             evt.consume();
@@ -265,7 +256,7 @@ public class FGNode extends Collectable {
                         evt.consume();
                         db.setDragView(cursor);
                     });
-                        }
+                }
                 case default -> {
                 }
             }

@@ -43,10 +43,9 @@ public class NodeEditorController extends Collectable implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         Thread.setDefaultUncaughtExceptionHandler((t, error) -> Dlg.error("In " + t.getName(), error));
-        mnodes.initialize(this);
+        mnodes.initialize();
         mNodeTreeModel.initialize(navTree, mnodes);
         mnodes.forAll(n -> {
-            System.out.println("    Adding " + n);
             if(!n.isEmpty()) {
                 var namePath = toStringArray("Add", n);
                 addMenu(n, namePath);
@@ -81,7 +80,6 @@ public class NodeEditorController extends Collectable implements Initializable {
         });
         nodeEditor.setOnDragDropped(evt -> {
             if(DragAssist.createNode != null) {
-                System.out.println("Create " + evt + "\n\t" + DragAssist.createNode);
                 DragAssist.targetX = evt.getScreenX();
                 DragAssist.targetY = evt.getScreenY();
                 make(DragAssist.createNode);
@@ -91,7 +89,6 @@ public class NodeEditorController extends Collectable implements Initializable {
         });
     }
     private void addMenu(MNode n, String[] names) {
-        System.out.println("Add menu: " + Arrays.toString(names));
         var items = contextMenu.getItems();
         final int limit = names.length - 1;
         for(int i = 0; i < limit; i++) {
@@ -103,8 +100,7 @@ public class NodeEditorController extends Collectable implements Initializable {
                 var menu = new Menu(name);
                 items.add(menu);
                 items = menu.getItems();
-            } else
-                System.out.println("Menu expected at " + name);
+            }
         }
         var name = names[limit];
         var mi = find(items, name);
@@ -120,22 +116,14 @@ public class NodeEditorController extends Collectable implements Initializable {
                 return;
             }
             case DELETE, BACK_SPACE -> {
-                if(hovered != null) {
-                    System.out.println("Hovering over " + hovered);
-                    switch(hovered) {
-                        case null -> {
-                            System.out.println("Hover? NULL");
-                        }
-                        default -> {
-                            System.out.println("Hover? " + hovered);
-                        }
-                        case FGNode n ->
-                            n.delete();
-                        case InArc in ->
-                            in.setIncoming(null);
-                    }
-                } else
-                    System.out.println("Nothing to delete");
+                switch(hovered) {
+                    default ->
+                        Dlg.error("Hover over a node or arc to delete it");
+                    case FGNode n ->
+                        n.delete();
+                    case InArc in ->
+                        in.setIncoming(null);
+                }
             }
         }
         c.consume();
@@ -149,7 +137,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     }
     private static final Path dfltFile = Exec.deTilde("~/nodes.yaml");
     void openAction(ActionEvent evt) {
-        System.out.println("openAction");
+//        System.out.println("openAction");
         loadFile(dfltFile);
     }
     void saveAction(ActionEvent evt) {
@@ -185,7 +173,7 @@ public class NodeEditorController extends Collectable implements Initializable {
         adjustArcs();
     }
     public FGNode make(MNode n) {
-        System.out.println("Creating " + n);
+//        System.out.println("Creating " + n);
         var model = new FGNode(n, NodeEditorController.this, null);
         var pane = model.view;
         pane.setUserData(model);
@@ -195,7 +183,7 @@ public class NodeEditorController extends Collectable implements Initializable {
                 && !model.outputs.isEmpty()
                 && !model.inputs.isEmpty()) {
             var cf = in.comesFrom;
-            System.out.println("Hovering " + hovered);
+//            System.out.println("Hovering " + hovered);
             in.setIncoming(model.outputs.get(0));
             model.inputs.get(0).setIncoming(cf);
             Platform.runLater(() -> layoutAction(null));
