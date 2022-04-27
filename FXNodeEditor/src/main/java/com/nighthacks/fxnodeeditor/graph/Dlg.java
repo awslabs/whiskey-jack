@@ -23,7 +23,7 @@ public class Dlg {
     }
     private void show(Object... o) {
         body.getStyleClass().add("errorDialog");
-        Dialog d = new Dialog();
+        var d = new Dialog();
         var img = new ImageView(errorIcon);
         img.setPreserveRatio(true);
         img.setFitHeight(64);
@@ -42,7 +42,7 @@ public class Dlg {
         if(o == null)
             return style;
         if(o.getClass().isArray()) {
-            int len = Array.getLength(o);
+            var len = Array.getLength(o);
             for(var i = 0; i < len; i++)
                 style = addStuff(Array.get(o, i), style);
         } else

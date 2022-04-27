@@ -4,8 +4,9 @@
  */
 package com.nighthacks.fxnodeeditor.graph;
 
-import com.nighthacks.fxnodeeditor.*;
+import com.nighthacks.fxnodeeditor.meta.*;
 import com.nighthacks.fxnodeeditor.util.*;
+import static com.nighthacks.fxnodeeditor.util.Utils.*;
 import java.util.*;
 import javafx.geometry.*;
 import javafx.scene.control.*;
@@ -70,14 +71,14 @@ public class FGNode extends Collectable {
         right.setFillWidth(true);
         contents.getColumnConstraints().addAll(left, right);
         contents.getStyleClass().add("nodeItem");
-        view = new NodePane(mn.fullname(), contents);
+        view = new NodePane(mn.name, mn.fullname(), contents);
         view.hoverProperty().addListener(b -> {
             controller.hovered = view.isHover() ? this : null;
         });
         view.getStyleClass().add("nodePane");
         mn.forAllChildren(p -> {
-            int x = p.in ? 0 : 1;
-            int y = p.slot;
+            var x = p.in ? 0 : 1;
+            var y = p.slot;
             ArcEndpoint endpoint;
             if(p.in) {
                 var in = new InArc(p, FGNode.this, null);
@@ -100,7 +101,7 @@ public class FGNode extends Collectable {
             var v = m.get(a.meta.name);
             if(v != null) {
                 var un = v.toString();
-                int colon = un.indexOf(':');
+                var colon = un.indexOf(':');
                 if(colon > 0) {
                     var u = un.substring(0, colon);
                     var n = un.substring(colon + 1);
@@ -153,7 +154,7 @@ public class FGNode extends Collectable {
         private final ImageView openClose;
         private final GridPane contents;
         private final HBox titleRegion;
-        NodePane(String title, GridPane c) {
+        NodePane(String title, String tooltip, GridPane c) {
             contents = c;
             var text = new Text(title);
             openClose = new ImageView(closeArrow);
@@ -161,6 +162,8 @@ public class FGNode extends Collectable {
             openClose.setPreserveRatio(true);
             openClose.getStyleClass().add("arrow");
             titleRegion = new HBox(openClose, text);
+            if(!isEmpty(tooltip))
+                Tooltip.install(titleRegion, new Tooltip(tooltip));
             HBox.setHgrow(c, Priority.ALWAYS);
             HBox.setHgrow(titleRegion, Priority.ALWAYS);
             HBox.setHgrow(text, Priority.ALWAYS);
@@ -224,12 +227,18 @@ public class FGNode extends Collectable {
                         if(DragAssist.createArc != null) {
                             ea.setIncoming(DragAssist.createArc);
                             controller.adjustArcs();
+                        } else if(DragAssist.createNode != null) {
+                            System.out.println("Create node");
+                            DragAssist.targetX = evt.getScreenX();
+                            DragAssist.targetY = evt.getScreenY();
+                            ea.container.controller.hovered = ea;
+                            ea.container.controller.make(DragAssist.createNode);
                         }
                         evt.setDropCompleted(true);
                         evt.consume();
                     });
                     setOnDragOver(evt -> {
-                        if(DragAssist.createArc != null && DragAssist.createArc.container != FGNode.this) {
+                        if(DragAssist.createNode != null || DragAssist.createArc != null && DragAssist.createArc.container != FGNode.this) {
                             evt.acceptTransferModes(TransferMode.ANY);
                             evt.consume();
                         }
@@ -248,6 +257,7 @@ public class FGNode extends Collectable {
                 }
                 case OutArc outa -> {
                     setOnDragDetected(evt -> {
+                        DragAssist.dragClean();
                         var db = startDragAndDrop(TransferMode.ANY);
                         var content = new ClipboardContent();
                         DragAssist.createArc = outa;
@@ -255,6 +265,24 @@ public class FGNode extends Collectable {
                         db.setContent(content);
                         evt.consume();
                         db.setDragView(cursor);
+                    });
+                    setOnDragDropped(evt -> {
+                        getStyleClass().remove("good");
+                        if(DragAssist.createNode != null) {
+                            System.out.println("Create node");
+                            DragAssist.targetX = evt.getScreenX();
+                            DragAssist.targetY = evt.getScreenY();
+                            outa.container.controller.hovered = outa;
+                            outa.container.controller.make(DragAssist.createNode);
+                        }
+                        evt.setDropCompleted(true);
+                        evt.consume();
+                    });
+                    setOnDragOver(evt -> {
+                        if(DragAssist.createNode != null) {
+                            evt.acceptTransferModes(TransferMode.ANY);
+                            evt.consume();
+                        }
                     });
                 }
                 case default -> {

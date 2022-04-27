@@ -2,8 +2,10 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.nighthacks.fxnodeeditor.graph;
+package com.nighthacks.fxnodeeditor.meta;
 
+import com.nighthacks.fxnodeeditor.graph.*;
+import com.nighthacks.fxnodeeditor.metaedit.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
@@ -17,8 +19,7 @@ public class MNodeTreeModel {
         lib = l;
         t.setRoot(new nTreeItem(lib.root));
         t.setShowRoot(false);
-        t.setCellFactory(i
-                -> {
+        t.setCellFactory(i -> {
             var ret = new TreeCell<MNode>() {
                 @Override
                 protected void updateItem(MNode item, boolean empty) {
@@ -31,7 +32,8 @@ public class MNodeTreeModel {
                 }
                 {
                     setEditable(false);
-                    setOnDragDetected(evt->{
+                    setOnDragDetected(evt -> {
+                        DragAssist.dragClean();
                         var db = startDragAndDrop(TransferMode.ANY);
                         var content = new ClipboardContent();
                         DragAssist.createNode = getItem();
@@ -39,6 +41,11 @@ public class MNodeTreeModel {
                         db.setContent(content);
                         evt.consume();
                         db.setDragView(cursor);
+                    });
+                    setOnMouseClicked((MouseEvent mouseEvent) -> {
+                        if(mouseEvent.getButton().equals(MouseButton.PRIMARY))
+                            if(mouseEvent.getClickCount() == 2)
+                                MetaEditorController.edit(getItem());
                     });
                 }
             };

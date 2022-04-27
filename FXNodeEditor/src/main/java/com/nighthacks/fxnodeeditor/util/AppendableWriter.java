@@ -22,7 +22,7 @@ public class AppendableWriter extends Writer {
 
     @Override
     public void write(@Nonnull char[] buf, int offset, int len) throws IOException {
-        for (int i = 0; i < len; i++) {
+        for (var i = 0; i < len; i++) {
             appendable.append(buf[offset++]);
         }
     }

@@ -29,13 +29,13 @@ public final class CommitableReader {
      * @throws IOException on I/O error
      */
     public void read(CrashableFunction<InputStream, Void, IOException> validator) throws IOException {
-        try (InputStream t = Files.newInputStream(target)) {
+        try (var t = Files.newInputStream(target)) {
             validator.apply(t);
         } catch (IOException e1) {
             if (!Files.exists(backup)) {
                 throw e1;
             }
-            try (InputStream b = Files.newInputStream(backup)) {
+            try (var b = Files.newInputStream(backup)) {
                 validator.apply(b);
             } catch (IOException e2) {
                 e1.addSuppressed(e2);

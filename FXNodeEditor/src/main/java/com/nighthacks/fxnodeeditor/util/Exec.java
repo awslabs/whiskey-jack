@@ -130,8 +130,8 @@ public abstract class Exec implements Closeable {
 
     protected static void addPathEntries(String path) {
         if (path != null && path.length() > 0) {
-            for (String f : path.split("[" + PATH_SEP + ",] *")) {
-                Path p = deTilde(f);
+            for (var f : path.split("[" + PATH_SEP + ",] *")) {
+                var p = deTilde(f);
                 if (!paths.contains(p)) {
                     paths.add(p);
                 }
@@ -140,7 +140,7 @@ public abstract class Exec implements Closeable {
     }
 
     protected static void computeDefaultPathString() {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         paths.forEach(p -> {
             if (sb.length() > 5) {
                 sb.append(PATH_SEP);
@@ -341,7 +341,7 @@ public abstract class Exec implements Closeable {
      * @throws IOException          if execution of the process fails to start
      */
     public String execAndGetStringOutput() throws InterruptedException, IOException {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         Consumer<CharSequence> f = sb::append;
         withOut(f).withErr(f).exec();
         return sb.toString().trim();
@@ -355,8 +355,8 @@ public abstract class Exec implements Closeable {
     @SuppressWarnings("PMD.NullAssignment")
     void setClosed() {
         if (!isClosed.get()) {
-            final IntConsumer wd = whenDone;
-            final int exit = process == null ? -1 : process.exitValue();
+            final var wd = whenDone;
+            final var exit = process == null ? -1 : process.exitValue();
             isClosed.set(true);
             if (wd != null) {
                 wd.accept(exit);
@@ -418,9 +418,9 @@ public abstract class Exec implements Closeable {
 
         @Override
         public void run() {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8), 200)) {
-                StringBuilder sb = new StringBuilder();
-                boolean cr = false;
+            try (var br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8), 200)) {
+                var sb = new StringBuilder();
+                var cr = false;
                 while (true) {
                     int c;
                     for (c = br.read(); c >= 0 && c != '\n' && c != '\r'; c = br.read()) {

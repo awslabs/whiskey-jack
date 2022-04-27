@@ -19,19 +19,19 @@ public final class Coerce {
     private static final Pattern unwrap = Pattern.compile(" *\\[ *(.*) *\\] *");
     private static final ObjectMapper MAPPER = new ObjectMapper();
     public static boolean get(Map m, String key, boolean dflt) {
-        Object v = m.get(key);
+        var v = m.get(key);
         return v == null ? dflt : Coerce.toBoolean(v);
     }
     public static double get(Map m, String key, double dflt) {
-        Object v = m.get(key);
+        var v = m.get(key);
         return v == null ? dflt : Coerce.toDouble(v);
     }
     public static String get(Map m, String key, String dflt) {
-        Object v = m.get(key);
+        var v = m.get(key);
         return v == null ? dflt : Coerce.toString(v);
     }
     public static Map getMap(Map m, String key) {
-        Object v = m.get(key);
+        var v = m.get(key);
         return v instanceof Map vm ? vm : Map.of();
     }
 
@@ -71,7 +71,7 @@ public final class Coerce {
         if(o instanceof Number n)
             return n.intValue();
         if(o != null) try {
-            CharSequence cs = o instanceof CharSequence ? (CharSequence) o : o.toString();
+            var cs = o instanceof CharSequence ? (CharSequence) o : o.toString();
             return (int) Utils.parseLong(cs);
         } catch(NumberFormatException ignore) {
         }
@@ -145,16 +145,16 @@ public final class Coerce {
         if(o instanceof String[] strings)
             return strings;
         if(o.getClass().isArray()) {
-            int len = Array.getLength(o);
-            String[] ret = new String[len];
-            for(int i = 0; i < len; i++) {
-                Object e = Array.get(o, i);
+            var len = Array.getLength(o);
+            var ret = new String[len];
+            for(var i = 0; i < len; i++) {
+                var e = Array.get(o, i);
                 ret[i] = e == null ? "" : e.toString();
             }
             return ret;
         }
-        String body = o.toString();
-        Matcher uw = unwrap.matcher(body);
+        var body = o.toString();
+        var uw = unwrap.matcher(body);
         if(uw.matches())
             body = uw.group(1);
         body = body.trim();
@@ -196,14 +196,14 @@ public final class Coerce {
         }
         if(clazz.isAssignableFrom(o.getClass()))
             return (T) o;
-        T[] values = clazz.getEnumConstants();
+        var values = clazz.getEnumConstants();
         if(o instanceof Number number)
             return values[Math.max(0, Math.min(values.length - 1, number.intValue()))];
-        String s = Coerce.toString(o);
+        var s = Coerce.toString(o);
         if(s != null) {
-            int l = s.length();
-            for(T v: values) {
-                String vs = v.toString();
+            var l = s.length();
+            for(var v: values) {
+                var vs = v.toString();
                 if(vs.length() < l)
                     continue;
                 if(vs.regionMatches(true, 0, s, 0, l))

@@ -93,8 +93,8 @@ public final class Utils {
     public static boolean isEmpty(String s) {
         if(s == null)
             return true;
-        int len = s.length();
-        for(int i = 0; i < len; i++)
+        var len = s.length();
+        for(var i = 0; i < len; i++)
             if(!Character.isSpaceChar(s.charAt(i)))
                 return false;
         return true;
@@ -147,7 +147,7 @@ public final class Utils {
     public static String getUltimateMessage(Throwable t) {
         if(t == null)
             return "No Error";
-        String msg = getUltimateCause(t).getMessage();
+        var msg = getUltimateCause(t).getMessage();
         return isEmpty(msg) ? t.toString() : msg;
     }
 
@@ -161,8 +161,8 @@ public final class Utils {
         SecureRandom r;
         if((r = random) == null)
             r = random = new SecureRandom();
-        StringBuilder sb = new StringBuilder(desiredLength);
-        byte[] srb = new byte[desiredLength];
+        var sb = new StringBuilder(desiredLength);
+        var srb = new byte[desiredLength];
         r.nextBytes(srb);
         while(--desiredLength >= 0)
             sb.append(rsChars[srb[desiredLength] & 31]);
@@ -180,7 +180,7 @@ public final class Utils {
      * @return the extension (if any) or else the empty string.
      */
     public static String extension(String s) {
-        int pos = s.lastIndexOf('.');
+        var pos = s.lastIndexOf('.');
         return pos > 0 ? s.substring(pos + 1) : "";
     }
 
@@ -202,7 +202,7 @@ public final class Utils {
     public static CharSequence deepToString(Object o, int maxLength) {
         if(o instanceof CharSequence charSequence)
             return charSequence;
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         try {
             deepToString(o, sb, maxLength);
         } catch(IOException ignore) {
@@ -217,10 +217,10 @@ public final class Utils {
      * @return unencoded string
      */
     public static String dequote(CharSequence cs) {
-        final StringBuilder sb = new StringBuilder();
-        int limit = cs.length();
-        for(int i = 0; i < limit; i++) {
-            char c = cs.charAt(i);
+        final var sb = new StringBuilder();
+        var limit = cs.length();
+        for(var i = 0; i < limit; i++) {
+            var c = cs.charAt(i);
             if(c != '"')
                 if(c == '\\')
                     try {
@@ -261,11 +261,11 @@ public final class Utils {
     public static int deepToStringQuoted(Object o, Appendable sb, int maxLength) throws IOException {
         if(o instanceof CharSequence s) {
             sb.append('"');
-            int l0 = s.length();
-            int len = Math.min(l0, Math.max(5, maxLength - 10));
-            int olen = 2;
-            for(int i = 0; i < len; i++) {
-                char c = s.charAt(i);
+            var l0 = s.length();
+            var len = Math.min(l0, Math.max(5, maxLength - 10));
+            var olen = 2;
+            for(var i = 0; i < len; i++) {
+                var c = s.charAt(i);
                 switch(c) {
                     case '\n' -> {
                         sb.append("\\n");
@@ -307,15 +307,15 @@ public final class Utils {
      * @throws IOException if the append fails.
      */
     public static int deepToString(Object o, Appendable sb, int maxLength) throws IOException {
-        int olen = 0;
+        var olen = 0;
         if(o == null) {
             sb.append("null");
             olen += 4;
         } else if(o.getClass().isArray()) {
-            int len = Array.getLength(o);
+            var len = Array.getLength(o);
             olen += 2;
             sb.append('[');
-            for(int i = 0; i < len; i++) {
+            for(var i = 0; i < len; i++) {
                 if(olen >= maxLength) {
                     sb.append(TRUNCATED_STRING);
                     olen += 3;
@@ -331,7 +331,7 @@ public final class Utils {
         } else if(o instanceof Map) {
             sb.append('{');
             olen += 2;
-            int slot = 0;
+            var slot = 0;
             for(Map.Entry<?, ?> me: ((Map<?, ?>) o).entrySet()) {
                 if(olen >= maxLength) {
                     sb.append(TRUNCATED_STRING);
@@ -351,8 +351,8 @@ public final class Utils {
         } else if(o instanceof Iterable && !(o instanceof Path)) {
             sb.append('[');
             olen += 2;
-            int slot = 0;
-            for(Object obj: (Iterable) o) {
+            var slot = 0;
+            for(var obj: (Iterable) o) {
                 if(olen >= maxLength) {
                     sb.append(TRUNCATED_STRING);
                     olen += 3;
@@ -366,7 +366,7 @@ public final class Utils {
             }
             sb.append(']');
         } else {
-            String s = o.toString();
+            var s = o.toString();
             olen += s.length();
             sb.append(s);
         }
@@ -433,8 +433,8 @@ public final class Utils {
      */
     @SuppressWarnings("PMD.PrematureDeclaration")
     public static long parseLongChecked(CharSequence str, int pos, int limit, int radix) {
-        CharBuffer buf = CharBuffer.wrap(str, pos, limit);
-        long res = parseLong(buf, radix);
+        var buf = CharBuffer.wrap(str, pos, limit);
+        var res = parseLong(buf, radix);
         if(buf.remaining() > 0)
             throw new NumberFormatException("For input string \"" + str + "\"");
         return res;
@@ -447,8 +447,8 @@ public final class Utils {
      * @return long value from the string.
      */
     public static long parseLong(CharBuffer str) {
-        boolean neg = false;
-        int radix = 10;
+        var neg = false;
+        var radix = 10;
         char c;
         scanPrefix:
         while(true) {
@@ -479,7 +479,7 @@ public final class Utils {
                 }
             }
         }
-        long ret = parseLong(str, radix);
+        var ret = parseLong(str, radix);
         return neg ? -ret : ret;
     }
 
@@ -528,9 +528,9 @@ public final class Utils {
     public static <K, V> Map<K, V> immutableMap(K k1, V v1, Object... keyValuePairs) {
         if(keyValuePairs.length % 2 != 0)
             throw new IllegalArgumentException("Expected even number of arguments");
-        HashMap<K, V> map = new HashMap<>();
+        var map = new HashMap<K, V>();
         map.put(k1, v1);
-        for(int i = 0; i < keyValuePairs.length; i += 2)
+        for(var i = 0; i < keyValuePairs.length; i += 2)
             map.put((K) keyValuePairs[i], (V) keyValuePairs[i + 1]);
         return Collections.unmodifiableMap(map);
     }
@@ -542,7 +542,7 @@ public final class Utils {
      * @throws IOException if path creation fails
      */
     public static void createPaths(Path... paths) throws IOException {
-        for(Path p: paths) {
+        for(var p: paths) {
             if(p.toFile().exists())
                 continue;
             // This only supports POSIX compliant file permission right now. We will need to
@@ -559,9 +559,9 @@ public final class Utils {
      * @throws IOException if deletion fails
      */
     public static void deleteFileRecursively(File filePath) throws IOException {
-        File[] files = filePath.listFiles();
+        var files = filePath.listFiles();
         if(files != null)
-            for(File file: files)
+            for(var file: files)
                 deleteFileRecursively(file);
         Files.deleteIfExists(filePath.toPath());
     }
@@ -589,7 +589,7 @@ public final class Utils {
      * @return string or null if there was an exception
      */
     public static String inputStreamToString(InputStream is) {
-        try( InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);  BufferedReader sr = new BufferedReader(isr)) {
+        try( var isr = new InputStreamReader(is, StandardCharsets.UTF_8);  var sr = new BufferedReader(isr)) {
             return sr.lines().collect(Collectors.joining("\n"));
         } catch(IOException e) {
             return null;

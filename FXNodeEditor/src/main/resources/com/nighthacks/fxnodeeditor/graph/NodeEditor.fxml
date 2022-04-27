@@ -12,7 +12,7 @@
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<SplitPane dividerPositions="0.75" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nighthacks.fxnodeeditor.NodeEditorController">
+<SplitPane fx:id="keyboardRoot" dividerPositions="0.75" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nighthacks.fxnodeeditor.graph.NodeEditorController">
    <items>
       <ScrollPane fx:id="scrollPane">    
           <stylesheets>

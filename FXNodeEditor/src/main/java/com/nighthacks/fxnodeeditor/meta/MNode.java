@@ -2,32 +2,46 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.nighthacks.fxnodeeditor.graph;
+package com.nighthacks.fxnodeeditor.meta;
 
+import com.nighthacks.fxnodeeditor.graph.*;
+import static com.nighthacks.fxnodeeditor.meta.Port.*;
 import com.nighthacks.fxnodeeditor.util.*;
+import static com.nighthacks.fxnodeeditor.util.Collectable.*;
 import static com.nighthacks.fxnodeeditor.util.Utils.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 
-public class MNode extends Collectable implements Comparable<MNode>  { // meta-node
+/**
+ * The meta information needed to understand a node.  It's like a "class" in
+ * objected-oriented programming.
+ */
+public class MNode extends Collectable implements Comparable<MNode>  { 
     public MNode(MNode p, String n) {
         parent = p;
         name = n;
     }
+    Path fromFile;
     public final MNode parent;
     public final String name;
     public String tooltip;
     public String description;
+    public String domain;
     Map<String, MNode> children = null;
     final Map<String,Port> in = new LinkedHashMap<>();
     final Map<String,Port> out = new LinkedHashMap<>();
-    MNode in(String name, Object dflt) {
-        in.computeIfAbsent(name, n->new Port(nslot(true), true, n, dflt, false));
-        return this;
-    }
-    MNode out(String name, Object dflt) {
-        out.computeIfAbsent(name, n->new Port(nslot(false), false, n, dflt, false));
-        return this;
+    void createPort(String name, Object dflt, final boolean isIn) {
+        var p = (isIn ? in : out).computeIfAbsent(name, n->new Port(nslot(isIn), isIn, n, this));
+        if(dflt instanceof Map m) {
+            p.dflt = Coerce.get(m, "default", null);
+            p.type = Coerce.get(m, "type", null);
+            if(p.type==null) p.type = guessType(p.dflt);
+            p.description = Coerce.get(m, "description", null);
+        } else {
+            p.dflt = dflt;
+            p.type = guessType(dflt);
+        }
     }
     public boolean isEmpty() { return in.isEmpty() && out.isEmpty(); }
     public boolean isRoot() { return false; }
@@ -61,9 +75,10 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
         System.out.println("Merge into "+fullname());
         tooltip = Coerce.get(m, "tooltip", null);
         description = Coerce.get(m, "description", null);
+        domain = Coerce.get(m, "domain", "Anywhere");
         Coerce.getMap(m, "children").forEach((k,v)->createIfAbsent(Coerce.toString(k)).merge(v));
-        Coerce.getMap(m, "in").forEach((k,v)->in(Coerce.toString(k),v));
-        Coerce.getMap(m, "out").forEach((k,v)->out(Coerce.toString(k),v));
+        Coerce.getMap(m, "in").forEach((k,v)->createPort(Coerce.toString(k),v,true));
+        Coerce.getMap(m, "out").forEach((k,v)->createPort(Coerce.toString(k),v,false));
     }
     @Override
     public String toString() {
@@ -82,7 +97,7 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
         }
         sb.append(name);
     }
-    final String fullname() {
+    public final String fullname() {
         var sb = new StringBuilder();
         appendNameTo(sb);
         return sb.toString();
@@ -117,35 +132,9 @@ public class MNode extends Collectable implements Comparable<MNode>  { // meta-n
             m.put("out", asObject(out));
         if(children!=null && !children.isEmpty())
             m.put("children", asObject(children));
+        if(!"Anywhere".equals(domain))
+            m.put("domain", domain);
         return m;
-    }
-    public class Port extends Collectable {
-        Port(int s, boolean i, String n, Object d, boolean m) {
-            slot = s;
-            in = i;
-            multi = m;
-            name = n;
-            dflt = d == null ? Boolean.FALSE : d;
-        }
-        final int slot;
-        final boolean in;
-        final boolean multi;
-        final String name;
-        final Object dflt;
-        @Override
-        public Object collect() {
-            var m = new LinkedHashMap<String, Object>();
-            m.put("default", dflt);
-            if(multi) m.put("multi", multi);
-            return m.size()==1 ? dflt : m;
-        }
-        @Override
-        public String toString() {
-            return NodeLibrary.tname(dflt) + " " + name;
-        }
-        String fullname() {
-            return MNode.this.name + (in ? "↓" : "↑") + name;
-        }
     }
 
     public void forEach(Consumer<MNode> f) {

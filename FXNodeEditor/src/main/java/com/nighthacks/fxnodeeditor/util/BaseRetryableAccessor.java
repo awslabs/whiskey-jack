@@ -26,12 +26,12 @@ public class BaseRetryableAccessor {
     public <T, E extends Throwable> T retry(int tries, int initialBackoffMillis, CrashableSupplier<T, E> func,
                                             Iterable<Class<? extends Throwable>> retryableExceptions) throws E {
         E lastException = null;
-        int tryCount = 0;
+        var tryCount = 0;
         while (tryCount++ < tries) {
             try {
                 return func.apply();
             } catch (Throwable e) {
-                boolean retryable = false;
+                var retryable = false;
                 lastException = (E) e;
 
                 for (Class<?> t : retryableExceptions) {

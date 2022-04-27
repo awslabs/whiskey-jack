@@ -16,10 +16,10 @@ public class CheapSetTest {
         T("a", "b", "c", "d");
     }
     private void T(String... s) {
-        CheapSet<String> c = CheapSet.ofAll(s);
+        var c = CheapSet.ofAll(s);
         System.out.println(s.length+": "+c);
         Assertions.assertEquals(s.length, c.size());
-        for(String v: s)
+        for(var v: s)
             Assertions.assertTrue(c.contains(v));
     }
 

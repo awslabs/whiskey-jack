@@ -62,13 +62,13 @@ public final class CommitableFile extends OutputStream implements Commitable {
      * @throws IOException if unable to create/delete the files.
      */
     public static CommitableFile of(Path path, boolean commitOnClose) throws IOException {
-        Path n = getNewFile(path);
-        Path b = getBackupFile(path);
+        var n = getNewFile(path);
+        var b = getBackupFile(path);
         Files.deleteIfExists(n);
         try {
             return new CommitableFile(n, b, path, commitOnClose);
         } catch(IOException ioe) {
-            Path parent = n.getParent();
+            var parent = n.getParent();
             if(parent != null)
                 Files.createDirectories(parent);
             return new CommitableFile(n, b, path, commitOnClose);

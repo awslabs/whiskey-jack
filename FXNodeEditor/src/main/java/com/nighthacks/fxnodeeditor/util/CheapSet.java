@@ -31,14 +31,14 @@ public class CheapSet<T> {
         return e==null ? this : of(e, null);
     }
     public CheapSet<T> addAll(T... e) {
-        CheapSet<T> ret = this;
-        for(T v: e)
+        var ret = this;
+        for(var v: e)
             ret = ret.add(v);
         return ret;
     }
     public CheapSet<T> addAll(Collection<T> e) {
-        CheapSet<T> ret = this;
-        for(T v: e)
+        var ret = this;
+        for(var v: e)
             ret = ret.add(v);
         return ret;
     }
@@ -49,7 +49,7 @@ public class CheapSet<T> {
     }
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append('{');
         forEach(v -> {
             if(sb.length()>1)
@@ -155,7 +155,7 @@ public class CheapSet<T> {
     }
     public static <T> CheapSet<T> of(T a, T b, T c, T... rest) {
         var ret = of(a, b).add(c);
-        for(T d: rest)
+        for(var d: rest)
             ret = ret.add(d);
         return ret;
     }

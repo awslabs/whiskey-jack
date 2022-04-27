@@ -2,8 +2,9 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.nighthacks.fxnodeeditor.graph;
+package com.nighthacks.fxnodeeditor.util;
 
+import com.nighthacks.fxnodeeditor.meta.MNode;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.*;

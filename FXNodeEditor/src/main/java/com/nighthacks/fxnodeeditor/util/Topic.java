@@ -72,7 +72,7 @@ public class Topic {
         return this;
     }
     protected void fire() {
-        for (Consumer<Topic> s : watchers) {
+        for (var s : watchers) {
             s.accept(this);
         }
 

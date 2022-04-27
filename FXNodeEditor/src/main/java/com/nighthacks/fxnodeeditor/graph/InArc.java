@@ -4,6 +4,8 @@
  */
 package com.nighthacks.fxnodeeditor.graph;
 
+import com.nighthacks.fxnodeeditor.meta.MNode;
+import com.nighthacks.fxnodeeditor.meta.Port;
 import java.util.*;
 import javafx.application.*;
 import javafx.css.*;
@@ -13,10 +15,11 @@ import javafx.scene.shape.*;
 import javafx.scene.transform.*;
 
 public class InArc extends ArcEndpoint {
-    InArc(MNode.Port m, FGNode c, OutArc f) {
+    InArc(Port m, FGNode c, OutArc f) {
         super(m, c);
         comesFrom = f;
     }
+    public int vizorder; // for layout sorting
     public OutArc comesFrom;
     CubicCurve viz;
     Object value = "unknown";
@@ -31,6 +34,7 @@ public class InArc extends ArcEndpoint {
         if(!Objects.equals(value, v)) {
             value = v;
             setIncoming(null);
+            setViewText();
         }
     }
     public void setIncoming(OutArc n) {
@@ -82,9 +86,11 @@ public class InArc extends ArcEndpoint {
         setViewText();
     }
     private void setViewText() {
-        getView().setText(comesFrom == null
-                ? meta.name + ": " + value
-                : meta.name);
+        var v = getView();
+        if(v != null)
+            v.setText(comesFrom == null
+                    ? meta.name + ": " + value
+                    : meta.name);
     }
     private static final PseudoClass HOVER_PSEUDO_CLASS = PseudoClass.getPseudoClass("hover");
     public void reposition(Transform area) {

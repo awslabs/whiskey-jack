@@ -4,10 +4,12 @@
  */
 package com.nighthacks.fxnodeeditor.graph;
 
+import com.nighthacks.fxnodeeditor.meta.MNode;
+import com.nighthacks.fxnodeeditor.meta.Port;
 import java.util.*;
 
 public class OutArc extends ArcEndpoint {
-    OutArc(MNode.Port m, FGNode c) {
+    OutArc(Port m, FGNode c) {
         super(m, c);
     }
     final ArrayList<InArc> goesTo = new ArrayList<>();

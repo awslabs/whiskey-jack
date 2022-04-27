@@ -4,6 +4,7 @@
  */
 package com.nighthacks.fxnodeeditor;
 
+import com.nighthacks.fxnodeeditor.graph.*;
 import java.io.*;
 import javafx.application.*;
 import javafx.fxml.*;
@@ -15,7 +16,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
         try {
             primaryStage.setTitle("Node Editor Test");
-            primaryStage.setScene(new Scene(new FXMLLoader(Main.class.getResource("nodeEditor.fxml")).load(), 1000, 640));
+            primaryStage.setScene(new Scene(new FXMLLoader(NodeEditorController.class.getResource("NodeEditor.fxml")).load(), 1000, 640));
             primaryStage.show();
         } catch(IOException ex) {
             ex.printStackTrace(System.out);

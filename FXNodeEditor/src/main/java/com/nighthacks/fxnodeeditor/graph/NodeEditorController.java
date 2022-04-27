@@ -2,12 +2,13 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.nighthacks.fxnodeeditor;
+package com.nighthacks.fxnodeeditor.graph;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.yaml.*;
-import com.nighthacks.fxnodeeditor.graph.*;
+import com.nighthacks.fxnodeeditor.meta.*;
+import com.nighthacks.fxnodeeditor.metaedit.*;
 import com.nighthacks.fxnodeeditor.util.*;
 import java.io.*;
 import java.lang.reflect.*;
@@ -21,7 +22,9 @@ import javafx.event.*;
 import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
+import static javafx.scene.input.KeyCode.*;
 import javafx.scene.input.*;
+import static javafx.scene.input.KeyCode.*;
 import javafx.scene.layout.*;
 
 public class NodeEditorController extends Collectable implements Initializable {
@@ -33,6 +36,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     private ScrollPane scrollPane;
     @FXML
     private TreeView navTree;
+    @FXML private Node keyboardRoot;
     public Object hovered;
     public Node dragNode;
     public final Map<String, FGNode> nByUid = new ConcurrentHashMap<>();
@@ -71,7 +75,7 @@ public class NodeEditorController extends Collectable implements Initializable {
             DragAssist.targetX = mouseEvent.getScreenX();
             DragAssist.targetY = mouseEvent.getScreenY();
         });
-        scrollPane.setOnKeyPressed(e -> keyTyped(e));
+        keyboardRoot.setOnKeyPressed(e -> keyTyped(e));
         loadFile(dfltFile);
         nodeEditor.getStyleClass().add("baseLayer");
         nodeEditor.setOnDragOver(evt -> {
@@ -90,8 +94,8 @@ public class NodeEditorController extends Collectable implements Initializable {
     }
     private void addMenu(MNode n, String[] names) {
         var items = contextMenu.getItems();
-        final int limit = names.length - 1;
-        for(int i = 0; i < limit; i++) {
+        final var limit = names.length - 1;
+        for(var i = 0; i < limit; i++) {
             var name = names[i];
             var item = find(items, name);
             if(item instanceof Menu menu)
@@ -123,6 +127,14 @@ public class NodeEditorController extends Collectable implements Initializable {
                         n.delete();
                     case InArc in ->
                         in.setIncoming(null);
+                }
+            }
+            case HOME -> {
+                switch(hovered) {
+                    default ->
+                        Dlg.error("Hover over a node or arc to delete it");
+                    case FGNode n ->
+                        MetaEditorController.edit(n.meta);
                 }
             }
         }
@@ -179,14 +191,25 @@ public class NodeEditorController extends Collectable implements Initializable {
         pane.setUserData(model);
         nodeEditor.getChildren().add(pane);
         ix++;
-        if(hovered instanceof InArc in
-                && !model.outputs.isEmpty()
-                && !model.inputs.isEmpty()) {
-            var cf = in.comesFrom;
-//            System.out.println("Hovering " + hovered);
-            in.setIncoming(model.outputs.get(0));
-            model.inputs.get(0).setIncoming(cf);
-            Platform.runLater(() -> layoutAction(null));
+        switch(hovered) {
+            case InArc in -> {
+                if(!model.outputs.isEmpty()
+                        && !model.inputs.isEmpty()) {
+                    var cf = in.comesFrom;
+                    in.setIncoming(model.outputs.get(0));
+                    model.inputs.get(0).setIncoming(cf);
+                    Platform.runLater(() -> layoutAction(null));
+                }
+            }
+            case OutArc out -> {
+                if(!model.outputs.isEmpty()
+                        && !model.inputs.isEmpty()) {
+                    model.inputs.get(0).setIncoming(out);
+                    Platform.runLater(() -> layoutAction(null));
+                }
+            }
+            case null -> {}
+            default -> {}
         }
         var lp = nodeEditor.screenToLocal(DragAssist.targetX, DragAssist.targetY);
         pane.setLayoutX(lp.getX());
@@ -244,7 +267,7 @@ public class NodeEditorController extends Collectable implements Initializable {
 
     static private int ix = 0;
     private static MenuItem find(List<MenuItem> items, String name) {
-        for(MenuItem mi: items)
+        for(var mi: items)
             if(mi.getText().equalsIgnoreCase(name))
                 return mi;
         return null;

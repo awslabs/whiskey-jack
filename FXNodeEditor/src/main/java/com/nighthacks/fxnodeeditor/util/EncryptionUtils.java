@@ -56,8 +56,8 @@ public final class EncryptionUtils {
      */
     public static List<X509Certificate> loadX509Certificates(Path certificatePath)
             throws IOException, CertificateException {
-        try (InputStream certificateInputStream = Files.newInputStream(certificatePath)) {
-            CertificateFactory factory = CertificateFactory.getInstance("X.509");
+        try (var certificateInputStream = Files.newInputStream(certificatePath)) {
+            var factory = CertificateFactory.getInstance("X.509");
             return new ArrayList<>(
                     (Collection<? extends X509Certificate>) factory.generateCertificates(certificateInputStream));
         }
@@ -76,8 +76,8 @@ public final class EncryptionUtils {
      * @throws GeneralSecurityException can't load private key
      */
     public static KeyPair loadPrivateKeyPair(Path keyPath) throws IOException, GeneralSecurityException {
-        byte[] keyBytes = Files.readAllBytes(keyPath);
-        String keyString = new String(keyBytes, StandardCharsets.UTF_8);
+        var keyBytes = Files.readAllBytes(keyPath);
+        var keyString = new String(keyBytes, StandardCharsets.UTF_8);
 
         if (keyString.contains(PKCS_1_PEM_HEADER)) {
             keyString = keyString.replace(PKCS_1_PEM_HEADER, "");
@@ -103,20 +103,20 @@ public final class EncryptionUtils {
     private static KeyPair readPkcs8PrivateKey(byte[] pkcs8Bytes) throws GeneralSecurityException {
         InvalidKeySpecException exception;
         try {
-            KeyFactory keyFactory = KeyFactory.getInstance(RSA_TYPE);
+            var keyFactory = KeyFactory.getInstance(RSA_TYPE);
             KeySpec keySpec = new PKCS8EncodedKeySpec(pkcs8Bytes);
-            RSAPrivateCrtKey privateKey = (RSAPrivateCrtKey) keyFactory.generatePrivate(keySpec);
-            RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(privateKey.getModulus(),
+            var privateKey = (RSAPrivateCrtKey) keyFactory.generatePrivate(keySpec);
+            var publicKeySpec = new RSAPublicKeySpec(privateKey.getModulus(),
                     privateKey.getPublicExponent());
             return new KeyPair(keyFactory.generatePublic(publicKeySpec), privateKey);
         } catch (InvalidKeySpecException e) {
             exception = e;
         }
         try {
-            KeyFactory keyFactory = KeyFactory.getInstance(EC_TYPE);
+            var keyFactory = KeyFactory.getInstance(EC_TYPE);
             KeySpec keySpec = new PKCS8EncodedKeySpec(pkcs8Bytes);
-            ECPrivateKey privateKey = (ECPrivateKey) keyFactory.generatePrivate(keySpec);
-            ECPublicKeySpec publicKeySpec = new ECPublicKeySpec(privateKey.getParams().getGenerator(),
+            var privateKey = (ECPrivateKey) keyFactory.generatePrivate(keySpec);
+            var publicKeySpec = new ECPublicKeySpec(privateKey.getParams().getGenerator(),
                     privateKey.getParams());
             return new KeyPair(keyFactory.generatePublic(publicKeySpec), privateKey);
         } catch (InvalidKeySpecException e) {
@@ -127,8 +127,8 @@ public final class EncryptionUtils {
 
     private static KeyPair readPkcs1PrivateKey(byte[] pkcs1Bytes) throws GeneralSecurityException {
         // We can't use Java internal APIs to parse ASN.1 structures, so we build a PKCS#8 key Java can understand
-        int pkcs1Length = pkcs1Bytes.length;
-        int totalLength = pkcs1Length + 22;
+        var pkcs1Length = pkcs1Bytes.length;
+        var totalLength = pkcs1Length + 22;
         // reference to https://github.com/Mastercard/client-encryption-java/blob/master/src/main/java/com/mastercard/developer/utils/EncryptionUtils.java#L95-L100
         // this method can save us from importing BouncyCastle as dependency
         byte[] pkcs8Header = {0x30, (byte) 0x82, (byte) ((totalLength >> 8) & 0xff), (byte) (totalLength & 0xff),
@@ -139,12 +139,12 @@ public final class EncryptionUtils {
                 0x4, (byte) 0x82, (byte) ((pkcs1Length >> 8) & 0xff), (byte) (pkcs1Length & 0xff)
                 // Octet string + length
         };
-        byte[] pkcs8bytes = join(pkcs8Header, pkcs1Bytes);
+        var pkcs8bytes = join(pkcs8Header, pkcs1Bytes);
         return readPkcs8PrivateKey(pkcs8bytes);
     }
 
     private static byte[] join(byte[] byteArray1, byte[] byteArray2) {
-        byte[] bytes = new byte[byteArray1.length + byteArray2.length];
+        var bytes = new byte[byteArray1.length + byteArray2.length];
         System.arraycopy(byteArray1, 0, bytes, 0, byteArray1.length);
         System.arraycopy(byteArray2, 0, bytes, byteArray1.length, byteArray2.length);
         return bytes;
