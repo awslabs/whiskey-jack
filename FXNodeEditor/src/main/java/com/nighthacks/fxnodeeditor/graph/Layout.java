@@ -137,7 +137,7 @@ public class Layout {
             var sum = 0;
             var count = 0;
             for(var o:n.outputs)
-                for(var p:o.goesTo) {
+                for(var p:o.connectsTo) {
                     sum += p.vizorder;
                     count += 1;
                 }

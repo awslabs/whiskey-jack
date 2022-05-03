@@ -4,13 +4,18 @@
  */
 package com.nighthacks.fxnodeeditor.graph;
 
-import com.nighthacks.fxnodeeditor.meta.MNode;
-import com.nighthacks.fxnodeeditor.meta.Port;
+import com.nighthacks.fxnodeeditor.meta.*;
 import java.util.*;
 
 public class OutArc extends ArcEndpoint {
     OutArc(Port m, FGNode c) {
         super(m, c);
     }
-    final ArrayList<InArc> goesTo = new ArrayList<>();
+    final ArrayList<InArc> connectsTo = new ArrayList<>();
+    @Override
+    public void setViewText() {
+        var v = getView();
+        if(v != null)
+            v.setText(meta.name);
+    }
 }

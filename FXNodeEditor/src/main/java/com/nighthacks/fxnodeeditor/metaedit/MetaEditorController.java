@@ -16,7 +16,8 @@ import javafx.scene.control.*;
 import javafx.stage.*;
 
 public class MetaEditorController implements Initializable {
-    public static void edit(MNode m) {
+    public static void edit(MNode m, NodeEditorController parent) {
+        nec = parent;
         if(singleton != null)
             singleton.populate(m);
         else {
@@ -30,11 +31,13 @@ public class MetaEditorController implements Initializable {
             Parent root = new FXMLLoader(MetaEditorController.class.getResource("MetaEditor.fxml")).load();
             var scene = new Scene(root, 600, 800);
             stage = new Stage();
+            stage.setTitle("Product catalog entry editor");
             stage.setScene(scene);
         } catch(Throwable ex) {
             Dlg.error("Launching meta editor dialog", ex);
         }
     }
+    private static NodeEditorController nec;
     private MNode current;
     private static MNode first;
     private static MetaEditorController singleton;
@@ -53,8 +56,6 @@ public class MetaEditorController implements Initializable {
     private ListView<Port> meParamList;
     @FXML
     private TextField meParameterName;
-    @FXML
-    private Button meSave;
     @FXML
     private ComboBox<String> meType;
     @FXML
@@ -79,7 +80,9 @@ public class MetaEditorController implements Initializable {
         System.out.println("meDelete");
     }
     private void populate(MNode mn) {
+        if(mn==current) return;
         current = mn;
+        selectParam(null);
         if(mn != null) {
             current = mn;
             meName.setText(mn.name);
@@ -87,16 +90,48 @@ public class MetaEditorController implements Initializable {
             var items = meParamList.getItems();
             items.clear();
             mn.forAllChildren(p -> items.add(p));
-
         }
     }
+    private Port currentPort;
     private void selectParam(Port ae) {
+        if(currentPort == ae) return;
+        if(currentPort!=null) {
+            var name = meParameterName.getText();
+            if(!Objects.equals(name, currentPort.name)) {
+                currentPort.name = name;
+                nec.adjustNames();
+                currentPort.setDirty();
+            }
+            var desc = meParamDesc.getText();
+            if(!Objects.equals(desc, currentPort.description)) {
+                currentPort.description = desc;
+                currentPort.setDirty();
+            }
+            var value = meValue.getText();
+            if(!Objects.equals(value, currentPort.dflt)) {
+                currentPort.dflt = value;
+                currentPort.setDirty();
+            }
+            var type = meType.getValue();
+            if(!Objects.equals(type, currentPort.type)) {
+                currentPort.dflt = type;
+                currentPort.setDirty();
+            }
+        }
         if(ae != null) {
             meIsInput.setSelected(ae.in);
             meParameterName.setText(ae.name);
             meValue.setText(Coerce.toString(ae.dflt));
             meParamDesc.setText(ae.description);
             meType.selectionModelProperty().get().select(ae.type);
+            currentPort = ae;
+        } else {
+            meIsInput.setSelected(false);
+            meParameterName.setText("");
+            meValue.setText("");
+            meParamDesc.setText("");
+            meType.selectionModelProperty().get().select("");
+            currentPort = null;
         }
     }
 }

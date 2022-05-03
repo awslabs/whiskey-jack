@@ -17,19 +17,23 @@ public class Dlg {
     private final VBox body = new VBox();
     private VBox expandable;
     public static void error(Object... o) {
-        new Dlg().show(o);
+        new Dlg().show(true, o);
     }
     private Dlg() {
     }
-    private void show(Object... o) {
-        body.getStyleClass().add("errorDialog");
+    private void show(boolean isError, Object... o) {
         var d = new Dialog();
+        if(isError) {
         var img = new ImageView(errorIcon);
         img.setPreserveRatio(true);
         img.setFitHeight(64);
         d.setGraphic(img);
+        body.getStyleClass().add("errorDialog");
+        } else {
+        body.getStyleClass().add("noteDialog");
+        }
         var dp = d.getDialogPane();
-        dp.getStyleClass().add("error");
+        dp.getStyleClass().add(isError ? "error" : "note");
         dp.setContent(body);
         addStuff(o, "dlgTitle");
         dp.setExpandableContent(expandable);
@@ -83,6 +87,9 @@ public class Dlg {
                 l.getStyleClass().add(style);
                 v.add(l);
             }
+    }
+    public static void note(Object... o) {
+        new Dlg().show(false, o);
     }
     static final private Image errorIcon = new Image(FGNode.class.getResourceAsStream("Oops.png"));
 

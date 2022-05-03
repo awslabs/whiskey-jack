@@ -7,8 +7,8 @@ package com.nighthacks.fxnodeeditor.meta;
 import com.nighthacks.fxnodeeditor.graph.*;
 import static com.nighthacks.fxnodeeditor.meta.Port.*;
 import com.nighthacks.fxnodeeditor.util.*;
-import static com.nighthacks.fxnodeeditor.util.Collectable.*;
 import static com.nighthacks.fxnodeeditor.util.Utils.*;
+import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
@@ -29,10 +29,10 @@ public class MNode extends Collectable implements Comparable<MNode>  {
     public String description;
     public String domain;
     Map<String, MNode> children = null;
-    final Map<String,Port> in = new LinkedHashMap<>();
-    final Map<String,Port> out = new LinkedHashMap<>();
+    final Map<String,Port> ports = new LinkedHashMap<>();
     void createPort(String name, Object dflt, final boolean isIn) {
-        var p = (isIn ? in : out).computeIfAbsent(name, n->new Port(nslot(isIn), isIn, n, this));
+        if("v".equals(name)) name = isIn ? "in" : "out";
+        var p = ports.computeIfAbsent(name, n->new Port(nslot(isIn), isIn, n, this));
         if(dflt instanceof Map m) {
             p.dflt = Coerce.get(m, "default", null);
             p.type = Coerce.get(m, "type", null);
@@ -43,10 +43,13 @@ public class MNode extends Collectable implements Comparable<MNode>  {
             p.type = guessType(dflt);
         }
     }
-    public boolean isEmpty() { return in.isEmpty() && out.isEmpty(); }
+    public boolean isEmpty() { return ports.isEmpty(); }
     public boolean isRoot() { return false; }
     private int nslot(boolean isIn) {
-        return (isIn ? in : out).size();
+        int ns = 0;
+        for(var p:ports.values())
+            if(isIn==p.in) ns++;
+        return ns;
     }
     MNode get(String n) {
         return children == null ? null : children.get(n);
@@ -59,8 +62,7 @@ public class MNode extends Collectable implements Comparable<MNode>  {
         }
     }
     public void forAllChildren(Consumer<Port> c) {
-        in.values().forEach(c);
-        out.values().forEach(c);
+        ports.values().forEach(c);
     }
     MNode createIfAbsent(String n) {
         if(children == null)
@@ -111,7 +113,8 @@ public class MNode extends Collectable implements Comparable<MNode>  {
     }
     private void lports(boolean isIn, StringBuilder sb) {
         var first = true;
-        for(var p: (isIn ? in : out).values()) {
+        for(var p: ports.values())
+            if(isIn==p.in) {
                 if(first)
                     first = false;
                 else
@@ -126,21 +129,58 @@ public class MNode extends Collectable implements Comparable<MNode>  {
     @Override
     public Object collect() {
         var m = new LinkedHashMap<String, Object>();
-        if(!in.isEmpty())
-            m.put("in", asObject(in));
-        if(!out.isEmpty())
-            m.put("out", asObject(out));
+        if(!ports.isEmpty())
+            m.put("ports", Collectable.asObject(ports));
         if(children!=null && !children.isEmpty())
-            m.put("children", asObject(children));
+            m.put("children", Collectable.asObject(children));
         if(!"Anywhere".equals(domain))
             m.put("domain", domain);
         return m;
     }
 
-    public void forEach(Consumer<MNode> f) {
+    public void forAllLeaves(Consumer<MNode> f) {
         if(children == null)
             f.accept(this);
         else
-            children.values().forEach(v->v.forEach(f));
+            children.values().forEach(v->v.forAllLeaves(f));
+    }
+    public void forEach(Consumer<MNode> f) {
+        if(children != null)
+            children.values().forEach(v->f.accept(v));
+    }
+    public void setDirty() {
+        if(!dirty) {
+            dirty = true;
+            if(parent!=null) parent.setDirty();
+        }
+    }
+    private void clearDirty() {
+        if(dirty) {
+            dirty = false;
+            forEach(c->clearDirty());
+        }
+    }
+    private boolean dirty;
+    public void writeDirty(List<String> results) {
+        if(dirty) {
+            System.out.println("Write "+fullname()+": "+fromFile);
+            if(fromFile !=null) {
+                System.out.println("writing "+fullname()+" to "+fromFile);
+                try(var out = CommitableWriter.abandonOnClose(fromFile)) {
+                    NodeEditorController.fileio.writeValue(out, asObject(this));
+                    out.commit();
+                    results.add("Write "+fromFile);
+                    System.out.println("Wrote "+fromFile);
+                } catch(IOException ex) {
+                    Dlg.error("Failed to write "+fullname(),"to file "+fromFile,ex);
+                }
+            } else {
+                dirty = false;
+                System.out.println("Loop "+children.size());
+                forEach(m->m.writeDirty(results));
+            }
+            clearDirty();
+        }
+        else System.out.println("Clean "+fullname()+": "+fromFile);
     }
 }

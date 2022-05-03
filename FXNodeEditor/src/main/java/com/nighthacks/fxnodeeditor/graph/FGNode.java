@@ -105,6 +105,7 @@ public class FGNode extends Collectable {
                 if(colon > 0) {
                     var u = un.substring(0, colon);
                     var n = un.substring(colon + 1);
+                    if("v".equals(n)) n = "out";
                     var fgn = controller.nByUid.get(u);
                     for(var in: fgn.outputs)
                         if(in.meta.name.equals(n))
@@ -116,11 +117,11 @@ public class FGNode extends Collectable {
     public void delete() {
         var firstInput = inputs.stream().filter(i -> i.comesFrom != null).findFirst().orElse(null);
         var out0 = firstInput != null ? firstInput.comesFrom : null;
-        var firstOutput = outputs.stream().filter(i -> !i.goesTo.isEmpty()).findFirst().orElse(null);
-        var in0 = firstOutput != null ? firstOutput.goesTo.get(0) : null;
+        var firstOutput = outputs.stream().filter(i -> !i.connectsTo.isEmpty()).findFirst().orElse(null);
+        var in0 = firstOutput != null ? firstOutput.connectsTo.get(0) : null;
         inputs.forEach(ia -> ia.setIncoming(null));
         var in = new ArrayList<InArc>();
-        outputs.forEach(oa -> in.addAll(oa.goesTo));
+        outputs.forEach(oa -> in.addAll(oa.connectsTo));
         in.forEach(n -> n.setIncoming(null));
         controller.nodeEditor.getChildren().remove(view);
         controller.nByUid.remove(uid);

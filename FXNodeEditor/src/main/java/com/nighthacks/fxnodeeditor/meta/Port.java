@@ -31,6 +31,9 @@ public class Port extends Collectable {
             m.put("type", type);
         if(!isEmpty(description))
             m.put("description", description);
+        m.put("name",name);
+        if(in) m.put("in", true);
+        System.out.println(name+" = "+deepToString(m));
         return m.size() == 1  && m.containsKey("default") ? dflt : m;
     }
     @Override
@@ -64,6 +67,9 @@ public class Port extends Collectable {
                 yield "String";
             }
         };
+    }
+    public void setDirty() {
+        outer.setDirty();
     }
     // must be used single-threaded
     static final Matcher isBoolean = Pattern.compile("true|false").matcher("");

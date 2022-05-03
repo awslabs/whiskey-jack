@@ -14,7 +14,9 @@ public class MNodeTreeModel {
     static final Image cursor = new Image(FGNode.class.getResourceAsStream("CreateNodeCursor.png"));
     TreeView tree;
     NodeLibrary lib;
-    public void initialize(TreeView t, NodeLibrary l) {
+    NodeEditorController nec;
+    public void initialize(TreeView t, NodeLibrary l, NodeEditorController n) {
+        nec = n;
         tree = t;
         lib = l;
         t.setRoot(new nTreeItem(lib.root));
@@ -45,7 +47,7 @@ public class MNodeTreeModel {
                     setOnMouseClicked((MouseEvent mouseEvent) -> {
                         if(mouseEvent.getButton().equals(MouseButton.PRIMARY))
                             if(mouseEvent.getClickCount() == 2)
-                                MetaEditorController.edit(getItem());
+                                MetaEditorController.edit(getItem(), n);
                     });
                 }
             };

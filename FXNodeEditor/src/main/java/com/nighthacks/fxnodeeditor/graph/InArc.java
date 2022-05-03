@@ -4,8 +4,7 @@
  */
 package com.nighthacks.fxnodeeditor.graph;
 
-import com.nighthacks.fxnodeeditor.meta.MNode;
-import com.nighthacks.fxnodeeditor.meta.Port;
+import com.nighthacks.fxnodeeditor.meta.*;
 import java.util.*;
 import javafx.application.*;
 import javafx.css.*;
@@ -42,7 +41,7 @@ public class InArc extends ArcEndpoint {
             return;
         if(n == null) {
             if(comesFrom != null)
-                comesFrom.goesTo.remove(this);
+                comesFrom.connectsTo.remove(this);
             comesFrom = null;
             if(viz != null) {
                 container.controller.nodeEditor.getChildren().remove(viz);
@@ -50,7 +49,7 @@ public class InArc extends ArcEndpoint {
             }
         } else {
             comesFrom = n;
-            comesFrom.goesTo.add(this);
+            comesFrom.connectsTo.add(this);
             if(viz == null) {
                 viz = new CubicCurve();
                 viz.hoverProperty().addListener(b -> {
@@ -85,7 +84,8 @@ public class InArc extends ArcEndpoint {
         super.setView(v);
         setViewText();
     }
-    private void setViewText() {
+    @Override
+    public void setViewText() {
         var v = getView();
         if(v != null)
             v.setText(comesFrom == null

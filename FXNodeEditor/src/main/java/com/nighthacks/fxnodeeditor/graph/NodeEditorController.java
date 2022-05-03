@@ -24,7 +24,6 @@ import javafx.scene.*;
 import javafx.scene.control.*;
 import static javafx.scene.input.KeyCode.*;
 import javafx.scene.input.*;
-import static javafx.scene.input.KeyCode.*;
 import javafx.scene.layout.*;
 
 public class NodeEditorController extends Collectable implements Initializable {
@@ -48,7 +47,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         Thread.setDefaultUncaughtExceptionHandler((t, error) -> Dlg.error("In " + t.getName(), error));
         mnodes.initialize();
-        mNodeTreeModel.initialize(navTree, mnodes);
+        mNodeTreeModel.initialize(navTree, mnodes, this);
         mnodes.forAll(n -> {
             if(!n.isEmpty()) {
                 var namePath = toStringArray("Add", n);
@@ -132,9 +131,9 @@ public class NodeEditorController extends Collectable implements Initializable {
             case HOME -> {
                 switch(hovered) {
                     default ->
-                        Dlg.error("Hover over a node or arc to delete it");
+                        Dlg.error("Hover over a node or arc to edit it");
                     case FGNode n ->
-                        MetaEditorController.edit(n.meta);
+                        MetaEditorController.edit(n.meta, this);
                 }
             }
         }
@@ -235,15 +234,27 @@ public class NodeEditorController extends Collectable implements Initializable {
             Dlg.error("Error adding node", t);
         }
     }
-    private final AtomicBoolean adjustQueued = new AtomicBoolean(false);
+    private final AtomicBoolean adjustArcsQueued = new AtomicBoolean(false);
     public void adjustArcs() {
-        if(adjustQueued.getAndSet(true))
+        if(adjustArcsQueued.getAndSet(true))
             return;
         Platform.runLater(() -> {
-            adjustQueued.set(false);
+            adjustArcsQueued.set(false);
             var t = nodeEditor.getLocalToSceneTransform();
             nByUid.values().forEach(n
                     -> n.inputs.forEach(a -> a.reposition(t)));
+        });
+    }
+    private final AtomicBoolean adjustNamesQueued = new AtomicBoolean(false);
+    public void adjustNames() {
+        if(adjustNamesQueued.getAndSet(true))
+            return;
+        Platform.runLater(() -> {
+            adjustNamesQueued.set(false);
+            nByUid.values().forEach(n -> {
+                n.inputs.forEach(a->a.setViewText());
+                n.outputs.forEach(a->a.setViewText());
+            });
         });
     }
     @Override

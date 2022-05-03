@@ -4,13 +4,12 @@
  */
 package com.nighthacks.fxnodeeditor.graph;
 
-import com.nighthacks.fxnodeeditor.meta.MNode;
-import com.nighthacks.fxnodeeditor.meta.Port;
+import com.nighthacks.fxnodeeditor.meta.*;
 import javafx.geometry.*;
 import javafx.scene.transform.*;
 import javax.annotation.*;
 
-public class ArcEndpoint {
+public abstract class ArcEndpoint {
     ArcEndpoint(@Nonnull Port m, @Nonnull FGNode c) {
         meta = m;
         container = c;
@@ -38,4 +37,5 @@ public class ArcEndpoint {
             return new Point2D(0,0);
         }
     }
+    public abstract void setViewText();
 }

@@ -18,7 +18,6 @@ import javafx.event.*;
  * A library of meta nodes.  The "product catalog"
  */
 public class NodeLibrary {
-    public final Map<String, MNode> flatmap = new HashMap<>();
     public final MNode root = new MNode(null, "root") {
         @Override
         public boolean isRoot() {
@@ -26,13 +25,8 @@ public class NodeLibrary {
         }
     };
     private Path rootPath;
-    public MNode add(String group, String name) {
-        var n = root.createIfAbsent(group).createIfAbsent(name);
-        flatmap.put(name, n);
-        return n;
-    }
     public void forAll(Consumer<MNode> f) {
-        root.forEach(f);
+        root.forAllLeaves(f);
     }
     public MNode createIfAbsent(String name) {
         if(isEmpty(name) || "root".equals(name))
@@ -47,7 +41,8 @@ public class NodeLibrary {
         return o.getClass().getCanonicalName();
     }
     public void exportAction(ActionEvent t) {
-        saveAllAs(rootPath.resolve("total.mn"));
+        saveAllDirty();
+//        saveAllAs(rootPath.resolve("total.mn"));
     }
     public void saveAllAs(Path p) {
         try( var out = CommitableWriter.abandonOnClose(p)) {
@@ -56,6 +51,13 @@ public class NodeLibrary {
         } catch(IOException ioe) {
             Dlg.error("Can't save file", ioe);
         }
+    }
+    public void saveAllDirty() {
+        System.out.println("Save All Dirty");
+        var l = new ArrayList<String>();
+        root.writeDirty(l);
+        if(l.isEmpty()) Dlg.note("No modified product catalogs");
+        else Dlg.note("Wrote:"+l);
     }
     public void load(String tag, Path fn) {
         try {
