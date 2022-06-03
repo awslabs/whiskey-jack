@@ -80,13 +80,13 @@ public class InArc extends ArcEndpoint {
         Platform.runLater(() -> setViewText());
     }
     @Override
-    public void setView(FGNode.PortView v) {
+    public void setView(PortView v) {
         super.setView(v);
         setViewText();
     }
     @Override
     public void setViewText() {
-        var v = getView();
+        com.nighthacks.fxnodeeditor.graph.PortView v = getView();
         if(v != null)
             v.setText(comesFrom == null
                     ? meta.name + ": " + value

@@ -14,7 +14,7 @@ public class DragAssist {
     public static final Object dummy = new Serializable() {
     };
     public static OutArc createArc;
-    public static MNode createNode;
+    public static MetaNode createNode;
     public static double targetX;
     public static double targetY;
     public static void dragClean() {

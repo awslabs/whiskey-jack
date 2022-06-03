@@ -18,9 +18,9 @@ public abstract class ArcEndpoint {
     @Nonnull final Port meta;
     @Nonnull final FGNode container;
     final String uname;
-    private FGNode.PortView view;
-    public void setView(FGNode.PortView v) { view = v; }
-    public FGNode.PortView getView() {
+    private PortView view;
+    public void setView(PortView v) { view = v; }
+    public PortView getView() {
         return view;
     }
     @Override public String toString() { return container.meta.name+"."+meta.name; }

@@ -16,7 +16,7 @@ import javafx.scene.control.*;
 import javafx.stage.*;
 
 public class MetaEditorController implements Initializable {
-    public static void edit(MNode m, NodeEditorController parent) {
+    public static void edit(MetaNode m, NodeEditorController parent) {
         nec = parent;
         if(singleton != null)
             singleton.populate(m);
@@ -38,8 +38,8 @@ public class MetaEditorController implements Initializable {
         }
     }
     private static NodeEditorController nec;
-    private MNode current;
-    private static MNode first;
+    private MetaNode current;
+    private static MetaNode first;
     private static MetaEditorController singleton;
     private static Stage stage;
     @FXML
@@ -79,7 +79,7 @@ public class MetaEditorController implements Initializable {
     void meDelete(ActionEvent event) {
         System.out.println("meDelete");
     }
-    private void populate(MNode mn) {
+    private void populate(MetaNode mn) {
         if(mn==current) return;
         current = mn;
         selectParam(null);
@@ -114,7 +114,7 @@ public class MetaEditorController implements Initializable {
             }
             var type = meType.getValue();
             if(!Objects.equals(type, currentPort.type)) {
-                currentPort.dflt = type;
+                currentPort.type = type;
                 currentPort.setDirty();
             }
         }

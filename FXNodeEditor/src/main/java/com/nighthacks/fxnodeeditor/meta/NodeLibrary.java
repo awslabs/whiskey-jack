@@ -18,17 +18,17 @@ import javafx.event.*;
  * A library of meta nodes.  The "product catalog"
  */
 public class NodeLibrary {
-    public final MNode root = new MNode(null, "root") {
+    public final MetaNode root = new MetaNode(null, "root") {
         @Override
         public boolean isRoot() {
             return true;
         }
     };
     private Path rootPath;
-    public void forAll(Consumer<MNode> f) {
+    public void forAll(Consumer<MetaNode> f) {
         root.forAllLeaves(f);
     }
-    public MNode createIfAbsent(String name) {
+    public MetaNode createIfAbsent(String name) {
         if(isEmpty(name) || "root".equals(name))
             return root;
         var names = joiners.split(name);
@@ -61,11 +61,11 @@ public class NodeLibrary {
     }
     public void load(String tag, Path fn) {
         try {
-            System.out.println("load " + tag + " " + fn);
+//            System.out.println("load " + tag + " " + fn);
             CommitableReader.of(fn).read(in -> {
                 var fromFile = fn;
                 var v = NodeEditorController.fileio.readValue(in, Object.class);
-                System.out.println(Utils.deepToString(v, 80));
+//                System.out.println(Utils.deepToString(v, 80));
                 switch(v) {
                     case Map m -> {
                         var rootName = Coerce.get(m, "name", "");
@@ -90,7 +90,7 @@ public class NodeLibrary {
         } catch(Throwable t) {
             Dlg.error("Couldn't scan parts catalog", t);
         }
-        root.dump(0);
+//        root.dump(0);
     }
     private static final Pattern joiners = Pattern.compile(" *[.,:/] *");
 }

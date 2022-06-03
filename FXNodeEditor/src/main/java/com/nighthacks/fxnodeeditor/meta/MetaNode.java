@@ -17,19 +17,30 @@ import java.util.function.*;
  * The meta information needed to understand a node.  It's like a "class" in
  * objected-oriented programming.
  */
-public class MNode extends Collectable implements Comparable<MNode>  { 
-    public MNode(MNode p, String n) {
+public class MetaNode extends Collectable implements Comparable<MetaNode>  { 
+    public MetaNode(MetaNode p, String n) {
         parent = p;
         name = n;
     }
     Path fromFile;
-    public final MNode parent;
+    public final MetaNode parent;
     public final String name;
     public String tooltip;
     public String description;
     public String domain;
-    Map<String, MNode> children = null;
+    Map<String, MetaNode> children = null;
     final Map<String,Port> ports = new LinkedHashMap<>();
+    public boolean hasOutputs() {
+        return hasIO(false);
+    }
+    public boolean hasInputs() {
+        return hasIO(true);
+    }
+    private boolean hasIO(boolean in) {
+        for(var p:ports.values())
+            if(in==p.in) return true;
+        return false;
+    }
     void createPort(String name, Object dflt, final boolean isIn) {
         if("v".equals(name)) name = isIn ? "in" : "out";
         var p = ports.computeIfAbsent(name, n->new Port(nslot(isIn), isIn, n, this));
@@ -51,7 +62,7 @@ public class MNode extends Collectable implements Comparable<MNode>  {
             if(isIn==p.in) ns++;
         return ns;
     }
-    MNode get(String n) {
+    MetaNode get(String n) {
         return children == null ? null : children.get(n);
     }
     void remove(String n) {
@@ -64,23 +75,24 @@ public class MNode extends Collectable implements Comparable<MNode>  {
     public void forAllChildren(Consumer<Port> c) {
         ports.values().forEach(c);
     }
-    MNode createIfAbsent(String n) {
+    MetaNode createIfAbsent(String n) {
         if(children == null)
             children = new LinkedHashMap<>();
-        return children.computeIfAbsent(n, nm -> new MNode(MNode.this, nm));
+        return children.computeIfAbsent(n, nm -> new MetaNode(MetaNode.this, nm));
     }
     void merge(Object o) {
         if(o instanceof Map m) merge(m);
         else Dlg.error("While reading "+fullname(),"found unexpected value",deepToString(o));
     }
     void merge(Map m) {
-        System.out.println("Merge into "+fullname());
+//        System.out.println("Merge into "+fullname());
         tooltip = Coerce.get(m, "tooltip", null);
         description = Coerce.get(m, "description", null);
         domain = Coerce.get(m, "domain", "Anywhere");
         Coerce.getMap(m, "children").forEach((k,v)->createIfAbsent(Coerce.toString(k)).merge(v));
         Coerce.getMap(m, "in").forEach((k,v)->createPort(Coerce.toString(k),v,true));
         Coerce.getMap(m, "out").forEach((k,v)->createPort(Coerce.toString(k),v,false));
+        Coerce.getMap(m, "ports").forEach((k,v)->createPort(Coerce.toString(k),v,true));
     }
     @Override
     public String toString() {
@@ -123,28 +135,44 @@ public class MNode extends Collectable implements Comparable<MNode>  {
             }
     }
     @Override
-    public int compareTo(MNode o) {
+    public int compareTo(MetaNode o) {
         return name.compareToIgnoreCase(o.name);
     }
     @Override
     public Object collect() {
         var m = new LinkedHashMap<String, Object>();
-        if(!ports.isEmpty())
-            m.put("ports", Collectable.asObject(ports));
+//        if(!ports.isEmpty())
+//            m.put("ports", Collectable.asObject(ports));
+//    if(!in.isEmpty())
+//            m.put("in", asObject(in));
+//        if(!out.isEmpty())
+//            m.put("out", asObject(out));
+        collectChildren(m, true);
+        collectChildren(m, false);
         if(children!=null && !children.isEmpty())
             m.put("children", Collectable.asObject(children));
         if(!"Anywhere".equals(domain))
             m.put("domain", domain);
         return m;
     }
+    private void collectChildren(Map<String,Object> m, boolean in) {
+    Map<String,Port> ret = new LinkedHashMap<>();
+        ports.forEach((k,p)->{
+            if(p.in == in)
+                ret.put(k, p);
+        });
+        if(!ret.isEmpty()) {
+            m.put(in ? "in" : "out", asObject(ret));
+        }
+    }
 
-    public void forAllLeaves(Consumer<MNode> f) {
+    public void forAllLeaves(Consumer<MetaNode> f) {
         if(children == null)
             f.accept(this);
         else
             children.values().forEach(v->v.forAllLeaves(f));
     }
-    public void forEach(Consumer<MNode> f) {
+    public void forEach(Consumer<MetaNode> f) {
         if(children != null)
             children.values().forEach(v->f.accept(v));
     }

@@ -14,7 +14,7 @@ public class OutArc extends ArcEndpoint {
     final ArrayList<InArc> connectsTo = new ArrayList<>();
     @Override
     public void setViewText() {
-        var v = getView();
+        com.nighthacks.fxnodeeditor.graph.PortView v = getView();
         if(v != null)
             v.setText(meta.name);
     }

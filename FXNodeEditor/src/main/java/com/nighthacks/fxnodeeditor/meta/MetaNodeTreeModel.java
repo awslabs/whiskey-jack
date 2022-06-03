@@ -10,7 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
 
-public class MNodeTreeModel {
+public class MetaNodeTreeModel {
     static final Image cursor = new Image(FGNode.class.getResourceAsStream("CreateNodeCursor.png"));
     TreeView tree;
     NodeLibrary lib;
@@ -22,9 +22,9 @@ public class MNodeTreeModel {
         t.setRoot(new nTreeItem(lib.root));
         t.setShowRoot(false);
         t.setCellFactory(i -> {
-            var ret = new TreeCell<MNode>() {
+            var ret = new TreeCell<MetaNode>() {
                 @Override
-                protected void updateItem(MNode item, boolean empty) {
+                protected void updateItem(MetaNode item, boolean empty) {
                     super.updateItem(item, empty);
                     if(empty || item == null) {
                         setText(null);
@@ -54,8 +54,8 @@ public class MNodeTreeModel {
             return ret;
         });
     }
-    class nTreeItem extends TreeItem<MNode> {
-        nTreeItem(MNode m) {
+    private class nTreeItem extends TreeItem<MetaNode> {
+        nTreeItem(MetaNode m) {
             super(m);
             if(m.children != null)
                 m.children.values().forEach(c -> getChildren().add(new nTreeItem(c)));
@@ -65,6 +65,6 @@ public class MNodeTreeModel {
             return getValue().name;
         }
     }
-    static MNode dragSource;
+    static MetaNode dragSource;
 
 }

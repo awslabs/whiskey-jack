@@ -41,7 +41,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     public final Map<String, FGNode> nByUid = new ConcurrentHashMap<>();
     public final Map<FGNode, Map> connections = new HashMap<>();
     public final NodeLibrary mnodes = new NodeLibrary();
-    public final MNodeTreeModel mNodeTreeModel = new MNodeTreeModel();
+    public final MetaNodeTreeModel mNodeTreeModel = new MetaNodeTreeModel();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -60,7 +60,7 @@ public class NodeEditorController extends Collectable implements Initializable {
                 mkaction("Open", this::openAction, KeyCode.O),
                 mkaction("Save", this::saveAction, KeyCode.S),
                 mkaction("New", this::newAction, KeyCode.N),
-                mkaction("Layout", this::layoutAction, KeyCode.L),
+                mkaction("Layout", e->layoutAction(), KeyCode.L),
                 mkaction("Export All Meta", mnodes::exportAction, KeyCode.X),
                 mkaction("Quit", this::quitAction, KeyCode.Q)
         );
@@ -91,7 +91,7 @@ public class NodeEditorController extends Collectable implements Initializable {
             evt.consume();
         });
     }
-    private void addMenu(MNode n, String[] names) {
+    private void addMenu(MetaNode n, String[] names) {
         var items = contextMenu.getItems();
         final var limit = names.length - 1;
         for(var i = 0; i < limit; i++) {
@@ -166,7 +166,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     void newAction(ActionEvent evt) {
         clearAll();
     }
-    void layoutAction(ActionEvent evt) {
+    void layoutAction() {
         new Layout(nByUid.values()).trivialLayout().apply();
     }
     public void loadFile(Path p) {
@@ -183,10 +183,10 @@ public class NodeEditorController extends Collectable implements Initializable {
         connections.clear();
         adjustArcs();
     }
-    public FGNode make(MNode n) {
+    public FGNode make(MetaNode n) {
 //        System.out.println("Creating " + n);
         var model = new FGNode(n, NodeEditorController.this, null);
-        var pane = model.view;
+        com.nighthacks.fxnodeeditor.graph.NodePane pane = model.view;
         pane.setUserData(model);
         nodeEditor.getChildren().add(pane);
         ix++;
@@ -197,14 +197,14 @@ public class NodeEditorController extends Collectable implements Initializable {
                     var cf = in.comesFrom;
                     in.setIncoming(model.outputs.get(0));
                     model.inputs.get(0).setIncoming(cf);
-                    Platform.runLater(() -> layoutAction(null));
+                    Platform.runLater(() -> layoutAction());
                 }
             }
             case OutArc out -> {
                 if(!model.outputs.isEmpty()
                         && !model.inputs.isEmpty()) {
                     model.inputs.get(0).setIncoming(out);
-                    Platform.runLater(() -> layoutAction(null));
+                    Platform.runLater(() -> layoutAction());
                 }
             }
             case null -> {}
@@ -226,7 +226,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     }
     private void add(FGNode model) {
         try {
-            var pane = model.view;
+            com.nighthacks.fxnodeeditor.graph.NodePane pane = model.view;
             pane.setUserData(model);
             nodeEditor.getChildren().add(pane);
             makeDraggable(pane);
@@ -354,7 +354,7 @@ public class NodeEditorController extends Collectable implements Initializable {
                 for(var e: c)
                     appendTo(e, l);
             }
-            case MNode m -> {
+            case MetaNode m -> {
                 if(!m.isRoot()) {
                     appendTo(m.parent, l);
                     l.add(m.name);

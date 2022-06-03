@@ -10,14 +10,14 @@ import java.util.*;
 import java.util.regex.*;
 
 public class Port extends Collectable {
-    private final MNode outer;
+    private final MetaNode outer;
     public final int slot;
     public final boolean in;
     public String name;
     public String description;
     public String type;
     public Object dflt;
-    Port(int s, boolean i, String n, final MNode o) {
+    Port(int s, boolean i, String n, final MetaNode o) {
         outer = o;
         slot = s;
         in = i;
@@ -31,8 +31,8 @@ public class Port extends Collectable {
             m.put("type", type);
         if(!isEmpty(description))
             m.put("description", description);
-        m.put("name",name);
-        if(in) m.put("in", true);
+        //m.put("name",name);
+        //if(!in) m.put("in", false);
         System.out.println(name+" = "+deepToString(m));
         return m.size() == 1  && m.containsKey("default") ? dflt : m;
     }

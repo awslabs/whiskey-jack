@@ -28,7 +28,6 @@ Any value defined here will override the pom.xml file value but is only applicab
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.spaceBeforeTryParen>false</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.spaceBeforeTryParen>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.spaceBeforeSwitchParen>false</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.spaceBeforeSwitchParen>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.redundantWhileBraces>ELIMINATE</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.redundantWhileBraces>
-        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.blankLinesBeforeClass>0</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.blankLinesBeforeClass>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.spaceBeforeColon>false</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.spaceBeforeColon>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.enable-indent>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.enable-indent>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.redundantDoWhileBraces>ELIMINATE</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.redundantDoWhileBraces>
@@ -54,5 +53,6 @@ Any value defined here will override the pom.xml file value but is only applicab
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.visibilityOrder>PUBLIC;PROTECTED;DEFAULT;PRIVATE</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.visibilityOrder>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.keepGettersAndSettersTogether>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.keepGettersAndSettersTogether>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.preferStaticImports>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.preferStaticImports>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.classMembersOrder>FIELD;CONSTRUCTOR;STATIC FIELD;STATIC_INIT;STATIC METHOD;INSTANCE_INIT;METHOD;STATIC CLASS;CLASS</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.classMembersOrder>
     </properties>
 </project-shared-configuration>

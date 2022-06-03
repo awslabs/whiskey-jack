@@ -4,7 +4,7 @@
  */
 package com.nighthacks.fxnodeeditor.util;
 
-import com.nighthacks.fxnodeeditor.meta.MNode;
+import com.nighthacks.fxnodeeditor.meta.MetaNode;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.*;
@@ -40,7 +40,7 @@ public abstract class Collectable {
                 yield c;
             }
         };
-        if(ret instanceof MNode)
+        if(ret instanceof MetaNode)
             throw new Error(ret.toString());
         return ret;
     }
