@@ -6,6 +6,7 @@ package com.nighthacks.fxnodeeditor.graph;
 
 import com.nighthacks.fxnodeeditor.meta.*;
 import com.nighthacks.fxnodeeditor.util.*;
+import static com.nighthacks.fxnodeeditor.util.Utils.*;
 import java.util.*;
 import javafx.geometry.*;
 import javafx.scene.control.*;
@@ -65,7 +66,7 @@ public class FGNode extends Collectable {
     
     private static final Insets noPadding = new Insets(0, 0, 0, 0);
     
-    public static FGNode of(Map m, NodeEditorController c) {
+    public static FGNode of(Map m, NodeEditorController c, Map<FGNode, Map> cx) {
         var uid = Coerce.get(m, "uid", "nouid");
         var prev = c.nByUid.get(uid);
         if(prev != null) {
@@ -85,15 +86,29 @@ public class FGNode extends Collectable {
         });
         var connections = Coerce.getMap(m, "connections");
         if(!connections.isEmpty())
-            c.connections.put(ret, connections);
+            cx.put(ret, connections);
         ret.view.setExpanded(expanded);
         ret.view.setLayoutX(x);
         ret.view.setLayoutY(y);
         return ret;
     }
+    public InArc defaultIn() {
+        if(inputs.isEmpty()) return null;
+        for(var i:inputs)
+            if("in".equals(i.meta.name)) return i;
+        return inputs.get(0);
+    }
+    public OutArc defaultOut() {
+        if(inputs.isEmpty()) return null;
+        for(var i:outputs)
+            if("out".equals(i.meta.name)) return i;
+        return outputs.get(0);
+    }
     public void applyConnections(Map m) {
+//        System.out.println("Apply Connections "+meta.name+" "+uid+"\n\t"+Utils.deepToString(m,100));
         inputs.forEach(a -> {
             var v = m.get(a.meta.name);
+//            System.out.println("  ?"+a.meta.name+" "+v);
             if(v != null) {
                 var un = v.toString();
                 var colon = un.indexOf(':');
@@ -132,10 +147,11 @@ public class FGNode extends Collectable {
         return ret;
     }
     public void delete() {
-        var firstInput = inputs.stream().filter(i -> i.comesFrom != null).findFirst().orElse(null);
+        var firstInput = defaultIn();
         var out0 = firstInput != null ? firstInput.comesFrom : null;
-        var firstOutput = outputs.stream().filter(i -> !i.connectsTo.isEmpty()).findFirst().orElse(null);
-        var in0 = firstOutput != null ? firstOutput.connectsTo.get(0) : null;
+        var firstOutput = defaultOut();
+        var in0 = firstOutput != null && !isEmpty(firstOutput.connectsTo)
+                ? firstOutput.connectsTo.get(0) : null;
         inputs.forEach(ia -> ia.setIncoming(null));
         var in = new ArrayList<InArc>();
         outputs.forEach(oa -> in.addAll(oa.connectsTo));

@@ -1,0 +1,29 @@
+---
+children:
+    dynamo:
+        in:
+            insertion: 0
+            id: none
+        out:
+            query: 0
+
+    timestream:
+        in:
+            insertion: 0
+            id: none
+        out:
+            query: 0
+
+    fleetwise:
+        in:
+            insertion: 0
+            id: none
+        out:
+            query: 0
+
+    aurora:
+        in:
+            insertion: 0
+            id: none
+        out:
+            query: 0

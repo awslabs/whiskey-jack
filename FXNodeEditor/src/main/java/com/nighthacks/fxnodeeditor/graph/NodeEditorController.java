@@ -13,10 +13,13 @@ import com.nighthacks.fxnodeeditor.util.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
+import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.prefs.Preferences;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import static java.util.prefs.Preferences.*;
 import javafx.application.*;
 import javafx.event.*;
 import javafx.fxml.*;
@@ -36,10 +39,10 @@ public class NodeEditorController extends Collectable implements Initializable {
     @FXML
     private TreeView navTree;
     @FXML private Node keyboardRoot;
+    static final Preferences pref = userNodeForPackage(NodeEditorController.class);
     public Object hovered;
     public Node dragNode;
     public final Map<String, FGNode> nByUid = new ConcurrentHashMap<>();
-    public final Map<FGNode, Map> connections = new HashMap<>();
     public final NodeLibrary mnodes = new NodeLibrary();
     public final MetaNodeTreeModel mNodeTreeModel = new MetaNodeTreeModel();
 
@@ -75,7 +78,7 @@ public class NodeEditorController extends Collectable implements Initializable {
             DragAssist.targetY = mouseEvent.getScreenY();
         });
         keyboardRoot.setOnKeyPressed(e -> keyTyped(e));
-        loadFile(dfltFile);
+        openDefault();
         nodeEditor.getStyleClass().add("baseLayer");
         nodeEditor.setOnDragOver(evt -> {
             evt.acceptTransferModes(TransferMode.ANY);
@@ -146,14 +149,19 @@ public class NodeEditorController extends Collectable implements Initializable {
         m.setOnAction(evt);
         return m;
     }
-    private static final Path dfltFile = Exec.deTilde("~/nodes.yaml");
+    private static final Path dfltFile = Exec.deTilde("~/unknown.ang");
     void openAction(ActionEvent evt) {
-//        System.out.println("openAction");
-        loadFile(dfltFile);
+        openDefault();
+    }
+    void openDefault() {
+        if(loadFile(pref.get("lastFile", null))) return;
+        if(loadFile(dfltFile.toString())) return;
+        if(loadFile(this.getClass().getResource("/ang/unknown.ang"))) return;
     }
     void saveAction(ActionEvent evt) {
+        
         try( var w = CommitableWriter.abandonOnClose(dfltFile)) {
-            System.out.println("Writing " + dfltFile);
+//            System.out.println("Writing " + dfltFile);
             fileio.writeValue(w, collect());
             w.commit();
         } catch(IOException ioe) {
@@ -169,19 +177,30 @@ public class NodeEditorController extends Collectable implements Initializable {
     void layoutAction() {
         new Layout(nByUid.values()).trivialLayout().apply();
     }
-    public void loadFile(Path p) {
-        System.out.println("Loading " + p);
-        connections.clear();
-        try( var in = Files.newBufferedReader(p)) {
+    public boolean loadFile(String p) {
+//        System.out.println("String "+p);
+        if(p!=null) try {
+            return loadFile(new File(p).toURI().toURL());
+        } catch(MalformedURLException ex) {
+        }
+        return false;
+    }
+    public boolean loadFile(URL p) {
+        System.out.println("Trying " + p);
+        if(p==null) return false;
+        Map<FGNode, Map> connections = new HashMap<>();
+        try( var in = new InputStreamReader(p.openStream(), StandardCharsets.UTF_8)) {
             for(var n: fileio.readValue(in, Object[].class))
                 if(n instanceof Map m)
-                    add(FGNode.of(m, this));
+                    add(FGNode.of(m, this, connections));
+            connections.forEach((n, m) -> n.applyConnections(m));
+            adjustArcs();
+            System.out.println("Loaded "+p);
+            return true;
         } catch(IOException ioe) {
-            ioe.printStackTrace(System.out);
+//            ioe.printStackTrace(System.out);
+            return false;
         }
-        connections.forEach((n, m) -> n.applyConnections(m));
-        connections.clear();
-        adjustArcs();
     }
     public FGNode make(MetaNode n) {
 //        System.out.println("Creating " + n);
@@ -195,15 +214,15 @@ public class NodeEditorController extends Collectable implements Initializable {
                 if(!model.outputs.isEmpty()
                         && !model.inputs.isEmpty()) {
                     var cf = in.comesFrom;
-                    in.setIncoming(model.outputs.get(0));
-                    model.inputs.get(0).setIncoming(cf);
+                    in.setIncoming(model.defaultOut());
+                    model.defaultIn().setIncoming(cf);
                     Platform.runLater(() -> layoutAction());
                 }
             }
             case OutArc out -> {
                 if(!model.outputs.isEmpty()
                         && !model.inputs.isEmpty()) {
-                    model.inputs.get(0).setIncoming(out);
+                    model.defaultIn().setIncoming(out);
                     Platform.runLater(() -> layoutAction());
                 }
             }

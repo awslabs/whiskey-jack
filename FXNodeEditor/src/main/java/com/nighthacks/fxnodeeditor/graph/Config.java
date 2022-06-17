@@ -14,7 +14,8 @@ import java.util.function.*;
 import java.util.regex.*;
 
 public class Config {
-    private static final Path configDir = Path.of(System.getProperty("user.home", "/tmp"), ".aflowgraph");
+    public static final Path configDir = Path.of(System.getProperty("user.home", "/tmp"), ".ang");
+//    private static final Path configDir = Path.of("/Users/jag/Dropbox/NetBeansProjects/FXNodeEditor/FXNodeEditor/src/main/resources/ang");
     private static final Path propFile = configDir.resolve("config.properties");
     private static final Properties props = new Properties();
     static {

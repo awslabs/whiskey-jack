@@ -119,6 +119,9 @@ public final class Utils {
     public static boolean isEmpty(Collection<?> s) {
         return s == null || s.isEmpty();
     }
+    public static boolean isEmpty(Map<?,?> s) {
+        return s == null || s.isEmpty();
+    }
 
     public static <T extends Collection> T nullEmpty(T s) {
         return s == null || s.isEmpty() ? null : s;

@@ -33,7 +33,7 @@ public class Port extends Collectable {
             m.put("description", description);
         //m.put("name",name);
         //if(!in) m.put("in", false);
-        System.out.println(name+" = "+deepToString(m));
+//        System.out.println(name+" = "+deepToString(m));
         return m.size() == 1  && m.containsKey("default") ? dflt : m;
     }
     @Override

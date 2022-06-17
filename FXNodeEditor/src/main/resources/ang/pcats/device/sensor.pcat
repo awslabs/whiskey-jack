@@ -1,0 +1,51 @@
+---
+children:
+    temperature:
+        in:
+            id: none
+        out:
+            v: 0
+    brightness:
+        in:
+            id: none
+        out:
+            v: 0
+    humidity:
+        in:
+            id: none
+        out:
+            v: 0
+    touch:
+        in:
+            id: none
+        out:
+            v: 
+    switch:
+        in:
+            id: none
+        out:
+            v: false
+    distance:
+        in:
+            id: none
+        out:
+            v: 0
+    angle:
+        in:
+            id: none
+        out:
+            v: 0
+    pressure:
+        in:
+            id: none
+        out:
+            v: 0
+    motion:
+        in:
+            id: none
+        out:
+            v: 0
+    camera:
+        out:
+            image:
+                type: image

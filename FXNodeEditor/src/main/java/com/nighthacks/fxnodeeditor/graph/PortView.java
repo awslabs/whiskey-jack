@@ -49,7 +49,7 @@ public class PortView extends Label {
                         ea.container.controller.hovered = ea;
                         com.nighthacks.fxnodeeditor.graph.FGNode n = ea.container.controller.make(DragAssist.createNode);
                         if(!n.outputs.isEmpty())
-                            ea.setIncoming(n.outputs.get(0));
+                            ea.setIncoming(n.defaultOut());
                         fgnode.controller.layoutAction();
                     }
                     evt.setDropCompleted(true);
@@ -101,7 +101,7 @@ public class PortView extends Label {
                         DragAssist.targetY = evt.getScreenY();
                         outa.container.controller.hovered = outa;
                         com.nighthacks.fxnodeeditor.graph.FGNode n = outa.container.controller.make(DragAssist.createNode);
-                        n.inputs.get(0).setIncoming(outa);
+                        n.defaultIn().setIncoming(outa);
                         fgnode.controller.layoutAction();
                     }
                     evt.setDropCompleted(true);

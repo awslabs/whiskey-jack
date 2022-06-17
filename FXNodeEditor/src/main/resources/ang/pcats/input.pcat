@@ -1,0 +1,15 @@
+---
+
+    children:
+      constant:
+        out:
+          v: 0
+      slider:
+        out:
+          v: 0
+      sin:
+        in:
+          freq: 0.5
+          amp: 1
+        out:
+          v: 0

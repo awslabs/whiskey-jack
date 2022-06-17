@@ -1,0 +1,22 @@
+---
+children:
+    model:
+        domain: with neighbor
+        description: The model data that is output from training for use in recognition
+        in:
+            id: none
+        out:
+            model: 
+                type: mlmodel
+    imageRecognizer:
+        description: |-
+            An algorithm that takes in some model data to use in recognizing
+            images and emit events describing everything recognized.        
+        in:
+            model:
+                type: mlmodel
+            image:
+                type: image
+        out:
+            recognition:
+                type: event
