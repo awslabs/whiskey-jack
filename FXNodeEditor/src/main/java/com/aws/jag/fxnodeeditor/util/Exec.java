@@ -51,7 +51,7 @@ public abstract class Exec implements Closeable {
         addPathEntries(System.getenv(PATH_ENVVAR));
         computeDefaultPathString();
         defaultEnvironment.put("JAVA_HOME", System.getProperty("java.home"));
-        defaultEnvironment.put("HOME", System.getProperty("user.home"));
+        defaultEnvironment.put("HOME", Utils.homePath(null).toString());
     }
 
     protected final AtomicBoolean isClosed = new AtomicBoolean(false);
@@ -86,7 +86,6 @@ public abstract class Exec implements Closeable {
 //        return this;
 //    }
 
-    // TODO Cleanup convenient methods. These are more than necessary
     public String cmd(String... command) throws InterruptedException, IOException {
         return withExec(command).execAndGetStringOutput();
     }

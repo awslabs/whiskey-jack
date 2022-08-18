@@ -86,7 +86,7 @@ public class InArc extends ArcEndpoint {
     }
     @Override
     public void setViewText() {
-        com.aws.jag.fxnodeeditor.graph.PortView v = getView();
+        var v = getView();
         if(v != null)
             v.setText(comesFrom == null
                     ? meta.name + ": " + value

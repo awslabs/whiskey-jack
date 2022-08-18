@@ -19,8 +19,7 @@ import java.util.stream.*;
 
 @SuppressWarnings({"checkstyle:overloadmethodsdeclarationorder", "PMD.AssignmentInOperand"})
 public final class Utils {
-    public static final Path HOME_PATH = Paths.get(System.getProperty("user.home"));
-    private static final char[] rsChars = "abcdefghjklmnpqrstuvwxyz0123456789".toCharArray();
+    public static final Path HOME_PATH = Paths.get(System.getProperty("user.home", "/tmp"));
     private static final char[] hex = "0123456789ABCDEF".toCharArray();
     private static final int OCTAL_RADIX = 8;
     private static final int BASE_10 = 10;
@@ -119,7 +118,7 @@ public final class Utils {
     public static boolean isEmpty(Collection<?> s) {
         return s == null || s.isEmpty();
     }
-    public static boolean isEmpty(Map<?,?> s) {
+    public static boolean isEmpty(Map<?, ?> s) {
         return s == null || s.isEmpty();
     }
 
@@ -168,12 +167,16 @@ public final class Utils {
         var srb = new byte[desiredLength];
         r.nextBytes(srb);
         while(--desiredLength >= 0)
-            sb.append(rsChars[srb[desiredLength] & 31]);
+            sb.append(rsChars[srb[desiredLength] & 077]);
         return sb.toString();
+    }
+    private static final char[] rsChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".toCharArray();
+    static {
+        assert rsChars.length >= 64;
     }
 
     public static Path homePath(String s) {
-        return HOME_PATH.resolve(s);
+        return s == null ? HOME_PATH : HOME_PATH.resolve(s);
     }
 
     /**
@@ -408,6 +411,37 @@ public final class Utils {
         if(value >= BASE_10)
             appendLong(value / BASE_10, out);
         out.append((char) ('0' + value % BASE_10));
+    }
+
+    /** Parse a string into an Object based on what it looks like, "true" and
+     * "false" are the obvious booleans, if it looks like a long or a double,
+     * then that's what's returned.  Otherwise it's returned as a string. */
+    public static Object parseObject(String s) {
+        return switch(s) {
+            case null ->
+                null;
+            case "true" ->
+                Boolean.TRUE;
+            case "false" ->
+                Boolean.FALSE;
+            case "NaN", "nan" ->
+                Double.NaN;
+            case "Inf", "inf" ->
+                Double.POSITIVE_INFINITY;
+            case "-Inf", "-inf" ->
+                Double.NEGATIVE_INFINITY;
+            default -> {
+                var buf = CharBuffer.wrap(s);
+                var res = parseLong(buf);
+                if(buf.remaining() == 0)
+                    yield res;
+                try {
+                    yield Double.valueOf(s);
+                } catch(NumberFormatException err) {
+                    yield s;
+                }
+            }
+        };
     }
 
     public static long parseLong(CharSequence str) {

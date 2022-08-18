@@ -28,7 +28,7 @@ public class MetaEditorController implements Initializable {
     }
     public static void launch() {
         if(singleton == null) try {
-            Parent root = new FXMLLoader(MetaEditorController.class.getResource("MetaEditor.fxml")).load();
+            var root = (Parent)new FXMLLoader(MetaEditorController.class.getResource("MetaEditor.fxml")).load();
             var scene = new Scene(root, 600, 800);
             stage = new Stage();
             stage.setTitle("Product catalog entry editor");
@@ -72,11 +72,11 @@ public class MetaEditorController implements Initializable {
         populate(first);
     }
     @FXML
-    void doSave(ActionEvent event) {
+    public void doSave(ActionEvent event) {
         System.out.println("doSave");
     }
     @FXML
-    void meDelete(ActionEvent event) {
+    public void meDelete(ActionEvent event) {
         System.out.println("meDelete");
     }
     private void populate(MetaNode mn) {

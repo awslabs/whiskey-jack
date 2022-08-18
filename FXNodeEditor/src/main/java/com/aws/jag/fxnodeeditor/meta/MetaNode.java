@@ -57,7 +57,7 @@ public class MetaNode extends Collectable implements Comparable<MetaNode>  {
     public boolean isEmpty() { return ports.isEmpty(); }
     public boolean isRoot() { return false; }
     private int nslot(boolean isIn) {
-        int ns = 0;
+        var ns = 0;
         for(var p:ports.values())
             if(isIn==p.in) ns++;
         return ns;

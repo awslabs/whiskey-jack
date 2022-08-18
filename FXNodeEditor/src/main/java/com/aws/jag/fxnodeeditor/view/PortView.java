@@ -2,47 +2,60 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.aws.jag.fxnodeeditor.graph;
 
-import com.aws.jag.fxnodeeditor.view.*;
+package com.aws.jag.fxnodeeditor.view;
+
+import com.aws.jag.fxnodeeditor.gengraph.*;
+//import com.aws.jag.fxnodeeditor.graph.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
-import javafx.scene.input.*;
+import javax.annotation.*;
 
-public class PortView extends Label {
-    private final FGNode fgnode;
-    static final private Image rightArrow = new Image(FGNode.class.getResourceAsStream("RightArrow.png"));
+class PortView extends Port {
+    public PortView(@Nonnull Graph parent, @Nonnull PortView original) {
+        super(parent, original);
+        init();
+    }
+    public PortView(@Nonnull Graph parent, @Nonnull MetaPort mn) {
+        super(parent, mn);
+        init();
+    }
+    @Override
+    public View getContext() {
+        return (View)super.getContext();
+    }
+    static final private Image rightArrow = new Image(PortView.class.getResourceAsStream("RightArrow.png"));
+    private final Label label = new Label("");
 
     @SuppressWarnings(value="LeakingThisInConstructor")
-    PortView(ArcEndpoint ae, final FGNode o) {
-        super(ae.meta.name);
-        fgnode = o;
-        setGraphicTextGap(4);
-        var in = ae.meta.in;
-        getStyleClass().add(in ? "inPort" : "outPort");
+    private void init() {
+        label.setText(metadata.name);
+        label.setGraphicTextGap(4);
+        var in = metadata.in;
+        label.getStyleClass().add(in ? "inPort" : "outPort");
         var img = new ImageView(rightArrow);
         img.setFitHeight(10);
         img.setPreserveRatio(true);
         img.setCache(true);
         img.setSmooth(true);
-        setGraphic(img);
-        localToSceneTransformProperty().addListener(b -> {
-            fgnode.controller.adjustArcs();
+        label.setGraphic(img);
+        label.localToSceneTransformProperty().addListener(b -> {
+            getContext().adjustArcs();
         });
-        setContentDisplay(in ? ContentDisplay.LEFT : ContentDisplay.RIGHT);
-        switch(ae) {
-            case InArc ea -> {
-                setOnMouseClicked(evt -> {
-                    javafx.scene.control.TextInputDialog td = new TextInputDialog(String.valueOf(ea.value));
-                    td.setHeaderText(ea.meta.name);
+        label.setContentDisplay(in ? ContentDisplay.LEFT : ContentDisplay.RIGHT);
+        /*
+        if(in) {
+                label.setOnMouseClicked(evt -> {
+                    TextInputDialog td = new TextInputDialog(String.valueOf(constantValue));
+                    td.setHeaderText(metadata.name);
                     td.setTitle("Enter new value");
-                    ea.setValue(td.showAndWait());
+                    setValue(td.showAndWait().get());
                 });
-                setOnDragDropped(evt -> {
-                    getStyleClass().remove("good");
+                label.setOnDragDropped(evt -> {
+                    label.getStyleClass().remove("good");
                     if(DragAssist.createArc != null) {
                         ea.setIncoming(DragAssist.createArc);
-                        fgnode.controller.adjustArcs();
+                        within.controller.adjustArcs();
                     } else if(DragAssist.createNode != null) {
                         System.out.println("Create node");
                         DragAssist.targetX = evt.getScreenX();
@@ -51,20 +64,20 @@ public class PortView extends Label {
                         com.aws.jag.fxnodeeditor.graph.FGNode n = ea.container.controller.make(DragAssist.createNode);
                         if(!n.outputs.isEmpty())
                             ea.setIncoming(n.defaultOut());
-                        fgnode.controller.layoutAction();
+                        within.controller.layoutAction();
                     }
                     evt.setDropCompleted(true);
                     evt.consume();
                 });
                 setOnDragOver(evt -> {
-                    if(DragAssist.createNode != null || DragAssist.createArc != null && DragAssist.createArc.container != fgnode) {
+                    if(DragAssist.createNode != null || DragAssist.createArc != null && DragAssist.createArc.container != within) {
                         evt.acceptTransferModes(TransferMode.ANY);
                         evt.consume();
                     }
                 });
                 setOnDragEntered(evt -> {
                     System.out.println("Enter " + ae.meta.name + ": " + DragAssist.createArc);
-                    if(DragAssist.createArc != null && DragAssist.createArc.container != fgnode || DragAssist.createNode != null && DragAssist.createNode.hasOutputs()) {
+                    if(DragAssist.createArc != null && DragAssist.createArc.container != within || DragAssist.createNode != null && DragAssist.createNode.hasOutputs()) {
                         evt.acceptTransferModes(TransferMode.ANY);
                         getStyleClass().add("good");
                         evt.consume();
@@ -74,8 +87,7 @@ public class PortView extends Label {
                     getStyleClass().remove("good");
                     evt.consume();
                 });
-            }
-            case OutArc outa -> {
+            } else  {
                 setOnDragDetected(evt -> {
                     DragAssist.dragClean();
                     javafx.scene.input.Dragboard db = startDragAndDrop(TransferMode.ANY);
@@ -103,7 +115,7 @@ public class PortView extends Label {
                         outa.container.controller.hovered = outa;
                         com.aws.jag.fxnodeeditor.graph.FGNode n = outa.container.controller.make(DragAssist.createNode);
                         n.defaultIn().setIncoming(outa);
-                        fgnode.controller.layoutAction();
+                        within.controller.layoutAction();
                     }
                     evt.setDropCompleted(true);
                     evt.consume();
@@ -114,20 +126,13 @@ public class PortView extends Label {
                         evt.consume();
                     }
                 });
-                    }
-            default -> {
-            }
         }
-        ae.setView(this);
+/* */
     }
-    private static final Image cursor = new Image(FGNode.class.getResourceAsStream("DragTargetCursor.png"));
+    public javafx.scene.Node getView() { return label; }
+    private static final Image cursor = new Image(PortView.class.getResourceAsStream("DragTargetCursor.png"));
     @Override
     public String toString() {
-        return super.toString() + ":" + getText();
+        return super.toString() + ":" + label.getText();
     }
-//    @Override
-//    public View getContext() {
-//        return (View)super.getContext();
-//    }
-
 }

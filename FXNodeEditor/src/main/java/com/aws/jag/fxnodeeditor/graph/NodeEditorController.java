@@ -205,7 +205,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     public FGNode make(MetaNode n) {
 //        System.out.println("Creating " + n);
         var model = new FGNode(n, NodeEditorController.this, null);
-        com.aws.jag.fxnodeeditor.graph.NodePane pane = model.view;
+        var pane = model.view;
         pane.setUserData(model);
         nodeEditor.getChildren().add(pane);
         ix++;
@@ -245,7 +245,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     }
     private void add(FGNode model) {
         try {
-            com.aws.jag.fxnodeeditor.graph.NodePane pane = model.view;
+            var pane = model.view;
             pane.setUserData(model);
             nodeEditor.getChildren().add(pane);
             makeDraggable(pane);
@@ -381,7 +381,7 @@ public class NodeEditorController extends Collectable implements Initializable {
             }
             default -> {
                 if(o.getClass().isArray()) {
-                    int size = Array.getLength(o);
+                    var size = Array.getLength(o);
                     for(var i = 0; i < size; i++)
                         appendTo(Array.get(o, i), l);
                 } else

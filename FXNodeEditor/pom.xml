@@ -82,6 +82,11 @@
                         <!-- Default configuration for running -->
                         <!-- Usage: mvn clean javafx:run -->
                         <id>default-cli</id>
+                        <configuration>
+                            <options>
+                                <option>-ea</option>
+                            </options>
+                        </configuration>
                     </execution>
                     <execution>
                         <!-- Configuration for manual attach debugging -->
@@ -90,6 +95,7 @@
                         <configuration>
                             <options>
                                 <option>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=localhost:8000</option>
+                                <option>-ea</option>
                             </options>
                         </configuration>
                     </execution>
@@ -99,6 +105,7 @@
                         <configuration>
                             <options>
                                 <option>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</option>
+                                <option>-ea</option>
                             </options>
                         </configuration>
                     </execution>

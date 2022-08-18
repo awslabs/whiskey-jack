@@ -20,7 +20,7 @@ public class NodePane extends VBox {
     NodePane(String title, String tooltip, GridPane c, final FGNode outer) {
         this.outer = outer;
         contents = c;
-        javafx.scene.text.Text text = new Text(title);
+        var text = new Text(title);
         openClose = new ImageView(closeArrow);
         openClose.setFitHeight(12);
         openClose.setPreserveRatio(true);
