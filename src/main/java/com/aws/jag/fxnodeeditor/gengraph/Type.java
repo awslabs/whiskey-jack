@@ -16,4 +16,9 @@ public class Type {
     public String toString() {
         return "Type<" + getName() + ">";
     }
+    public static final Type int_t = new Type("integer");
+    public static final Type double_t = new Type("double");
+    public static final Type bool_t = new Type("boolean");
+    public static final Type image_t = new Type("image");
+    public static final Type json_t = new Type("json");
 }

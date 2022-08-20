@@ -11,7 +11,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javax.annotation.*;
 
-class PortView extends Port {
+public class PortView extends Port {
     public PortView(@Nonnull Graph parent, @Nonnull PortView original) {
         super(parent, original);
         init();
@@ -29,7 +29,7 @@ class PortView extends Port {
 
     @SuppressWarnings(value="LeakingThisInConstructor")
     private void init() {
-        label.setText(metadata.name);
+        setText();
         label.setGraphicTextGap(4);
         var in = metadata.in;
         label.getStyleClass().add(in ? "inPort" : "outPort");
@@ -128,6 +128,14 @@ class PortView extends Port {
                 });
         }
 /* */
+    }
+    @Override
+    public void setValue(Object v) {
+        super.setValue(v);
+        setText();
+    }
+    private void setText() {
+        label.setText(!metadata.in || isConnected() ? metadata.name : metadata.name+"="+constantValue);
     }
     public javafx.scene.Node getView() { return label; }
     private static final Image cursor = new Image(PortView.class.getResourceAsStream("DragTargetCursor.png"));

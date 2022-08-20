@@ -17,4 +17,8 @@ public class MetaNode implements Named, MetaPart {
     public String getName() {
         return name;
     }
+    public MetaNode add(MetaPort p) {
+        ports.put(p.name, p);
+        return this;
+    }
 }

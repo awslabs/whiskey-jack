@@ -37,6 +37,7 @@ public class Port extends GraphPart {
     public void forEach(Consumer<Arc> f) {
         if(arcs!=null) arcs.forEach(f);
     }
+    public int nArcs() { return arcs==null ? 0 : arcs.size(); }
     public boolean connectsTo(Port x) { 
         if(arcs==null) return true;
         for(var a:arcs)
@@ -55,7 +56,10 @@ public class Port extends GraphPart {
     public String toString() {
         return "Port<"+within.getName()+"."+metadata.getName()+">";
     }
-    public void setValue(String v) {
-        constantValue = Utils.parseObject(v);
+    public final void setValue(String v) {
+        setValue(Utils.parseObject(v));
+    }
+    public void setValue(Object v) {
+        constantValue = v;
     }
 }

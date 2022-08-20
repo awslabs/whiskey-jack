@@ -17,14 +17,21 @@ public class Node extends GraphPart implements Named {
         context = parent;
         metadata = original.metadata;
         for(var p:original.ports)
-            parent.newPort(p).within = this;
+            add(parent.newPort(p));
     }
     @SuppressWarnings("LeakingThisInConstructor")
     public Node(@Nonnull Graph parent, @Nonnull MetaNode mn) {
         context = parent;
         metadata = mn;
-        for(var p:mn.ports.values())
-            parent.newPort(p).within = this;
+        System.out.println("Meta "+mn.name+" "+mn.ports.size());
+        for(var mp:mn.ports.values()) {
+            System.out.println("  "+mp.name);
+            add(parent.newPort(mp));
+        }
+    }
+    public final void add(Port p) {
+        p.within = this;
+        ports.add(p);
     }
     @Override
     public Graph getContext() {
@@ -36,6 +43,17 @@ public class Node extends GraphPart implements Named {
     }
     @Override
     public String toString() {
-        return metadata.getName();
+        StringBuilder sb = new StringBuilder();
+        sb.append(metadata.getName()).append('[');
+        boolean first = true;
+        for(var p:ports) {
+            if(first) first = false;
+            else sb.append(',');
+            sb.append(p.metadata.name);
+            if(p.isConnected()) sb.append('@').append(p.nArcs());
+            else sb.append('=').append(p.constantValue);
+        }
+        sb.append(']');
+        return sb.toString();
     }
 }

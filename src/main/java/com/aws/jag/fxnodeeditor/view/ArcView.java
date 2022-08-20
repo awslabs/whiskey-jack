@@ -9,7 +9,7 @@ import com.aws.jag.fxnodeeditor.gengraph.*;
 
 class ArcView extends Arc {
     @SuppressWarnings("unused")
-    ArcView(Port A, Port B) {
+    public ArcView(Port A, Port B) {
         super(A, B);
     }
     @Override

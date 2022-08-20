@@ -2,19 +2,19 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package com.aws.jag.fxnodeeditor.view;
 
 import com.aws.jag.fxnodeeditor.gengraph.*;
 import com.aws.jag.fxnodeeditor.util.*;
 import java.util.function.*;
+import javafx.geometry.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.*;
 import javax.annotation.*;
 
-class NodeView extends Node {
+public class NodeView extends Node {
     public NodeView(@Nonnull Graph parent, @Nonnull NodeView original) {
         super(parent, original);
         init();
@@ -25,7 +25,7 @@ class NodeView extends Node {
     }
     @Override
     public View getContext() {
-        return (View)super.getContext();
+        return (View) super.getContext();
     }
 
     private final VBox pane = new VBox();
@@ -41,6 +41,10 @@ class NodeView extends Node {
         HBox.setHgrow(contents, Priority.ALWAYS);
         HBox.setHgrow(titleRegion, Priority.ALWAYS);
         HBox.setHgrow(title, Priority.ALWAYS);
+        contents.setHgap(10);
+        contents.setPadding(noPadding);
+        contents.getColumnConstraints().addAll(flushLeft, flushRight);
+        contents.getStyleClass().add("nodeItem");
         pane.setFillWidth(true);
         pane.getStyleClass().setAll("fgpane");
         titleRegion.getStyleClass().setAll("fgtitle");
@@ -52,6 +56,9 @@ class NodeView extends Node {
         setTooltip(metadata.description);
         installPorts();
         setExpanded(true);
+    }
+    public javafx.scene.Node getView() {
+        return pane;
     }
     private void installPorts() {
         ports.forEach(new Consumer<Port>() {
@@ -72,25 +79,24 @@ class NodeView extends Node {
     }
     private Tooltip tip;
     public void setTooltip(String tooltip) {
-        if(!Utils.isEmpty(tooltip)) {
+        if(!Utils.isEmpty(tooltip))
             if(tip == null) {
                 tip = new Tooltip(tooltip);
                 Tooltip.install(titleRegion, tip);
-            }
-            else tip.setText(tooltip);
-        }
-        else {
-            if(tip!=null) {
+            } else
+                tip.setText(tooltip);
+        else
+            if(tip != null) {
                 Tooltip.uninstall(titleRegion, tip);
                 tip = null;
             }
-        }
     }
     public final void setExpanded(boolean b) {
         if(b != expanded) {
             expanded = b;
             openClose.getStyleClass().setAll(expanded ? "fgopen" : "fgclosed");
             pane.getChildren().remove(contents);
+            System.out.println("expanded: " + expanded + "  " + this);
             if(expanded)
                 pane.getChildren().add(contents);
             openClose.setRotate(expanded ? 90 : 0);
@@ -101,6 +107,15 @@ class NodeView extends Node {
     public boolean isExpanded() {
         return expanded;
     }
-    static final private Image closeArrow = new Image(NodeView.class.getResourceAsStream("CloseArrow.png"));
-
+    
+    private static final Image closeArrow = new Image(NodeView.class.getResourceAsStream("CloseArrow.png"));
+    private static final Insets noPadding = new Insets(0, 0, 0, 0);
+    private static final ColumnConstraints flushLeft = new ColumnConstraints();
+    private static final ColumnConstraints flushRight = new ColumnConstraints();
+    static {
+        flushLeft.setHalignment(HPos.LEFT);
+        flushLeft.setFillWidth(true);
+        flushRight.setHalignment(HPos.RIGHT);
+        flushRight.setFillWidth(true);
+    }
 }
