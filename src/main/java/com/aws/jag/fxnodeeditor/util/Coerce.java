@@ -255,4 +255,19 @@ public final class Coerce {
     public static <T> T toObject(String s, TypeReference<T> t) throws JsonProcessingException {
         return MAPPER.readValue(s, t);
     }
+    
+    public static Collection<Object> toCollection(Object o) {
+        if(o==null) return Collections.emptyList();
+        if(o.getClass().isArray()) {
+            var sz = Array.getLength(o);
+            if(sz==0) return Collections.emptyList();
+            var ret = new ArrayList<Object>(sz);
+            for(int i = 0; i<sz; i++)
+                ret.add(Array.get(o, i));
+            return ret;
+        }
+        if(o instanceof Collection c)
+            return c;
+        return Collections.singletonList(o);
+    }
 }

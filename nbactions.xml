@@ -10,8 +10,7 @@
                 <goal>javafx:run</goal>
             </goals>
             <properties>
-                <Env.JAVA_HOME>/Library/Java/JavaVirtualMachines/amazon-corretto-17.jdk/Contents/Home</Env.JAVA_HOME>
-                <Env.JDK_JAVA_OPTIONS>--enable-preview</Env.JDK_JAVA_OPTIONS>
+                <exec.vmArgs>--enable-preview</exec.vmArgs>
             </properties>
         </action>
         <action>
@@ -40,5 +39,60 @@
                 <goal>compile</goal>
                 <goal>javafx:jlink</goal>
             </goals>
+        </action>
+        <action>
+            <actionName>debug.single.main</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>process-test-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:3.0.0:exec</goal>
+            </goals>
+            <properties>
+                <exec.vmArgs>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</exec.vmArgs>
+                <exec.args>${exec.vmArgs} -classpath %classpath --enable-preview ${exec.mainClass} ${exec.appArgs}</exec.args>
+                <exec.executable>java</exec.executable>
+                <exec.mainClass>${packageClassName}</exec.mainClass>
+                <exec.classpathScope>${classPathScope}</exec.classpathScope>
+                <jpda.listen>true</jpda.listen>
+            </properties>
+        </action>
+        <action>
+            <actionName>debug.test.single</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>process-test-classes</goal>
+                <goal>surefire:test</goal>
+            </goals>
+            <properties>
+                <test>${packageClassName}</test>
+                <forkMode>once</forkMode>
+                <maven.surefire.debug>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</maven.surefire.debug>
+                <jpda.listen>true</jpda.listen>
+                <exec.vmArgs>--enable-preview</exec.vmArgs>
+                
+            </properties>
+        </action>
+        <action>
+            <actionName>debug.integration-test.single</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>pre-integration-test</goal>
+                <goal>failsafe:integration-test</goal>
+            </goals>
+            <properties>
+                <test>DummyToSkipUnitTests</test>
+                <failIfNoTests>false</failIfNoTests>
+                <it.test>${packageClassName}</it.test>
+                <forkMode>once</forkMode>
+                <maven.failsafe.debug>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</maven.failsafe.debug>
+                <jpda.listen>true</jpda.listen>
+                <exec.vmArgs>--enable-preview</exec.vmArgs>
+            </properties>
         </action>
     </actions>

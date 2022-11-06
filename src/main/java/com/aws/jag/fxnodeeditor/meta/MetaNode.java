@@ -166,13 +166,13 @@ public class MetaNode extends Collectable implements Comparable<MetaNode>  {
         }
     }
 
-    public void forAllLeaves(Consumer<MetaNode> f) {
+    public void forAllLeaves(Consumer<? super MetaNode> f) {
         if(children == null)
             f.accept(this);
         else
             children.values().forEach(v->v.forAllLeaves(f));
     }
-    public void forEach(Consumer<MetaNode> f) {
+    public void forEach(Consumer<? super MetaNode> f) {
         if(children != null)
             children.values().forEach(v->f.accept(v));
     }

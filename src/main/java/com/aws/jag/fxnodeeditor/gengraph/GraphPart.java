@@ -5,34 +5,33 @@
 package com.aws.jag.fxnodeeditor.gengraph;
 
 import com.aws.jag.fxnodeeditor.util.*;
-import java.util.concurrent.atomic.*;
+import java.lang.reflect.*;
+import java.util.*;
 import java.util.function.*;
+import java.util.stream.*;
 
-public abstract class GraphPart<T extends GraphPart> implements Named {
-    private String uid;
-    public String comment;
+public abstract class GraphPart<T extends GraphPart> {
+    private String message;  // situation-specific message (eg. an error)
+    private String name;
+    public abstract String getDescription(); // describe this part
+    public String getMessage() { return message; }
+    public String getName() { return name==null ? "unnamed" : name; }
+    public boolean isNamed() { return name!=null; }
+    public T setDescription(String d) { // describe this part
+        throw new IllegalAccessError("can't edit metadata.");
+    }
+    public T setName(String d) {
+        name = d;
+        return (T) this;
+    }
+    public T setMessage(String d) {
+        message = d;
+        return (T) this;
+    }
     public abstract Graph getContext();
 //    protected abstract void copyFromImpl(T source);
     @Override
     public abstract String toString(); // firce subclasses to implement toString
-//    protected void copyFrom(T source) {
-//        setUid(source.getUid());
-//        copyFromImpl(source);
-//    }
-    public void setUid(String u) {
-        if(uid!=null)
-            getContext().remove(this);
-        uid = u;
-        if(u!=null) getContext().add(this);
-    }
-    public String getUid() {
-        var u = uid;
-        if(u==null)
-            uid = u = uniquePrefix + sequenceNumber.incrementAndGet();
-        return u;
-    }
-    private static final String uniquePrefix = Utils.generateRandomString(12);
-    private static final AtomicInteger sequenceNumber = new AtomicInteger(0);
     private aListener listeners;
     public void fireListener(GEvent what, Object arg) {
         for(var p = listeners; p != null; p = p.next)
@@ -68,5 +67,62 @@ public abstract class GraphPart<T extends GraphPart> implements Named {
         aListener next;
         final GEvent tag;
         final BiConsumer<GraphPart, Object> action;
+    }
+    /* I should probably be using Jackson's built-in autoserializer, but I
+     * like the control I get by hand-rolling */
+    public Object collect() {
+        var ret = new HashMap<String,Object>();
+        collectMore(ret);
+        return ret;
+    }
+    protected void collectMore(Map<String,Object> map) {
+        map.put("name", getName());
+        map.put("message", message);
+    }
+    protected static void putOpt(Map<String,Object> map, String key, Object value) {
+        if(value==null) return;
+            if(value instanceof CharSequence cs && cs.isEmpty()) return;
+        map.put(key, value);
+    }
+    public void populateFrom(Map<String,Object> values) {
+        name = get(values,"name",null);
+        message = get(values,"message",null);
+    }
+//    public abstract void populateFrom(T other);
+    public static Object asObject(Object c) {
+        return switch(c) {
+            case null ->
+                null;
+            case GraphPart o ->
+                o.collect();
+            case Collection l ->
+                l.stream().map(o -> asObject(o)).collect(Collectors.toList());
+            case Map m -> {
+                var rm = new LinkedHashMap<>();
+                m.forEach((k, v) -> rm.put(asObject(k), asObject(v)));
+                yield rm;
+            }
+            default -> {
+                if(c.getClass().isArray()) {
+                    var len = Array.getLength(c);
+                    var list = new ArrayList<Object>();
+                    for(var i = 0; i < len; i++)
+                        list.add(asObject(Array.get(c, i)));
+                    yield list;
+                }
+                yield c;
+            }
+        };
+    }
+    public StringBuilder appendNameTo(StringBuilder sb) {
+        sb.append(getName());
+        return sb;
+    }
+    public static String get(Map m, String k, String dflt) {
+        var v = m.get(k);
+        return v==null ? dflt : v.toString();
+    }
+    public static Collection<Object> getCollection(Map m, String k) {
+        return m==null ? Collections.emptyList() : Coerce.toCollection(m.get(k));
     }
 }

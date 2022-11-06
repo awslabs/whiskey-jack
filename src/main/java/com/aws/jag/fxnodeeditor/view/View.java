@@ -11,12 +11,12 @@ public class View extends Graph<NodeView,PortView,ArcView,View> {
         super(NodeView.class, PortView.class, ArcView.class);
     }
     @Override
-    public String getName() {
-        return "View";
+    public String getDescription() {
+        return "A view on a graph";
     }
     @Override
-    public String toString() {
-        return getName();
+    public String getName() {
+        return "View";
     }
     public void adjustArcs() {
         //TODO implement

@@ -4,19 +4,23 @@
  */
 package com.aws.jag.fxnodeeditor.gengraph;
 
-public class MetaPort implements Named, MetaPart {
-    public String name;
-    public String description;
-    public MetaNode parent;
+import java.util.*;
+import javax.annotation.*;
+
+public class MetaPort extends Port {
     public Type type;
     public Object defaultValue;
+    public String name;
+    public String description;
     public boolean in;
-    public MetaPort() {
+    @SuppressWarnings("LeakingThisInConstructor")
+    public MetaPort(@Nonnull Node wi, MetaPort m) {
+        super(wi, null);
     }
-    public MetaPort(String n, String d, MetaNode p, Type t, Object df, boolean i) {
+    public MetaPort(String n, String d, MetaNode wi, Type t, Object df, boolean i) {
+        super(wi, null);
         name = n;
         description = d;
-        parent = p;
         type = t;
         defaultValue = df;
         in = i;
@@ -24,5 +28,20 @@ public class MetaPort implements Named, MetaPart {
     @Override
     public String getName() {
         return name;
+    }
+    public Type getType() {
+        return type;
+    }
+    @Override
+    public Graph getContext() {
+        return within.getContext();
+    }
+    @Override
+    public void populateFrom(Map values) {
+        // TODO implement
+    }
+    @Override
+    public String toString() {
+        return getName();
     }
 }

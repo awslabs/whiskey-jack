@@ -6,6 +6,7 @@ package com.aws.jag.fxnodeeditor.view;
 
 import com.aws.jag.fxnodeeditor.gengraph.*;
 import com.aws.jag.fxnodeeditor.util.*;
+import java.util.*;
 import java.util.function.*;
 import javafx.geometry.*;
 import javafx.scene.control.*;
@@ -16,8 +17,9 @@ import javax.annotation.*;
 
 public class NodeView extends Node {
     public NodeView(@Nonnull Graph parent, @Nonnull NodeView original) {
-        super(parent, original);
+        super(parent, original.metadata);
         init();
+        populateFrom(original);
     }
     public NodeView(@Nonnull Graph parent, @Nonnull MetaNode mn) {
         super(parent, mn);
@@ -52,8 +54,8 @@ public class NodeView extends Node {
         openClose.getStyleClass().setAll("open");
         pane.getChildren().setAll(titleRegion);
         openClose.setOnMouseReleased(e -> setExpanded(!isExpanded()));
-        setTitle(metadata.name);
-        setTooltip(metadata.description);
+        setTitle(metadata.getName());
+        setTooltip(metadata.getDescription());
         installPorts();
         setExpanded(true);
     }
@@ -61,7 +63,7 @@ public class NodeView extends Node {
         return pane;
     }
     private void installPorts() {
-        ports.forEach(new Consumer<Port>() {
+        ports.values().forEach(new Consumer<Port>() {
             int inrow = 0; // can't do this with a lambda!
             int outrow = 0;
             @Override
@@ -106,6 +108,13 @@ public class NodeView extends Node {
     }
     public boolean isExpanded() {
         return expanded;
+    }
+    @Override
+    protected void collectMore(Map map) {
+        super.collectMore(map);
+        map.put("x", pane.getLayoutX());
+        map.put("y", pane.getLayoutY());
+        map.put("expanded", isExpanded());
     }
     
     private static final Image closeArrow = new Image(NodeView.class.getResourceAsStream("CloseArrow.png"));

@@ -12,11 +12,12 @@ import javafx.scene.image.*;
 import javax.annotation.*;
 
 public class PortView extends Port {
-    public PortView(@Nonnull Graph parent, @Nonnull PortView original) {
-        super(parent, original);
+    public PortView(@Nonnull Node parent, @Nonnull PortView original) {
+        super(parent, original.metadata);
+        populateFrom(original);
         init();
     }
-    public PortView(@Nonnull Graph parent, @Nonnull MetaPort mn) {
+    public PortView(@Nonnull NodeView parent, @Nonnull MetaPort mn) {
         super(parent, mn);
         init();
     }
@@ -25,10 +26,11 @@ public class PortView extends Port {
         return (View)super.getContext();
     }
     static final private Image rightArrow = new Image(PortView.class.getResourceAsStream("RightArrow.png"));
-    private final Label label = new Label("");
+    private Label label;
 
     @SuppressWarnings(value="LeakingThisInConstructor")
-    private void init() {
+    private void init() { 
+        label = new Label("");
         setText();
         label.setGraphicTextGap(4);
         var in = metadata.in;

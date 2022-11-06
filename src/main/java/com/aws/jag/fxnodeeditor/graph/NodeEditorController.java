@@ -4,14 +4,12 @@
  */
 package com.aws.jag.fxnodeeditor.graph;
 
-import com.aws.jag.fxnodeeditor.graph.DragAssist;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.yaml.*;
 import com.aws.jag.fxnodeeditor.meta.*;
 import com.aws.jag.fxnodeeditor.metaedit.*;
 import com.aws.jag.fxnodeeditor.util.*;
-import com.aws.jag.fxnodeeditor.view.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
@@ -95,7 +93,7 @@ public class NodeEditorController extends Collectable implements Initializable {
             evt.setDropCompleted(true);
             evt.consume();
         });
-        ViewTest.annotate(nodeEditor);
+//        ViewTest.annotate(nodeEditor);
     }
     private void addMenu(MetaNode n, String[] names) {
         var items = contextMenu.getItems();
@@ -159,7 +157,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     void openDefault() {
         if(loadFile(pref.get("lastFile", null))) return;
         if(loadFile(dfltFile.toString())) return;
-        if(loadFile(this.getClass().getResource("/ang/unknown.ang"))) return;
+        loadFile(this.getClass().getResource("/ang/unknown.ang"));
     }
     void saveAction(ActionEvent evt) {
         
