@@ -4,12 +4,13 @@
  */
 package com.aws.jag.fxnodeeditor.meta;
 
+import com.aws.jag.fxnodeeditor.gengraph.*;
 import com.aws.jag.fxnodeeditor.util.*;
 import static com.aws.jag.fxnodeeditor.util.Utils.*;
 import java.util.*;
 import java.util.regex.*;
 
-public class Port extends Collectable {
+public class Port_wtf extends Collectable {
     private final MetaNode outer;
     public final int slot;
     public final boolean in;
@@ -17,7 +18,7 @@ public class Port extends Collectable {
     public String description;
     public String type;
     public Object dflt;
-    Port(int s, boolean i, String n, final MetaNode o) {
+    Port_wtf(int s, boolean i, String n, final MetaNode o) {
         outer = o;
         slot = s;
         in = i;
@@ -41,7 +42,7 @@ public class Port extends Collectable {
         return in ? "▶" + name : name + "▶︎";
     }
     String fullname() {
-        return outer.name + (in ? "↓" : "↑") + name;
+        return outer.getName() + (in ? "↓" : "↑") + name;
     }
     public static String guessType(Object s) {
         return switch(s) {
@@ -69,7 +70,7 @@ public class Port extends Collectable {
         };
     }
     public void setDirty() {
-        outer.setDirty();
+        outer.markDirty();
     }
     // must be used single-threaded
     static final Matcher isBoolean = Pattern.compile("true|false").matcher("");

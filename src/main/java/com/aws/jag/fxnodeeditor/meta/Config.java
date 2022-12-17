@@ -2,8 +2,9 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.aws.jag.fxnodeeditor.graph;
+package com.aws.jag.fxnodeeditor.meta;
 
+import com.aws.jag.fxnodeeditor.view.Dlg;
 import com.aws.jag.fxnodeeditor.util.*;
 import java.io.*;
 import static java.nio.file.FileVisitResult.*;

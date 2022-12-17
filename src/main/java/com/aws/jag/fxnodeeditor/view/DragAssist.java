@@ -4,8 +4,7 @@
  */
 package com.aws.jag.fxnodeeditor.view;
 
-import com.aws.jag.fxnodeeditor.graph.*;
-import com.aws.jag.fxnodeeditor.meta.*;
+import com.aws.jag.fxnodeeditor.gengraph.*;
 import java.io.*;
 import javafx.scene.input.*;
 
@@ -14,7 +13,7 @@ public class DragAssist {
     public static final DataFormat draggingOutArc = new DataFormat("node arc");
     public static final Object dummy = new Serializable() {
     };
-    public static OutArc createArc;
+    public static Arc createArc;
     public static MetaNode createNode;
     public static double targetX;
     public static double targetY;

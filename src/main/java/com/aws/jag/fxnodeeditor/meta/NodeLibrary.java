@@ -4,9 +4,10 @@
  */
 package com.aws.jag.fxnodeeditor.meta;
 
-import com.aws.jag.fxnodeeditor.graph.*;
+import com.aws.jag.fxnodeeditor.gengraph.*;
 import com.aws.jag.fxnodeeditor.util.*;
 import static com.aws.jag.fxnodeeditor.util.Utils.*;
+import com.aws.jag.fxnodeeditor.view.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -18,20 +19,14 @@ import javafx.event.*;
  * A library of meta nodes. The "product catalog"
  */
 public class NodeLibrary {
-    public final MetaNode root = new MetaNode(null, "root") {
-        @Override
-        public boolean isRoot() {
-            return true;
-        }
-    };
     public void forAll(Consumer<MetaNode> f) {
-        root.forAllLeaves(f);
+        throw new IllegalAccessError("MetaNode.metaMeta.forAllLeaves(f);");
     }
     public MetaNode createIfAbsent(String name) {
         if(isEmpty(name) || "root".equals(name))
-            return root;
+            return MetaNode.metaMeta;
         var names = joiners.split(name);
-        var v = root;
+        var v = MetaNode.metaMeta;
         for(var part: names)
             v = v.createIfAbsent(part);
         return v;
@@ -42,7 +37,7 @@ public class NodeLibrary {
     }
     public void saveAllAs(Path p) {
         try( var out = CommitableWriter.abandonOnClose(p)) {
-            NodeEditorController.fileio.writeValue(out, Collectable.asObject(root));
+            NodeEditorController.fileio.writeValue(out, Collectable.asObject(MetaNode.metaMeta));
             out.commit();
         } catch(IOException ioe) {
             Dlg.error("Can't save file", ioe);
@@ -51,7 +46,11 @@ public class NodeLibrary {
     public void saveAllDirty() {
 //        System.out.println("Save All Dirty");
         var l = new ArrayList<String>();
-        root.writeDirty(l);
+        MetaNode.cleanAllDirty(m->{
+            l.add(m.getName());
+            // TODO
+            System.out.println("Should have written dirty "+m);
+        });
         if(l.isEmpty())
             Dlg.note("No modified product catalogs");
         else
@@ -65,7 +64,9 @@ public class NodeLibrary {
             Dlg.error("Couldn't load " + fn, ex);
         }
     }
-    private Void load(String tag, Path fromFile, InputStream in) throws IOException {
+    private static final Map<Node,Path> loadedFrom = Collections.synchronizedMap(new WeakHashMap<>());
+    public static Path from(Node n) { return loadedFrom.get(n); }
+    private Void load(String tag, Path from, InputStream in) throws IOException {
         var v = NodeEditorController.fileio.readValue(in, Object.class);
 //                System.out.println(Utils.deepToString(v, 80));
         switch(v) {
@@ -73,13 +74,13 @@ public class NodeLibrary {
                 var rootName = Coerce.get(m, "name", "");
                 var node = (!rootName.isEmpty() ? createIfAbsent(rootName)
                         : !isEmpty(tag) ? createIfAbsent(tag)
-                        : root);
-                if(fromFile != null)
-                    node.fromFile = fromFile;
-                node.merge(m);
+                        : MetaNode.metaMeta);
+                if(from != null)
+                    loadedFrom.put(node, from);
+                node.populateFrom(m);
             }
             default ->
-                Dlg.error("Bad data in", fromFile.toString(), Utils.deepToString(v, 80));
+                Dlg.error("Bad data in", from.toString(), Utils.deepToString(v, 80));
         }
         return null;
     }

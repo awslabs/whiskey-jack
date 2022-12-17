@@ -16,18 +16,18 @@ import javafx.scene.text.*;
 import javax.annotation.*;
 
 public class NodeView extends Node {
-    public NodeView(@Nonnull Graph parent, @Nonnull NodeView original) {
+    public NodeView(@Nonnull GraphView parent, @Nonnull Node original) {
         super(parent, original.metadata);
         init();
         populateFrom(original);
     }
-    public NodeView(@Nonnull Graph parent, @Nonnull MetaNode mn) {
+    public NodeView(@Nonnull GraphView parent, @Nonnull MetaNode mn) {
         super(parent, mn);
         init();
     }
     @Override
-    public View getContext() {
-        return (View) super.getContext();
+    public GraphView getContext() {
+        return (GraphView) super.getContext();
     }
 
     private final VBox pane = new VBox();
@@ -59,7 +59,7 @@ public class NodeView extends Node {
         installPorts();
         setExpanded(true);
     }
-    public javafx.scene.Node getView() {
+    public VBox getView() {
         return pane;
     }
     private void installPorts() {
@@ -75,6 +75,9 @@ public class NodeView extends Node {
                         in ? inrow++ : outrow++);
             }
         });
+    }
+    void delete() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
     public void setTitle(String s) {
         title.setText(s);

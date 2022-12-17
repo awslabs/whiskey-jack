@@ -2,8 +2,9 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.aws.jag.fxnodeeditor.graph;
+package com.aws.jag.fxnodeeditor.view;
 
+import com.aws.jag.fxnodeeditor.gengraph.*;
 import java.util.*;
 import javafx.animation.*;
 import javafx.util.*;
@@ -16,16 +17,18 @@ public class Layout {
     int ncols = 1;
     Column[] columns;
     final double centerx, centery;
-    public Layout(Collection<FGNode> nodes) {
+    public Layout(Collection<NodeView> nodes) {
         if(nodes != null && !nodes.isEmpty()) {
             nodes.forEach(fg -> {
-                byUid.put(fg.uid, new LNode(fg));
+                byUid.put(fg.getUid(), new LNode(fg));
             });
             // create upstream links
             byUid.values().forEach(f -> {
-                f.flowgraph.inputs.forEach(in -> {
-                    if(in.comesFrom != null)
-                        f.addUpstream(byUid.get(in.comesFrom.container.uid));
+                f.view.ports.values().forEach(in -> {
+                    var bug = (Port) in;
+                    if(bug.isConnected()) {
+                        bug.forEach(o->f.addUpstream(byUid.get(o.otherEnd(bug).within.getUid())));
+                    }
                 });
             });
             ordered = byUid.values().stream()
@@ -96,8 +99,8 @@ public class Layout {
                 }
                 @Override
                 protected void interpolate(double frac) {
-                    n.flowgraph.view.setLayoutX(n.x0 * (1 - frac) + n.x1 * frac);
-                    n.flowgraph.view.setLayoutY(n.y0 * (1 - frac) + n.y1 * frac);
+                    n.view.getView().setLayoutX(n.x0 * (1 - frac) + n.x1 * frac);
+                    n.view.getView().setLayoutY(n.y0 * (1 - frac) + n.y1 * frac);
                 }
             });
         pt.play();
@@ -122,10 +125,10 @@ public class Layout {
             return height + ypad * (nodes.size() - 1);
         }
         public void labelInputOrder() {
-            var pos = 0;
-            for(var n:nodes)
-                for(var p:n.flowgraph.inputs)
-                    p.vizorder = ++pos;
+//            var pos = 0;
+//            for(var n:nodes)
+//                for(var p:n.view.ports.values())
+//                    p.vizorder = ++pos;
         }
         public void sort() {
             nodes.sort((a,b)->{
@@ -133,19 +136,19 @@ public class Layout {
             });
         }
         private int rank(LNode ln) {
-            var n = ln.flowgraph;
+            var n = ln.view;
             var sum = 0;
             var count = 0;
-            for(var o:n.outputs)
-                for(var p:o.connectsTo) {
-                    sum += p.vizorder;
+            for(var oneEnd:n.ports.values())
+                for(var arc:(Port)oneEnd) {
+                    sum += arc.otherEnd((Port)oneEnd).metadata.y;
                     count += 1;
                 }
             return count==0 ? 0 : sum/count;
         }
     }
     private class LNode { // Layout Node
-        private final FGNode flowgraph;
+        private final NodeView view;
         private final double x0, y0, w, h;
         private double x1, y1;
         int directDownstream = 0;
@@ -153,16 +156,16 @@ public class Layout {
         int column = -1;
         int row = 0;
         boolean inParentChain = false;
-        LNode(FGNode fg) {
-            flowgraph = fg;
-            x1 = x0 = flowgraph.view.getLayoutX();
-            y1 = y0 = flowgraph.view.getLayoutY();
-            w = flowgraph.view.getWidth();
-            h = flowgraph.view.getHeight();
+        LNode(NodeView fg) {
+            view = fg;
+            x1 = x0 = view.getView().getLayoutX();
+            y1 = y0 = view.getView().getLayoutY();
+            w = view.getView().getWidth();
+            h = view.getView().getHeight();
         }
         public void addUpstream(LNode u) {
             if(upstream.contains(u)) {
-                Dlg.error("Duplicate upstream: " + flowgraph.meta.name + "->" + u.flowgraph.meta.name, null);
+                Dlg.error("Duplicate upstream: " + view.getName() + "->" + u.view.getName(), null);
                 return;
             }
             upstream.add(u);
@@ -170,12 +173,12 @@ public class Layout {
         }
         @Override
         public String toString() {
-            return flowgraph.meta.name + ":"
+            return view.getName() + ":"
                     + x0 + "->" + x1 + ", " + y0 + "->" + y1;
         }
         void assignColumns(String caller, int level) {
             if(inParentChain)
-                Dlg.error("Loop involving " + flowgraph.meta.name, null);
+                Dlg.error("Loop involving " + view.getName(), null);
             else {
                 if(level > column) {
                     column = level;
@@ -183,7 +186,7 @@ public class Layout {
                         ncols = level + 1;
                 }
                 inParentChain = true;
-                upstream.forEach(u -> u.assignColumns(caller + "->" + flowgraph.meta.name, level + 1));
+                upstream.forEach(u -> u.assignColumns(caller + "->" + view.getName(), level + 1));
                 inParentChain = false;
             }
         }

@@ -2,7 +2,7 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.aws.jag.fxnodeeditor.graph;
+package com.aws.jag.fxnodeeditor.view;
 
 import static com.aws.jag.fxnodeeditor.util.Utils.*;
 import java.lang.reflect.*;
@@ -23,15 +23,15 @@ public class Dlg {
     }
     private void show(boolean isError, Object... o) {
         var d = new Dialog();
+        body.getStyleClass().clear();
         if(isError) {
-        var img = new ImageView(errorIcon);
-        img.setPreserveRatio(true);
-        img.setFitHeight(64);
-        d.setGraphic(img);
-        body.getStyleClass().add("errorDialog");
-        } else {
-        body.getStyleClass().add("noteDialog");
-        }
+            var img = new ImageView(errorIcon);
+            img.setPreserveRatio(true);
+            img.setFitHeight(64);
+            d.setGraphic(img);
+            body.getStyleClass().add("errorDialog");
+        } else
+            body.getStyleClass().add("noteDialog");
         var dp = d.getDialogPane();
         dp.getStyleClass().add(isError ? "error" : "note");
         dp.setContent(body);
@@ -91,6 +91,6 @@ public class Dlg {
     public static void note(Object... o) {
         new Dlg().show(false, o);
     }
-    static final private Image errorIcon = new Image(FGNode.class.getResourceAsStream("Oops.png"));
+    static final private Image errorIcon = new Image(NodeView.class.getResourceAsStream("Oops.png"));
 
 }

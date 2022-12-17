@@ -4,7 +4,7 @@
  */
 package com.aws.jag.fxnodeeditor.util;
 
-import com.aws.jag.fxnodeeditor.meta.MetaNode;
+import com.aws.jag.fxnodeeditor.gengraph.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.*;

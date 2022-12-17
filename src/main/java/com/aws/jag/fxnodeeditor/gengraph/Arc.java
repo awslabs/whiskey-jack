@@ -36,6 +36,9 @@ public class Arc extends GraphPart<Arc> {
              : x == b ? a
                       : null;
     }
+    public Port inOutPort(boolean in) {
+        return a.metadata.in==in ? a : b;
+    }
     public boolean connectsTo(Port x) {
         return x == a || x == b;
     }

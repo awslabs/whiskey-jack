@@ -20,12 +20,12 @@ public abstract class GraphPart<T extends GraphPart> {
     public T setDescription(String d) { // describe this part
         throw new IllegalAccessError("can't edit metadata.");
     }
-    public T setName(String d) {
-        name = d;
+    public T setName(String n) {
+        name = n;
         return (T) this;
     }
-    public T setMessage(String d) {
-        message = d;
+    public T setMessage(String m) {
+        message = m;
         return (T) this;
     }
     public abstract Graph getContext();
@@ -38,10 +38,10 @@ public abstract class GraphPart<T extends GraphPart> {
             if(p.tag == what)
                 p.action.accept(this, arg);
     }
-    public void removeListener(BiConsumer<GraphPart, Object> a) {
+    public void removeListener(BiConsumer<GraphPart, Object> action) {
         aListener prev = null;
         for(var p = listeners; p != null; p = p.next)
-            if(p.action != a)
+            if(p.action != action)
                 prev = p;
             else if(prev == null)
                 listeners = p.next;
@@ -87,6 +87,26 @@ public abstract class GraphPart<T extends GraphPart> {
     public void populateFrom(Map<String,Object> values) {
         name = get(values,"name",null);
         message = get(values,"message",null);
+    }
+    private Map<Class,Object> sidecars;
+    public <T> T sidecar(Class<T> cl) {
+        if(sidecars==null) sidecars = new HashMap<>();
+        return (T)sidecars.computeIfAbsent(cl, kcl->{
+            try {
+                return (T)kcl.getConstructor().newInstance();
+            } catch(ReflectiveOperationException | RuntimeException  ex) {
+                throw new Error("Trying to create "+cl.getSimpleName(), ex);
+            }
+        });
+    }
+    public void removeSidecar(Class<T> cl) {
+        if(sidecars!=null) {
+            sidecars.remove(cl);
+            if(sidecars.isEmpty()) removeAllSidecars();
+        }
+    }
+    public void removeAllSidecars() {
+        sidecars = null;
     }
 //    public abstract void populateFrom(T other);
     public static Object asObject(Object c) {

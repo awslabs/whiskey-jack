@@ -56,5 +56,6 @@ Any value defined here will override the pom.xml file value but is only applicab
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.classMembersOrder>FIELD;CONSTRUCTOR;STATIC FIELD;STATIC_INIT;STATIC METHOD;INSTANCE_INIT;METHOD;STATIC CLASS;CLASS</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.classMembersOrder>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.alignMultilineBinaryOp>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.alignMultilineBinaryOp>
         <netbeans.hint.jdkPlatform>JDK_17</netbeans.hint.jdkPlatform>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapCaseStatements>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapCaseStatements>
     </properties>
 </project-shared-configuration>

@@ -4,7 +4,7 @@
  */
 package com.aws.jag.fxnodeeditor;
 
-import com.aws.jag.fxnodeeditor.graph.*;
+import com.aws.jag.fxnodeeditor.view.*;
 import java.io.*;
 import javafx.application.*;
 import javafx.fxml.*;

@@ -9,6 +9,7 @@ import com.aws.jag.fxnodeeditor.gengraph.*;
 //import com.aws.jag.fxnodeeditor.graph.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
+import javafx.scene.transform.*;
 import javax.annotation.*;
 
 public class PortView extends Port {
@@ -22,8 +23,8 @@ public class PortView extends Port {
         init();
     }
     @Override
-    public View getContext() {
-        return (View)super.getContext();
+    public GraphView getContext() {
+        return (GraphView)super.getContext();
     }
     static final private Image rightArrow = new Image(PortView.class.getResourceAsStream("RightArrow.png"));
     private Label label;
@@ -31,7 +32,7 @@ public class PortView extends Port {
     @SuppressWarnings(value="LeakingThisInConstructor")
     private void init() { 
         label = new Label("");
-        setText();
+        setViewText();
         label.setGraphicTextGap(4);
         var in = metadata.in;
         label.getStyleClass().add(in ? "inPort" : "outPort");
@@ -134,10 +135,14 @@ public class PortView extends Port {
     @Override
     public void setValue(Object v) {
         super.setValue(v);
-        setText();
+        setViewText();
     }
-    private void setText() {
+    public void setViewText() {
         label.setText(!metadata.in || isConnected() ? metadata.name : metadata.name+"="+constantValue);
+    }
+    public void reposition(Transform t) {
+        // TODO implement
+        System.out.println("Reposition "+getFullName());
     }
     public javafx.scene.Node getView() { return label; }
     private static final Image cursor = new Image(PortView.class.getResourceAsStream("DragTargetCursor.png"));

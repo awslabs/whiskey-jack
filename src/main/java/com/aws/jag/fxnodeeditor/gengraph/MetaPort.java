@@ -13,6 +13,7 @@ public class MetaPort extends Port {
     public String name;
     public String description;
     public boolean in;
+    public int y;
     @SuppressWarnings("LeakingThisInConstructor")
     public MetaPort(@Nonnull Node wi, MetaPort m) {
         super(wi, null);
@@ -24,13 +25,21 @@ public class MetaPort extends Port {
         type = t;
         defaultValue = df;
         in = i;
+        y = wi.count(i);
+    }
+    public void markDirty() {
+        ((MetaNode)within).markDirty();
     }
     @Override
     public String getName() {
         return name;
     }
+    @Override
     public Type getType() {
         return type;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
     @Override
     public Graph getContext() {

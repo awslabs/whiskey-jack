@@ -4,14 +4,15 @@
  */
 package com.aws.jag.fxnodeeditor.meta;
 
-import com.aws.jag.fxnodeeditor.graph.*;
+import com.aws.jag.fxnodeeditor.gengraph.*;
+import com.aws.jag.fxnodeeditor.view.*;
 import com.aws.jag.fxnodeeditor.metaedit.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
 
 public class MetaNodeTreeModel {
-    static final Image cursor = new Image(FGNode.class.getResourceAsStream("CreateNodeCursor.png"));
+    static final Image cursor = new Image(Node.class.getResourceAsStream("CreateNodeCursor.png"));
     TreeView tree;
     NodeLibrary lib;
     NodeEditorController nec;
@@ -19,7 +20,7 @@ public class MetaNodeTreeModel {
         nec = n;
         tree = t;
         lib = l;
-        t.setRoot(new nTreeItem(lib.root));
+        t.setRoot(new nTreeItem(MetaNode.metaMeta));
         t.setShowRoot(false);
         t.setCellFactory(i -> {
             var ret = new TreeCell<MetaNode>() {
@@ -30,7 +31,7 @@ public class MetaNodeTreeModel {
                         setText(null);
                         setGraphic(null);
                     } else
-                        setText(item.name);
+                        setText(item.getName());
                 }
                 {
                     setEditable(false);
@@ -57,12 +58,11 @@ public class MetaNodeTreeModel {
     private class nTreeItem extends TreeItem<MetaNode> {
         nTreeItem(MetaNode m) {
             super(m);
-            if(m.children != null)
-                m.children.values().forEach(c -> getChildren().add(new nTreeItem(c)));
+            m.forEachChild(c -> getChildren().add(new nTreeItem(c)));
         }
         @Override
         public String toString() {
-            return getValue().name;
+            return getValue().getName();
         }
     }
     static MetaNode dragSource;

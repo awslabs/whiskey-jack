@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.function.*;
 import javax.annotation.*;
 
-public class Port /*extends GraphPart<Port>*/ {
+public class Port /*extends GraphPart<Port>*/implements Iterable<Arc> {
     public final MetaPort metadata;
     public final Node within;
     public Object constantValue; // used when disconnected
@@ -20,6 +20,10 @@ public class Port /*extends GraphPart<Port>*/ {
     public Port(@Nonnull Node wi, MetaPort m) {
         within = wi;
         metadata = m != null ? m : (MetaPort) this;  // Metaport's metadata is a circular reference.
+    }
+    @Override
+    public Iterator<Arc> iterator() {
+        return arcs.iterator();
     }
     public void populateFrom(Port other) {
         constantValue = other.constantValue;
@@ -75,6 +79,9 @@ public class Port /*extends GraphPart<Port>*/ {
     public String getName() {
         return metadata.getName();
     }
+    public void setName(String name) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
     public Type getType() {
         return metadata.getType();
     }
@@ -87,5 +94,8 @@ public class Port /*extends GraphPart<Port>*/ {
     }
     public void setValue(Object v) {
         constantValue = v;
+        var original = within.copiedFrom;
+        if(original!=null)
+            original.getPort(getName()).setValue(v);
     }
 }

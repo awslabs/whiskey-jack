@@ -14,5 +14,6 @@ module com.aws.jag.fxnodeeditor {
     opens com.aws.jag.fxnodeeditor to javafx.fxml;
     opens com.aws.jag.fxnodeeditor.graph to javafx.fxml;
     opens com.aws.jag.fxnodeeditor.metaedit to javafx.fxml;
+    opens com.aws.jag.fxnodeeditor.view to javafx.graphics, javafx.fxml;
     exports com.aws.jag.fxnodeeditor;
 }

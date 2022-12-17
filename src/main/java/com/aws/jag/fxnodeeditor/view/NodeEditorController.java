@@ -2,28 +2,30 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.aws.jag.fxnodeeditor.graph;
+package com.aws.jag.fxnodeeditor.view;
 
+//import com.aws.jag.fxnodeeditor.graph.*;
+import com.aws.jag.fxnodeeditor.gengraph.*;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.yaml.*;
 import com.aws.jag.fxnodeeditor.meta.*;
-import com.aws.jag.fxnodeeditor.metaedit.*;
 import com.aws.jag.fxnodeeditor.util.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.prefs.Preferences;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.*;
 import static java.util.prefs.Preferences.*;
 import javafx.application.*;
 import javafx.event.*;
 import javafx.fxml.*;
 import javafx.scene.*;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import static javafx.scene.input.KeyCode.*;
 import javafx.scene.input.*;
@@ -32,17 +34,20 @@ import javafx.scene.layout.*;
 public class NodeEditorController extends Collectable implements Initializable {
     @FXML
     public AnchorPane nodeEditor;
+    public static Consumer<NodeEditorController> createNotifier;
     @FXML
     private ContextMenu contextMenu;
     @FXML
     private ScrollPane scrollPane;
     @FXML
     private TreeView navTree;
-    @FXML private Node keyboardRoot;
+    @FXML
+    private Node keyboardRoot;
     static final Preferences pref = userNodeForPackage(NodeEditorController.class);
     public Object hovered;
     public Node dragNode;
-    public final Map<String, FGNode> nByUid = new ConcurrentHashMap<>();
+    GraphView viewedGraph;
+    public final Map<String, NodeView> nByUid = new ConcurrentHashMap<>();
     public final NodeLibrary mnodes = new NodeLibrary();
     public final MetaNodeTreeModel mNodeTreeModel = new MetaNodeTreeModel();
 
@@ -50,9 +55,9 @@ public class NodeEditorController extends Collectable implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         Thread.setDefaultUncaughtExceptionHandler((t, error) -> Dlg.error("In " + t.getName(), error));
         mnodes.initialize();
-        mNodeTreeModel.initialize(navTree, mnodes, this);
+//        mNodeTreeModel.initialize(navTree, mnodes, this);
         mnodes.forAll(n -> {
-            if(!n.isEmpty()) {
+            if(n.hasPorts()) {
                 var namePath = toStringArray("Add", n);
                 addMenu(n, namePath);
             }
@@ -63,7 +68,7 @@ public class NodeEditorController extends Collectable implements Initializable {
                 mkaction("Open", this::openAction, KeyCode.O),
                 mkaction("Save", this::saveAction, KeyCode.S),
                 mkaction("New", this::newAction, KeyCode.N),
-                mkaction("Layout", e->layoutAction(), KeyCode.L),
+                mkaction("Layout", e -> layoutAction(), KeyCode.L),
                 mkaction("Export All Meta", mnodes::exportAction, KeyCode.X),
                 mkaction("Quit", this::quitAction, KeyCode.Q)
         );
@@ -94,6 +99,20 @@ public class NodeEditorController extends Collectable implements Initializable {
             evt.consume();
         });
 //        ViewTest.annotate(nodeEditor);
+        if(createNotifier != null)
+            createNotifier.accept(this);
+    }
+    public void setGraph(GraphView vg) {
+        if(vg != null && vg != viewedGraph) {
+            System.out.println("setGraph " + vg);
+            if(viewedGraph != null)
+                viewedGraph.controller = null;
+            viewedGraph = vg;
+            vg.controller = this;
+            var children = nodeEditor.getChildren();
+            children.clear();
+            vg.forEach(n -> children.add(n.getView()));
+        }
     }
     private void addMenu(MetaNode n, String[] names) {
         var items = contextMenu.getItems();
@@ -126,19 +145,19 @@ public class NodeEditorController extends Collectable implements Initializable {
                 switch(hovered) {
                     default ->
                         Dlg.error("Hover over a node or arc to delete it");
-                    case FGNode n ->
+                    case NodeView n ->
                         n.delete();
-                    case InArc in ->
-                        in.setIncoming(null);
+//                    case InArc in ->
+//                        in.setIncoming(null);
                 }
             }
             case HOME -> {
-                switch(hovered) {
-                    default ->
-                        Dlg.error("Hover over a node or arc to edit it");
-                    case FGNode n ->
-                        MetaEditorController.edit(n.meta, this);
-                }
+//                switch(hovered) {
+//                    default ->
+//                        Dlg.error("Hover over a node or arc to edit it");
+//                    case NodeView n ->
+//                        MetaEditorController.edit(n.meta, this);
+//                }
             }
         }
         c.consume();
@@ -155,12 +174,14 @@ public class NodeEditorController extends Collectable implements Initializable {
         openDefault();
     }
     void openDefault() {
-        if(loadFile(pref.get("lastFile", null))) return;
-        if(loadFile(dfltFile.toString())) return;
+        if(loadFile(pref.get("lastFile", null)))
+            return;
+        if(loadFile(dfltFile.toString()))
+            return;
         loadFile(this.getClass().getResource("/ang/unknown.ang"));
     }
     void saveAction(ActionEvent evt) {
-        
+
         try( var w = CommitableWriter.abandonOnClose(dfltFile)) {
 //            System.out.println("Writing " + dfltFile);
             fileio.writeValue(w, collect());
@@ -180,7 +201,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     }
     public boolean loadFile(String p) {
 //        System.out.println("String "+p);
-        if(p!=null) try {
+        if(p != null) try {
             return loadFile(new File(p).toURI().toURL());
         } catch(MalformedURLException ex) {
         }
@@ -188,47 +209,40 @@ public class NodeEditorController extends Collectable implements Initializable {
     }
     public boolean loadFile(URL p) {
         System.out.println("Trying " + p);
-        if(p==null) return false;
-        Map<FGNode, Map> connections = new HashMap<>();
-        try( var in = new InputStreamReader(p.openStream(), StandardCharsets.UTF_8)) {
-            for(var n: fileio.readValue(in, Object[].class))
-                if(n instanceof Map m)
-                    add(FGNode.of(m, this, connections));
-            connections.forEach((n, m) -> n.applyConnections(m));
-            adjustArcs();
-            System.out.println("Loaded "+p);
-            return true;
-        } catch(IOException ioe) {
-//            ioe.printStackTrace(System.out);
-            return false;
-        }
+//        if(p==null) return false;
+//        Map<NodeView, Map> connections = new HashMap<>();
+//        try( var in = new InputStreamReader(p.openStream(), StandardCharsets.UTF_8)) {
+//            for(var n: fileio.readValue(in, Object[].class))
+//                if(n instanceof Map m)
+//                    add(NodeView.of(m, this, connections));
+//            connections.forEach((n, m) -> n.applyConnections(m));
+//            adjustArcs();
+//            System.out.println("Loaded "+p);
+//            return true;
+//        } catch(IOException ioe) {
+////            ioe.printStackTrace(System.out);
+//            return false;
+//        }
+        return false;
     }
-    public FGNode make(MetaNode n) {
+    public NodeView make(MetaNode n) {
 //        System.out.println("Creating " + n);
-        var model = new FGNode(n, NodeEditorController.this, null);
-        var pane = model.view;
-        pane.setUserData(model);
+        var view = new NodeView(viewedGraph, n);
+        var pane = view.getView();
+        pane.setUserData(view);
         nodeEditor.getChildren().add(pane);
         ix++;
-        switch(hovered) {
-            case InArc in -> {
-                if(!model.outputs.isEmpty()
-                        && !model.inputs.isEmpty()) {
-                    var cf = in.comesFrom;
-                    in.setIncoming(model.defaultOut());
-                    model.defaultIn().setIncoming(cf);
-                    Platform.runLater(() -> layoutAction());
-                }
-            }
-            case OutArc out -> {
-                if(!model.outputs.isEmpty()
-                        && !model.inputs.isEmpty()) {
-                    model.defaultIn().setIncoming(out);
-                    Platform.runLater(() -> layoutAction());
-                }
-            }
-            case null -> {}
-            default -> {}
+        if(hovered instanceof Arc arc) {
+            var in0 = arc.inOutPort(true);
+            var in = view.defaultPort(true);
+            var out0 = arc.inOutPort(false);
+            var out = view.defaultPort(false);
+            arc.disconnect();
+            if(out0 != null && in != null)
+                viewedGraph.newArc((PortView) out0, (PortView) in);
+            if(out != null && in0 != null)
+                viewedGraph.newArc((PortView) out, (PortView) in0);
+            Platform.runLater(() -> layoutAction());
         }
         var lp = nodeEditor.screenToLocal(DragAssist.targetX, DragAssist.targetY);
         pane.setLayoutX(lp.getX());
@@ -242,11 +256,11 @@ public class NodeEditorController extends Collectable implements Initializable {
         }
         makeDraggable(pane);
         nodeEditor.requestFocus();
-        return model;
+        return view;
     }
-    private void add(FGNode model) {
+    private void add(NodeView model) {
         try {
-            var pane = model.view;
+            var pane = model.getView();
             pane.setUserData(model);
             nodeEditor.getChildren().add(pane);
             makeDraggable(pane);
@@ -262,38 +276,35 @@ public class NodeEditorController extends Collectable implements Initializable {
             adjustArcsQueued.set(false);
             var t = nodeEditor.getLocalToSceneTransform();
             nByUid.values().forEach(n
-                    -> n.inputs.forEach(a -> a.reposition(t)));
+                    -> n.forEachPort(a -> ((PortView) a).reposition(t)));
         });
     }
     private final AtomicBoolean adjustNamesQueued = new AtomicBoolean(false);
     public void adjustNames() {
-        if(adjustNamesQueued.getAndSet(true))
-            return;
-        Platform.runLater(() -> {
-            adjustNamesQueued.set(false);
-            nByUid.values().forEach(n -> {
-                n.inputs.forEach(a->a.setViewText());
-                n.outputs.forEach(a->a.setViewText());
+        if(!adjustNamesQueued.getAndSet(true))
+            Platform.runLater(() -> {
+                adjustNamesQueued.set(false);
+                nByUid.values().forEach(n
+                        -> n.forEachPort(port -> ((PortView) port).setViewText()));
             });
-        });
     }
     @Override
     public Object collect() {
         var ret = new ArrayList<Object>();
         nodeEditor.getChildren().forEach(n -> {
             var u = n.getUserData();
-            if(u instanceof FGNode f)
+            if(u instanceof NodeView f)
                 ret.add(f.collect());
         });
         return ret;
     }
-    public Node[] allFGNodes() {
+    public Node[] allNodeViews() {
         return nodeEditor.getChildren().stream()
-                .filter(n -> n.getUserData() instanceof FGNode)
+                .filter(n -> n.getUserData() instanceof NodeView)
                 .toArray(n -> new Node[n]);
     }
     public void clearAll() {
-        nodeEditor.getChildren().removeAll(allFGNodes());
+        nodeEditor.getChildren().removeAll(allNodeViews());
     }
 
     static private int ix = 0;
@@ -376,8 +387,8 @@ public class NodeEditorController extends Collectable implements Initializable {
             }
             case MetaNode m -> {
                 if(!m.isRoot()) {
-                    appendTo(m.parent, l);
-                    l.add(m.name);
+                    appendTo(m.getParent(), l);
+                    l.add(m.getName());
                 }
             }
             default -> {

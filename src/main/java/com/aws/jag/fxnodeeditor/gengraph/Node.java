@@ -99,15 +99,20 @@ public class Node<T extends Node> extends GraphPart<T> {
                 .append(getUid());
         return sb;
     }
-    public void forEach(Consumer<? super Port> f) {
+    public void forEachPort(Consumer<? super Port> f) {
         ports.values().forEach(f);
     }
+    public boolean hasPorts() { return !ports.isEmpty(); }
     @Override
     protected void collectMore(Map<String, Object> map) {
         super.collectMore(map);
         putOpt(map, "ports", ports);
         map.put("uid", getUid());
         putOpt(map, "meta", metadata.getUid());
+    }
+    public Port defaultPort(boolean in) {
+        var dp = metadata.defaultPort(in);
+        return dp==null ? null : getPort(dp.getName());
     }
 //    @Override
     public void populateFrom(Node other) {
@@ -117,7 +122,7 @@ public class Node<T extends Node> extends GraphPart<T> {
         assert !hasUid();
         setUid(other.getUid());
         copiedFrom = other;
-        forEach(p -> p.populateFrom(other.getPort(p.getName())));
+        forEachPort(p -> p.populateFrom(other.getPort(p.getName())));
     }
     public Port getPort(String s) {
         return ports.get(s);
