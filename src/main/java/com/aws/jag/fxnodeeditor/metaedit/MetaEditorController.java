@@ -7,6 +7,7 @@ package com.aws.jag.fxnodeeditor.metaedit;
 import com.aws.jag.fxnodeeditor.util.*;
 import com.aws.jag.fxnodeeditor.view.*;
 import com.aws.jag.fxnodeeditor.gengraph.*;
+import java.io.*;
 import java.net.*;
 import java.util.*;
 import javafx.event.*;
@@ -33,7 +34,7 @@ public class MetaEditorController implements Initializable {
             stage = new Stage();
             stage.setTitle("Product catalog entry editor");
             stage.setScene(scene);
-        } catch(Throwable ex) {
+        } catch(IOException|Error ex) {
             Dlg.error("Launching meta editor dialog", ex);
         }
     }
@@ -104,8 +105,8 @@ public class MetaEditorController implements Initializable {
                 currentPort.markDirty();
             }
             var desc = meParamDesc.getText();
-            if(!Objects.equals(desc, currentPort.description)) {
-                currentPort.description = desc;
+            if(!Objects.equals(desc, currentPort.getDescription())) {
+                currentPort.setDescription(desc);
                 currentPort.markDirty();
             }
             var value = meValue.getText();
@@ -114,8 +115,8 @@ public class MetaEditorController implements Initializable {
                 currentPort.markDirty();
             }
             var type = meType.getValue();
-            if(!Objects.equals(type, currentPort.type)) {
-                currentPort.type = Type.of(type);
+            if(!Objects.equals(type, currentPort.getType())) {
+                currentPort.setType(Type.of(type));
                 currentPort.markDirty();
             }
         }
@@ -123,8 +124,8 @@ public class MetaEditorController implements Initializable {
             meIsInput.setSelected(ae.in);
             meParameterName.setText(ae.getName());
             meValue.setText(Coerce.toString(ae.defaultValue));
-            meParamDesc.setText(ae.description);
-            meType.selectionModelProperty().get().select(ae.type.getName());
+            meParamDesc.setText(ae.getDescription());
+            meType.selectionModelProperty().get().select(ae.getType().getName());
             currentPort = ae;
         } else {
             meIsInput.setSelected(false);

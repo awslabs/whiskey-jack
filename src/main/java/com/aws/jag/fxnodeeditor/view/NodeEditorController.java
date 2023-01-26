@@ -48,15 +48,18 @@ public class NodeEditorController extends Collectable implements Initializable {
     public Node dragNode;
     GraphView viewedGraph;
     public final Map<String, NodeView> nByUid = new ConcurrentHashMap<>();
-    public final NodeLibrary mnodes = new NodeLibrary();
     public final MetaNodeTreeModel mNodeTreeModel = new MetaNodeTreeModel();
+    @Override
+    public void appendRefTo(StringBuilder sb) {
+        sb.append("NodeEditorController?");
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         Thread.setDefaultUncaughtExceptionHandler((t, error) -> Dlg.error("In " + t.getName(), error));
-        mnodes.initialize();
-//        mNodeTreeModel.initialize(navTree, mnodes, this);
-        mnodes.forAll(n -> {
+        NodeLibrary.singleton.initialize();
+//        mNodeTreeModel.initialize(navTree, NodeLibrary.singleton, this);
+        NodeLibrary.singleton.forAll(n -> {
             if(n.hasPorts()) {
                 var namePath = toStringArray("Add", n);
                 addMenu(n, namePath);
@@ -69,7 +72,7 @@ public class NodeEditorController extends Collectable implements Initializable {
                 mkaction("Save", this::saveAction, KeyCode.S),
                 mkaction("New", this::newAction, KeyCode.N),
                 mkaction("Layout", e -> layoutAction(), KeyCode.L),
-                mkaction("Export All Meta", mnodes::exportAction, KeyCode.X),
+                mkaction("Export All Meta", NodeLibrary.singleton::exportAction, KeyCode.X),
                 mkaction("Quit", this::quitAction, KeyCode.Q)
         );
         scrollPane.viewportBoundsProperty().addListener(b -> {
@@ -245,14 +248,16 @@ public class NodeEditorController extends Collectable implements Initializable {
             Platform.runLater(() -> layoutAction());
         }
         var lp = nodeEditor.screenToLocal(DragAssist.targetX, DragAssist.targetY);
-        pane.setLayoutX(lp.getX());
-        pane.setLayoutY(lp.getY());
-        var parent = pane.getParent();
-        if(parent != null) {
-            pane.getParent().applyCss();
-            pane.getParent().layout();
-            pane.setLayoutX(lp.getX() - pane.getWidth() / 2);
-            pane.setLayoutY(lp.getY() - pane.getHeight() / 2);
+        if(lp != null) {
+            pane.setLayoutX(lp.getX());
+            pane.setLayoutY(lp.getY());
+            var parent = pane.getParent();
+            if(parent != null) {
+                pane.getParent().applyCss();
+                pane.getParent().layout();
+                pane.setLayoutX(lp.getX() - pane.getWidth() / 2);
+                pane.setLayoutY(lp.getY() - pane.getHeight() / 2);
+            }
         }
         makeDraggable(pane);
         nodeEditor.requestFocus();
@@ -290,7 +295,7 @@ public class NodeEditorController extends Collectable implements Initializable {
     }
     @Override
     public Object collect() {
-        var ret = new ArrayList<Object>();
+        var ret = new ArrayList<>();
         nodeEditor.getChildren().forEach(n -> {
             var u = n.getUserData();
             if(u instanceof NodeView f)

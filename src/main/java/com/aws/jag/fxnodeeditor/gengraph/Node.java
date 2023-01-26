@@ -55,10 +55,18 @@ public class Node<T extends Node> extends GraphPart<T> {
 //        System.out.println("UID: " + u);
         return u;
     }
+    @Override
+    public void appendRefTo(StringBuilder sb) {
+        sb.append(uid);
+    }
     private static final String uniquePrefix = Utils.generateRandomString(12);
     private static final AtomicInteger sequenceNumber = new AtomicInteger(0);
     public boolean hasUid() { // rarely needed
         return uid == null;
+    }
+    @Override
+    public String opcode() {
+        return "node";
     }
     @Override
     public String toString() {
@@ -107,7 +115,7 @@ public class Node<T extends Node> extends GraphPart<T> {
     protected void collectMore(Map<String, Object> map) {
         super.collectMore(map);
         putOpt(map, "ports", ports);
-        map.put("uid", getUid());
+        putOpt(map, "uid", getUid());
         putOpt(map, "meta", metadata.getUid());
     }
     public Port defaultPort(boolean in) {
@@ -131,14 +139,23 @@ public class Node<T extends Node> extends GraphPart<T> {
     public void populateFrom(Map map) {
         super.populateFrom(map);
         setUid(get(map, "uid", null));
-        getCollection(map, "ports").forEach(o -> {
-            if(o instanceof Map pm) { // Port already exists, so just populate the right one
-                var n = get(pm, "name", "unnamed");
-                var p = ports.get(n);
-                if(p == null)
-                    System.out.println("Port named " + n + " does not exist in " + this);
-                else
-                    p.populateFrom(pm);
+        populatePorts(map,"ports",false);
+        populatePorts(map,"in",true);
+        populatePorts(map,"out",false);
+    }
+    private void populatePorts(Map map, String key, boolean in) {
+        var m = getMap(map,key);
+        if(!m.isEmpty()) dump(m, "populatePorts "+key);
+        getMap(map, key).forEach((k,v) -> {
+            if(v instanceof Map pm) {
+                var p = ports.get(k);
+                if(p == null) {
+                    p = getContext().newPort(this, MetaPort.meta);
+                    ports.put(k, p);
+                    p.setName(k);
+                }
+                if(in) pm.put("in", in);
+                p.populateFrom(pm);
             }
         });
     }

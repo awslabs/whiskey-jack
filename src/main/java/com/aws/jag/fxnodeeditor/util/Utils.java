@@ -413,11 +413,13 @@ public final class Utils {
         out.append((char) ('0' + value % BASE_10));
     }
 
-    /** Parse a string into an Object based on what it looks like, "true" and
+    /**  Parse a string into an Object based on what it looks like, "true" and
      * "false" are the obvious booleans, if it looks like a long or a double,
-     * then that's what's returned.  Otherwise it's returned as a string. */
+     * then that's what's returned.Otherwise it's returned as a string.
+     * @param s string to be parsed
+     * @return  the result of parsing */
     public static Object parseObject(String s) {
-        return switch(s) {
+        return switch(s = s.trim()) {
             case null ->
                 null;
             case "true" ->
@@ -573,23 +575,6 @@ public final class Utils {
     }
 
     /**
-     * Create all paths.
-     *
-     * @param paths paths to create
-     * @throws IOException if path creation fails
-     */
-    public static void createPaths(Path... paths) throws IOException {
-        for(var p: paths) {
-            if(p.toFile().exists())
-                continue;
-            // This only supports POSIX compliant file permission right now. We will need to
-            // change this when trying to support Greengrass in Non-POSIX OS.
-            Files.createDirectories(p,
-                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
-        }
-    }
-
-    /**
      * Clean up a file or a directory recursively.
      *
      * @param filePath path to the file
@@ -626,7 +611,7 @@ public final class Utils {
      * @return string or null if there was an exception
      */
     public static String inputStreamToString(InputStream is) {
-        try( var isr = new InputStreamReader(is, StandardCharsets.UTF_8);  var sr = new BufferedReader(isr)) {
+        try( var sr = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             return sr.lines().collect(Collectors.joining("\n"));
         } catch(IOException e) {
             return null;
@@ -652,7 +637,8 @@ public final class Utils {
         Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                Utils.createPaths(des.resolve(src.relativize(dir)));
+                Files.createDirectories(des.resolve(src.relativize(dir)), 
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
                 return FileVisitResult.CONTINUE;
             }
 

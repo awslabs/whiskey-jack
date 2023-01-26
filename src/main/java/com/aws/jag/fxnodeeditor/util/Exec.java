@@ -32,7 +32,7 @@ import javax.annotation.*;
  * .background(exc -> System.out.println("exit "+exc));
  * </pre>
  */
-public abstract class Exec implements Closeable {
+public class Exec implements Closeable {
     private static final char PATH_SEP = File.pathSeparatorChar;
     private static final String PATH_ENVVAR = "PATH";
 //    private static final Logger staticLogger = LogManager.getLogger(Exec.class);
@@ -114,12 +114,26 @@ public abstract class Exec implements Closeable {
     /**
      * Find the path of a given command.
      *
-     * @param fn command to lookup.
+     * @param fn0 command to lookup.
      * @return the Path of the command, or null if not found.
      */
-    @Nullable
-    public abstract Path which(String fn);  // mirrors shell command
+//    @Nullable
+//    public Path which(String fn);  // mirrors shell command
 
+    @Nullable
+    public Path which(String fn0) {
+        var fn = deTilde(fn0);
+        if (fn.startsWith("/"))
+            return Files.isExecutable(fn) ? fn : null;
+        for (Path d : paths) {
+            Path f = d.resolve(fn);
+            if (Files.isExecutable(f)) {
+                return f;
+            }
+        }
+        return null;
+    }
+    
     public static Path deTilde(String s) {
         if (s.startsWith("~/")) {
             return Utils.HOME_PATH.resolve(s.substring(2));
@@ -277,7 +291,9 @@ public abstract class Exec implements Closeable {
      *
      * @return the command.
      */
-    public abstract String[] getCommand();
+    public String[] getCommand() {
+        return cmds;
+    }
 
     /**
      * Execute a command.
@@ -330,8 +346,18 @@ public abstract class Exec implements Closeable {
      * @return child process
      * @throws IOException if IO error occurs
      */
-    protected abstract Process createProcess() throws IOException;
+//    protected abstract Process createProcess() throws IOException; Only care about *nix
 
+    
+    protected Process createProcess() throws IOException {
+        String[] command = getCommand();
+//        logger.atTrace().kv("decorated command", String.join(" ", command)).log();
+        ProcessBuilder pb = new ProcessBuilder();
+        pb.environment().putAll(environment);
+        process = pb.directory(dir).command(command).start();
+//        pid = Processes.newPidProcess(process).getPid();
+        return process;
+    }
     /**
      * Get the stdout and stderr output as a string.
      *
@@ -376,15 +402,14 @@ public abstract class Exec implements Closeable {
         return process;
     }
 
-    /**
-     * Get the process ID of the underlying process.
-     *
-     * @return the process PID.
-     */
-    public abstract int getPid();
-
     @Override
-    public abstract void close() throws IOException;
+    public void close() {
+        var p = process;
+        if(!isClosed.getAndSet(true) && p!=null) {
+            p.destroy();
+            process = null;
+        }
+    }
 
     @Override
     public String toString() {

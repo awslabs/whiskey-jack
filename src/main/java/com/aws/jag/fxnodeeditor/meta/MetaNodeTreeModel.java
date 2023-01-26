@@ -12,14 +12,12 @@ import javafx.scene.image.*;
 import javafx.scene.input.*;
 
 public class MetaNodeTreeModel {
-    static final Image cursor = new Image(Node.class.getResourceAsStream("CreateNodeCursor.png"));
+    static final Image cursor = new Image(NodeView.class.getResourceAsStream("CreateNodeCursor.png"));
     TreeView tree;
-    NodeLibrary lib;
     NodeEditorController nec;
-    public void initialize(TreeView t, NodeLibrary l, NodeEditorController n) {
+    public void initialize(TreeView t, NodeEditorController n) {
         nec = n;
         tree = t;
-        lib = l;
         t.setRoot(new nTreeItem(MetaNode.metaMeta));
         t.setShowRoot(false);
         t.setCellFactory(i -> {

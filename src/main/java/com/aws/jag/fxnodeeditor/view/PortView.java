@@ -138,7 +138,7 @@ public class PortView extends Port {
         setViewText();
     }
     public void setViewText() {
-        label.setText(!metadata.in || isConnected() ? metadata.name : metadata.name+"="+constantValue);
+        label.setText(!metadata.in || isConnected() ? metadata.getName() : metadata.getName()+"="+constantValue);
     }
     public void reposition(Transform t) {
         // TODO implement

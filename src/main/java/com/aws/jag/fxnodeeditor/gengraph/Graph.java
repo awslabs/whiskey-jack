@@ -14,6 +14,7 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     private final Class<N> nodeClass;
     private final Class<P> portClass;
     private final Class<A> arcClass;
+    private final List<String> pendingConnections = new ArrayList<>();
     public Graph(Class<N> n, Class<P> p, Class<A> a) {
         nodeClass = n;
         portClass = p;
@@ -42,6 +43,15 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     public String getDescription() {
         return toString();
     }
+    @Override
+    public String opcode() {
+        return "graph";
+    }
+    @Override
+    public void appendRefTo(StringBuilder sb) {
+        sb.append("Graph:").append(getClass().getName());
+    }
+    public void addConnection(String con) { pendingConnections.add(con); }
 //    @Override
     public void populateFrom(Graph<? super Node,? super Port, ? super Arc, ? super Graph> other) {
         other.forEach(n->newNode(n)); // copy the nodes
@@ -138,6 +148,10 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     public void dump(PrintStream p) {
         p.println("\nGraph " + getName());
         map.values().forEach(n->System.out.println("  "+n));
+        if(!pendingConnections.isEmpty()) {
+            p.println("\tPending Connections:");
+            pendingConnections.forEach(s->p.println("\t\t"+s));
+        }
     }
     public void dump() {
         dump(System.out);

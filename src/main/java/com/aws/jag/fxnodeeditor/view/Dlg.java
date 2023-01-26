@@ -13,6 +13,7 @@ import javafx.scene.image.*;
 import javafx.scene.layout.*;
 
 public class Dlg {
+    private static final int maxStringWidth = 60;
     private String title;
     private final VBox body = new VBox();
     private VBox expandable;
@@ -56,12 +57,14 @@ public class Dlg {
                 case Node n ->
                     body.getChildren().add(n);
                 case Throwable t -> {
+                    t.printStackTrace(System.out); // TODO eliminate
                     System.out.flush();
                     var u = getUltimateCause(t);
                     var m = u.getMessage();
                     if(isEmpty(m))
                         m = u.toString();
-                    addStuff(m, "dlgerrTitle");
+                    addStuff(m, style);
+                    style = "dlgerrTitle";
                     if(expandable == null)
                         expandable = new VBox();
                     for(var e: u.getStackTrace())
@@ -70,7 +73,7 @@ public class Dlg {
                 case Collection c ->
                     c.forEach(e -> addStuff(e, "dlgBody"));
                 default -> {
-                    addString(body, deepToString(o, 80).toString(), style);
+                    addString(body, deepToString(o, maxStringWidth).toString(), style);
                     style = "dlgBody";
                 }
             }
@@ -81,9 +84,10 @@ public class Dlg {
         if(!isEmpty(s))
             if(title == null)
                 title = s;
-            else if(v.size() < 20) {
+            else if(v.size() < 80) {
                 var l = new Label(s);
                 l.setWrapText(true);
+                l.setPrefWidth(maxStringWidth*10);
                 l.getStyleClass().add(style);
                 v.add(l);
             }

@@ -115,9 +115,9 @@ public class NodeView extends Node {
     @Override
     protected void collectMore(Map map) {
         super.collectMore(map);
-        map.put("x", pane.getLayoutX());
-        map.put("y", pane.getLayoutY());
-        map.put("expanded", isExpanded());
+        putOpt(map, "x", pane.getLayoutX());
+        putOpt(map, "y", pane.getLayoutY());
+        putOpt(map, "expanded", isExpanded());
     }
     
     private static final Image closeArrow = new Image(NodeView.class.getResourceAsStream("CloseArrow.png"));

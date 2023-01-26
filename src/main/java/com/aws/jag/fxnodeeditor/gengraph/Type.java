@@ -4,16 +4,25 @@
  */
 package com.aws.jag.fxnodeeditor.gengraph;
 
+import com.aws.jag.fxnodeeditor.util.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-public class Type {
+public class Type extends Collectable {
     private final String name;
     @SuppressWarnings("")
-    public Type(String n) {
+    private Type(String n) {
         name = n;
         all.put(n, this);
+    }
+    @Override
+    public void appendRefTo(StringBuilder sb) {
+        sb.append(name);
+    }
+    @Override
+    public Object collect() {
+        return name;
     }
     public String getName() {
         return name;
@@ -35,6 +44,7 @@ public class Type {
     }
 
     private static final Map<String, Type> all = new HashMap();
+    public static final Type any_t = new Type("any");
     public static final Type bool_t = new Type("boolean");
     public static final Type double_t = new Type("double");
     public static final Type image_t = new Type("image");

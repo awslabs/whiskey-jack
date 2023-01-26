@@ -4,12 +4,13 @@
  */
 package com.aws.jag.fxnodeeditor.gengraph;
 
+import static com.aws.jag.fxnodeeditor.gengraph.GraphPart.*;
 import com.aws.jag.fxnodeeditor.util.*;
 import java.util.*;
 import java.util.function.*;
 import javax.annotation.*;
 
-public class Port /*extends GraphPart<Port>*/implements Iterable<Arc> {
+public class Port extends Collectable implements Iterable<Arc> {
     public final MetaPort metadata;
     public final Node within;
     public Object constantValue; // used when disconnected
@@ -30,11 +31,8 @@ public class Port /*extends GraphPart<Port>*/implements Iterable<Arc> {
         other.forEach(a -> System.out.println("  mk arc " + a));
     }
     public void populateFrom(Map values) {
-        throw new UnsupportedOperationException("PFM Not supported yet.");
-    }
-    protected void collectMore(Map map) {
-        GraphPart.putOpt(map, "value", constantValue);
-        GraphPart.putOpt(map, "value", constantValue);
+        constantValue = getOpt(values,"value",constantValue);
+        getCollection(values, "arcs").forEach(s->getContext().addConnection(s.toString()));
     }
     public void remove(Arc a) {
         if(arcs != null) {
@@ -48,6 +46,7 @@ public class Port /*extends GraphPart<Port>*/implements Iterable<Arc> {
             arcs = new ArrayList<>();
         arcs.add(a);
     }
+    @Override
     public void forEach(Consumer<? super Arc> f) {
         if(arcs != null)
             arcs.forEach(f);
@@ -65,6 +64,17 @@ public class Port /*extends GraphPart<Port>*/implements Iterable<Arc> {
     public void connectTo(Port n) {
         Arc.connect(this, n);
     }
+    @Override
+    public Object collect() {
+        var ret = new HashMap<String,Object>();
+        collectMore(ret);
+        return ret;
+    }
+    protected void collectMore(Map<String,Object> map) {
+        putOpt(map, "arcs", arcs);
+//        putOpt(map, "meta", metadata.getUid());
+        putOpt(map, "value", constantValue);
+    }
     public Graph getContext() {
         return within.getContext();
     }
@@ -81,6 +91,14 @@ public class Port /*extends GraphPart<Port>*/implements Iterable<Arc> {
     }
     public void setName(String name) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+    @Override
+    public void appendRefTo(StringBuilder sb) {
+        within.appendRefTo(sb);
+        sb.append('.').append(getName());
+    }
+    public String getDescription() {
+        return metadata.getDescription();
     }
     public Type getType() {
         return metadata.getType();

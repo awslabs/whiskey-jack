@@ -30,11 +30,25 @@ public class Arc extends GraphPart<Arc> {
         return a.getName() + "-" + b.getName();
     }
     public Port oneEnd() { return a; }
+    @Override
+    public String opcode() {
+        return "arc";
+    }
     public Port otherEnd() { return b; }
     public Port otherEnd(Port x) {
         return x == a ? b
              : x == b ? a
                       : null;
+    }
+    @Override
+    public Object collect() {
+        return getRef();
+    }
+    @Override
+    public void appendRefTo(StringBuilder sb) {
+        a.appendRefTo(sb);
+        sb.append('-');
+        b.appendRefTo(sb);
     }
     public Port inOutPort(boolean in) {
         return a.metadata.in==in ? a : b;

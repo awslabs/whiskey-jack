@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-public abstract class GraphPart<T extends GraphPart> {
+public abstract class GraphPart<T extends GraphPart> extends Collectable {
     private String message;  // situation-specific message (eg. an error)
     private String name;
     public abstract String getDescription(); // describe this part
@@ -70,19 +70,17 @@ public abstract class GraphPart<T extends GraphPart> {
     }
     /* I should probably be using Jackson's built-in autoserializer, but I
      * like the control I get by hand-rolling */
+    @Override
     public Object collect() {
         var ret = new HashMap<String,Object>();
         collectMore(ret);
         return ret;
     }
+    public abstract String opcode();
     protected void collectMore(Map<String,Object> map) {
-        map.put("name", getName());
-        map.put("message", message);
-    }
-    protected static void putOpt(Map<String,Object> map, String key, Object value) {
-        if(value==null) return;
-            if(value instanceof CharSequence cs && cs.isEmpty()) return;
-        map.put(key, value);
+        putOpt(map, "op", opcode());
+        putOpt(map, "name", getName());
+        putOpt(map, "message", message);
     }
     public void populateFrom(Map<String,Object> values) {
         name = get(values,"name",null);
@@ -113,7 +111,7 @@ public abstract class GraphPart<T extends GraphPart> {
         return switch(c) {
             case null ->
                 null;
-            case GraphPart o ->
+            case Collectable o ->
                 o.collect();
             case Collection l ->
                 l.stream().map(o -> asObject(o)).collect(Collectors.toList());
@@ -137,12 +135,5 @@ public abstract class GraphPart<T extends GraphPart> {
     public StringBuilder appendNameTo(StringBuilder sb) {
         sb.append(getName());
         return sb;
-    }
-    public static String get(Map m, String k, String dflt) {
-        var v = m.get(k);
-        return v==null ? dflt : v.toString();
-    }
-    public static Collection<Object> getCollection(Map m, String k) {
-        return m==null ? Collections.emptyList() : Coerce.toCollection(m.get(k));
     }
 }
