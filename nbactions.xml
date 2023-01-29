@@ -95,4 +95,30 @@
                 <exec.vmArgs>--enable-preview</exec.vmArgs>
             </properties>
         </action>
+        <action>
+            <actionName>test.single</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>process-test-classes</goal>
+                <goal>surefire:test</goal>
+            </goals>
+            <properties>
+                <test>${packageClassName}</test>
+                <exec.vmArgs>--enable-preview</exec.vmArgs>
+            </properties>
+        </action>
+        <action>
+            <actionName>test</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>test</goal>
+            </goals>
+            <properties>
+                <exec.vmArgs>--enable-preview</exec.vmArgs>
+            </properties>
+        </action>
     </actions>

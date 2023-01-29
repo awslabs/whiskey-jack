@@ -18,7 +18,7 @@ public class CheapSetTest {
     }
     private void T(String... s) {
         var c = CheapSet.ofAll(s);
-        System.out.println(s.length+": "+c);
+//        System.out.println(s.length+": "+c);
         Assertions.assertEquals(s.length, c.size());
         for(var v: s)
             Assertions.assertTrue(c.contains(v));

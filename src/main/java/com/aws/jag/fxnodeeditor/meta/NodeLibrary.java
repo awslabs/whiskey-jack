@@ -39,7 +39,7 @@ public class NodeLibrary {
     public void saveAllAs(Path p) {
         try( var out = CommitableWriter.abandonOnClose(p)) {
 //            Collectable.dump(Collectable.asObject(MetaNode.metaMeta));
-            NodeEditorController.fileio.writeValue(out, Collectable.asObject(MetaNode.metaMeta));
+            GraphView.fileio.writeValue(out, Collectable.asObject(MetaNode.metaMeta));
             out.commit();
         } catch(IOException ioe) {
             Dlg.error("Can't save file", ioe);
@@ -71,7 +71,7 @@ public class NodeLibrary {
         return loadedFrom.get(n);
     }
     private Void load(String tag, Path from, InputStream in) throws IOException {
-        var v = NodeEditorController.fileio.readValue(in, Object.class);
+        var v = GraphView.fileio.readValue(in, Object.class);
 //                System.out.println(Utils.deepToString(v, 80));
         if(v instanceof Map m) {
             var rootName = Coerce.get(m, "name", "");

@@ -13,11 +13,11 @@ import javafx.scene.input.*;
 
 public class MetaNodeTreeModel {
     static final Image cursor = new Image(NodeView.class.getResourceAsStream("CreateNodeCursor.png"));
-    TreeView tree;
-    NodeEditorController nec;
-    public void initialize(TreeView t, NodeEditorController n) {
-        nec = n;
-        tree = t;
+//    TreeView tree;
+//    GraphView nec;
+    public void initialize(TreeView t, GraphView n) {
+//        nec = n;
+//        tree = t;
         t.setRoot(new nTreeItem(MetaNode.metaMeta));
         t.setShowRoot(false);
         t.setCellFactory(i -> {
@@ -63,6 +63,6 @@ public class MetaNodeTreeModel {
             return getValue().getName();
         }
     }
-    static MetaNode dragSource;
+//    static MetaNode dragSource;
 
 }

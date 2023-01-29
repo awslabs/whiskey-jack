@@ -12,14 +12,14 @@
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<SplitPane fx:id="keyboardRoot" dividerPositions="0.75" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.aws.jag.fxnodeeditor.view.NodeEditorController">
+<SplitPane fx:id="keyboardRoot" dividerPositions="0.75" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.aws.jag.fxnodeeditor.view.GraphView">
    <items>
       <ScrollPane fx:id="scrollPane">    
           <stylesheets>
               <URL value="@nodeeditor.css" />
           </stylesheets>
           <content>
-              <AnchorPane fx:id="nodeEditor" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="200.0" styleClass="nodeEditor" />
+              <AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="200.0" styleClass="nodeEditor" />
           </content>
          <contextMenu>
             <ContextMenu fx:id="contextMenu" />

@@ -64,7 +64,7 @@ public class MetaPort extends Port {
     @Override
     public void populateFrom(Map values) {
         super.populateFrom(values);
-        System.out.println("PopulateFrom");dump(values);
+//        System.out.println("PopulateFrom");dump(values);
         setType(Type.of(getOpt(values, "type", getType().toString())));
         setName(getOpt(values, "name", getName()));
         defaultValue = getOpt(values, "defaultValue", defaultValue);

@@ -4,7 +4,6 @@
  */
 package com.aws.jag.fxnodeeditor.view;
 
-import com.aws.jag.fxnodeeditor.gengraph.*;
 import com.aws.jag.fxnodeeditor.gengraph.Arc;
 import static com.aws.jag.fxnodeeditor.view.GraphView.HOVER_PSEUDO_CLASS;
 import javafx.scene.control.*;
@@ -13,7 +12,7 @@ import javafx.scene.shape.*;
 import javafx.scene.transform.*;
 
 public class ArcView extends Arc {
-    CubicCurve viz;
+    private CubicCurve view;
 
     @SuppressWarnings("unused")
     public ArcView(PortView a, PortView b) {
@@ -25,20 +24,22 @@ public class ArcView extends Arc {
         return (GraphView) super.getContext();
     }
 
-    public void createViz() {
-        if(viz == null) {
-            viz = new CubicCurve();
-            var controller = ((GraphView) getContext()).controller;
-            viz.hoverProperty().addListener(b -> {
-                controller.hovered = viz.isHover() ? this : null;
+    public CubicCurve getView() {
+        var r = view;
+        if(r == null) {
+            System.out.println("createViz");
+            view = r = new CubicCurve();
+            var controller = getContext();
+            r.hoverProperty().addListener(b -> {
+                controller.hovered = view.isHover() ? this : null;
             });
-            viz.setOnDragOver(evt -> {
+            r.setOnDragOver(evt -> {
                 if(DragAssist.createNode != null) {
                     evt.acceptTransferModes(TransferMode.ANY);
                     evt.consume();
                 }
             });
-            viz.setOnDragDropped(evt -> {
+            r.setOnDragDropped(evt -> {
                 if(DragAssist.createNode != null) {
                     DragAssist.targetX = evt.getScreenX();
                     DragAssist.targetY = evt.getScreenY();
@@ -48,33 +49,36 @@ public class ArcView extends Arc {
                 evt.setDropCompleted(true);
                 evt.consume();
             });
-            viz.setOnDragEntered(evt -> viz.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, true));
-            viz.setOnDragExited(evt -> viz.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, false));
-            Tooltip.install(viz, new Tooltip(oneEnd().getName() + "->" + otherEnd().getName()));
-            controller.nodeEditor.getChildren().add(viz);
+            r.setOnDragEntered(evt -> view.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, true));
+            r.setOnDragExited(evt -> view.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, false));
+            Tooltip.install(r, new Tooltip(oneEnd().getName() + "->" + otherEnd().getName()));
+            controller.getView().getChildren().add(r);
         }
+        return r;
         // TODO Platform.runLater(() -> setViewText());
     }
-    public void deleteViz() {
-        if(viz!=null) {
-            getContext().controller.nodeEditor.getChildren().remove(viz);
-            viz = null;
+    public void delete() {
+        if(view != null) {
+            getContext().getView().getChildren().remove(view);
+            view = null;
         }
     }
     public void reposition(Transform area) {
-        if(viz != null)
-            if(oneEnd() instanceof PortView a && otherEnd() instanceof PortView b) {
-                var out = a.getPosition(true, area);
-                var in = b.getPosition(false, area);
-                var midX = (in.getX() + out.getX()) / 2;
-                viz.setStartX(out.getX());
-                viz.setStartY(out.getY());
-                viz.setControlX1(midX);
-                viz.setControlY1(out.getY());
-                viz.setControlX2(midX);
-                viz.setControlY2(in.getY());
-                viz.setEndX(in.getX());
-                viz.setEndY(in.getY());
-            }
+        var curve = getView();
+        if(oneEnd() instanceof PortView a && otherEnd() instanceof PortView b) {
+            var out = a.getPosition(true, area);
+            var in = b.getPosition(false, area);
+//                var midX = (in.getX() + out.getX()) / 2;
+            curve.setStartX(out.getX());
+            curve.setStartY(out.getY());
+//                curve.setControlX1(midX);
+            curve.setControlX1(out.getX() + (a.metadata.in ? -100 : 100));
+            curve.setControlY1(out.getY());
+//                curve.setControlX2(midX);
+            curve.setControlX2(in.getX() + (b.metadata.in ? -100 : 100));
+            curve.setControlY2(in.getY());
+            curve.setEndX(in.getX());
+            curve.setEndY(in.getY());
+        }
     }
 }

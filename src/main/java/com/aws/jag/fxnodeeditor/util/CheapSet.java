@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 
+// Probably a bad idea
 public class CheapSet<T> {
     private CheapSet() {
     }

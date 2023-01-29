@@ -49,9 +49,9 @@ public class ViewTest extends Application {
     }
 
     public void annotate(/*AnchorPane nodeEditor*/) {
-        testGraph.dump();
-        MetaNode.metaGraph.dump();
-        dupGraph.dump();
+//        testGraph.dump();
+//        MetaNode.metaGraph.dump();
+//        dupGraph.dump();
     }
     @Test
     public void fxstart() {
@@ -61,16 +61,14 @@ public class ViewTest extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            var v = new GraphView();
-            Collectable.dump(asObject(m), "View");
+//            Collectable.dump(asObject(m), "View");
 //            Consumer<NodeEditorController> nec = controller -> controller.setGraph(v);
-            NodeEditorController.createNotifier = controller -> {
-                controller.setGraph(v);
-                var nv = v.controller.make(m);
+            GraphView.createNotifier = controller -> {
+                var nv = controller.make(m);
                 var fx = nv.getView();
                 fx.setLayoutX(50);
                 fx.setLayoutY(50);
-                var nv2 = v.controller.make(m);
+                var nv2 = controller.make(m);
                 var fx2 = nv2.getView();
                 fx2.setLayoutX(250);
                 fx2.setLayoutY(50);
@@ -78,7 +76,7 @@ public class ViewTest extends Application {
 //                Collectable.dump(asObject(nv), "View2");
             };
             primaryStage.setTitle("Node Editor Test");
-            primaryStage.setScene(new Scene(new FXMLLoader(NodeEditorController.class.getResource("NodeEditor.fxml")).load(), 1000, 640));
+            primaryStage.setScene(new Scene(new FXMLLoader(GraphView.class.getResource("NodeEditor.fxml")).load(), 1000, 640));
             primaryStage.show();
 //            final Graph<NodeView, PortView, ArcView, Graph> viewGraph
 //                    = new Graph<>(NodeView.class, PortView.class, ArcView.class).setName("View");

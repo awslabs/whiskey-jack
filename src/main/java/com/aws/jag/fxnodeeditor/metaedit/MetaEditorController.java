@@ -17,7 +17,7 @@ import javafx.scene.control.*;
 import javafx.stage.*;
 
 public class MetaEditorController implements Initializable {
-    public static void edit(MetaNode m, NodeEditorController parent) {
+    public static void edit(MetaNode m, GraphView parent) {
         nec = parent;
         if(singleton != null)
             singleton.populate(m);
@@ -38,7 +38,7 @@ public class MetaEditorController implements Initializable {
             Dlg.error("Launching meta editor dialog", ex);
         }
     }
-    private static NodeEditorController nec;
+    private static GraphView nec;
     private MetaNode current;
     private static MetaNode first;
     private static MetaEditorController singleton;

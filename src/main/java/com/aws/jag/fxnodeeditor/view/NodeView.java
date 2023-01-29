@@ -5,10 +5,12 @@
 package com.aws.jag.fxnodeeditor.view;
 
 import com.aws.jag.fxnodeeditor.gengraph.*;
+import com.aws.jag.fxnodeeditor.gengraph.Node;
 import com.aws.jag.fxnodeeditor.util.*;
 import java.util.*;
 import java.util.function.*;
 import javafx.geometry.*;
+import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
@@ -21,9 +23,17 @@ public class NodeView extends Node {
         init();
         populateFrom(original);
     }
+    @SuppressWarnings("LeakingThisInConstructor")
     public NodeView(@Nonnull GraphView parent, @Nonnull MetaNode mn) {
         super(parent, mn);
         init();
+        try {
+            pane.setUserData(this);
+            parent.getView().getChildren().add(pane);
+            makeDraggable(pane);
+        } catch(Throwable t) {
+            Dlg.error("Error adding node", t);
+        }
     }
     @Override
     public GraphView getContext() {
@@ -36,6 +46,39 @@ public class NodeView extends Node {
     private final GridPane contents = new GridPane();
     private final Text title = new Text("unknown");
     private final HBox titleRegion = new HBox(openClose, title);
+    private void makeDraggable(final javafx.scene.Node tp) {
+        final var dragDelta = new Object() {
+            double x;
+            double y;
+        };
+        tp.setOnMousePressed(mouseEvent -> {
+            // record a delta distance for the drag and drop operation.
+            dragDelta.x = tp.getLayoutX() - mouseEvent.getScreenX();
+            dragDelta.y = tp.getLayoutY() - mouseEvent.getScreenY();
+            tp.setCursor(Cursor.OPEN_HAND);
+            mouseEvent.consume();
+        });
+        tp.setOnMouseReleased(mouseEvent -> {
+            tp.setCursor(Cursor.HAND);
+            mouseEvent.consume();
+        });
+        tp.setOnMouseDragged(mouseEvent -> {
+            tp.setLayoutX(mouseEvent.getScreenX() + dragDelta.x);
+            tp.setLayoutY(mouseEvent.getScreenY() + dragDelta.y);
+            getContext().adjustArcs();
+            mouseEvent.consume();
+        });
+        tp.setOnMouseEntered(mouseEvent -> {
+            if(!mouseEvent.isPrimaryButtonDown())
+                tp.setCursor(Cursor.HAND);
+            mouseEvent.consume();
+        });
+        tp.setOnMouseExited(mouseEvent -> {
+            if(!mouseEvent.isPrimaryButtonDown())
+                tp.setCursor(Cursor.DEFAULT);
+            mouseEvent.consume();
+        });
+    }
     private void init() {
         openClose.setFitHeight(12);
         openClose.setPreserveRatio(true);
@@ -101,7 +144,6 @@ public class NodeView extends Node {
             expanded = b;
             openClose.getStyleClass().setAll(expanded ? "fgopen" : "fgclosed");
             pane.getChildren().remove(contents);
-            System.out.println("expanded: " + expanded + "  " + this);
             if(expanded)
                 pane.getChildren().add(contents);
             openClose.setRotate(expanded ? 90 : 0);

@@ -26,7 +26,7 @@ public class Node<T extends Node> extends GraphPart<T> {
             setName(mn.getName());
         parent.add(this);
         metadata = mn;
-        System.out.println("Meta " + mn.getName() + " " + mn.ports.size());
+//        System.out.println("Meta " + mn.getName() + " " + mn.ports.size());
         mn.ports.entrySet().forEach(e -> {
             var p = context.newPort(this, e.getValue().metadata);
             ports.put(e.getKey(), p);
@@ -145,7 +145,7 @@ public class Node<T extends Node> extends GraphPart<T> {
     }
     private void populatePorts(Map map, String key, boolean in) {
         var m = getMap(map,key);
-        if(!m.isEmpty()) dump(m, "populatePorts "+key);
+//        if(!m.isEmpty()) dump(m, "populatePorts "+key);
         getMap(map, key).forEach((k,v) -> {
             if(v instanceof Map pm) {
                 var p = ports.get(k);

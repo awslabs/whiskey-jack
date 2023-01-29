@@ -6,6 +6,7 @@
 package com.aws.jag.fxnodeeditor.view;
 
 import com.aws.jag.fxnodeeditor.gengraph.*;
+import javafx.geometry.*;
 //import com.aws.jag.fxnodeeditor.graph.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
@@ -27,25 +28,25 @@ public class PortView extends Port {
         return (GraphView)super.getContext();
     }
     static final private Image rightArrow = new Image(PortView.class.getResourceAsStream("RightArrow.png"));
-    private Label label;
+    private Label view;
 
     @SuppressWarnings(value="LeakingThisInConstructor")
     private void init() { 
-        label = new Label("");
+        view = new Label("");
         setViewText();
-        label.setGraphicTextGap(4);
+        view.setGraphicTextGap(4);
         var in = metadata.in;
-        label.getStyleClass().add(in ? "inPort" : "outPort");
+        view.getStyleClass().add(in ? "inPort" : "outPort");
         var img = new ImageView(rightArrow);
         img.setFitHeight(10);
         img.setPreserveRatio(true);
         img.setCache(true);
         img.setSmooth(true);
-        label.setGraphic(img);
-        label.localToSceneTransformProperty().addListener(b -> {
+        view.setGraphic(img);
+        view.localToSceneTransformProperty().addListener(b -> {
             getContext().adjustArcs();
         });
-        label.setContentDisplay(in ? ContentDisplay.LEFT : ContentDisplay.RIGHT);
+        view.setContentDisplay(in ? ContentDisplay.LEFT : ContentDisplay.RIGHT);
         /*
         if(in) {
                 label.setOnMouseClicked(evt -> {
@@ -132,22 +133,35 @@ public class PortView extends Port {
         }
 /* */
     }
+    public Point2D getPosition(boolean right, Transform area) {
+        try {
+            var nv = (NodeView) within;
+            var box = nv.isExpanded() ? getView() : nv.getView();
+            var lbl = box.getBoundsInLocal();
+            var t = box.getLocalToSceneTransform();
+            var ret = t.transform(lbl.getMinX(), lbl.getHeight() / 2);
+            if(right) ret = ret.add(lbl.getWidth(), 0);
+            return area.inverseTransform(ret);
+        } catch(NonInvertibleTransformException ex) {
+            Dlg.error("getPosition error", ex);
+            return new Point2D(0,0);
+        }
+    }
     @Override
     public void setValue(Object v) {
         super.setValue(v);
         setViewText();
     }
     public void setViewText() {
-        label.setText(!metadata.in || isConnected() ? metadata.getName() : metadata.getName()+"="+constantValue);
+        view.setText(!metadata.in || isConnected() ? metadata.getName() : metadata.getName()+"="+constantValue);
     }
     public void reposition(Transform t) {
-        // TODO implement
-        System.out.println("Reposition "+getFullName());
+        forEach(a->((ArcView)a).reposition(t));
     }
-    public javafx.scene.Node getView() { return label; }
+    public javafx.scene.Node getView() { return view; }
     private static final Image cursor = new Image(PortView.class.getResourceAsStream("DragTargetCursor.png"));
     @Override
     public String toString() {
-        return super.toString() + ":" + label.getText();
+        return super.toString() + ":" + view.getText();
     }
 }
