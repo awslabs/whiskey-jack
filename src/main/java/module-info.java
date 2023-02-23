@@ -11,9 +11,9 @@ module com.aws.jag.fxnodeeditor {
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.dataformat.yaml;
 
-    opens com.aws.jag.fxnodeeditor to javafx.fxml;
-    opens com.aws.jag.fxnodeeditor.graph to javafx.fxml;
-    opens com.aws.jag.fxnodeeditor.metaedit to javafx.fxml;
-    opens com.aws.jag.fxnodeeditor.view to javafx.graphics, javafx.fxml;
-    exports com.aws.jag.fxnodeeditor;
+    opens aws.jag.DiagramEditor to javafx.fxml;
+//    opens com.aws.jag.fxnodeeditor.graph to javafx.fxml;
+    opens aws.jag.DiagramEditor.metadataeditor to javafx.fxml;
+    opens aws.jag.DiagramEditor.nodeviewerfx to javafx.graphics, javafx.fxml;
+    exports aws.jag.DiagramEditor;
 }
