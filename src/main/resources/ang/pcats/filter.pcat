@@ -1,0 +1,27 @@
+---
+    children:
+      clamp:
+        in:
+          in: 0
+          min: 0
+          max: 100
+        out:
+          out: 0
+      expmean:
+        in:
+          in: 0
+          window: 10
+        out:
+          out: 0
+      boxmean:
+        in:
+          in: 0
+          window: 10
+        out:
+          out: 0
+      ratelimit:
+        in:
+          in: 0
+          limit: 2
+        out:
+          out: 0

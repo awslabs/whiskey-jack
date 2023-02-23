@@ -1,0 +1,22 @@
+---
+children:
+    servo:
+        in:
+            v: 0
+            id: none
+    solenoid:
+        in:
+            v: false
+            id: none
+    heater:
+        in:
+            v: 0
+            id: none
+    lamp:
+        in:
+            v: 0
+            id: none
+    motor:
+        in:
+            v: 0
+            id: none

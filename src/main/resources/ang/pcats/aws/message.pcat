@@ -1,0 +1,22 @@
+---
+children:
+    kinesis:
+        in:
+            data: 0
+            target: none
+        out:
+            data: 0
+
+    sqs:
+        in:
+            data: 0
+            target: none
+        out:
+            data: 0
+
+    mqtt:
+        in:
+            data: 0
+            target: none
+        out:
+            data: 0

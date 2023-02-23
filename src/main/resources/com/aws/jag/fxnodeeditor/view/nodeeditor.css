@@ -1,0 +1,65 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+.baseLayer {
+    -fx-background-color: #888
+}
+.nodeEditor {
+    -fx-font-family: Chaloops, Chalkduster, Marker Felt, fantasy, Comic Sans, Cursive, Helvetica;
+    -fx-font-size: 13;
+}
+.nodeItem {
+    -fx-font-size: 11;
+    -fx-hgap: 20;
+}
+.fgpane {
+    -fx-fill-width: true;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+    -fx-padding: 7;
+    -fx-background-color: #eee
+}
+.fgpane.selected {
+    -fx-effect: dropshadow(gaussian,#FF9900,4,2,0,0);    
+}
+.fgtitle {
+    -fx-background-color: #ddd;
+    -fx-background-radius: 3;
+    -fx-text-fill: #fff;
+    color: #FFF;
+    -fx-fill: #fff;
+}
+.fgtitletext {
+    -fx-background-insets: 0 0 0 15;
+}
+.arrow {
+    -fx-background-insets: 20 0 0 0;
+}
+.outPort {
+}
+.inPort {
+
+}
+.good {
+    -fx-background-color: #DDFFDD;
+    -fx-font-size: 13;
+}
+.selected {
+    -fx-stroke: #99FF00;
+    -fx-stroke-width: 5;
+}
+CubicCurve {
+    -fx-fill: transparent;
+    -fx-stroke: #FF9900;
+    -fx-stroke-width: 2;
+    -fx-view-order: -1;
+}
+CubicCurve:hover {
+    -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.3),4,0,2,3);
+    -fx-stroke-width: 4;
+}
+.fgpane:hover {
+    -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.3),4,0,2,3);
+}

@@ -1,0 +1,10 @@
+---
+
+    children:
+      chart:
+        in:
+          v: 0
+      log:
+        in:
+          v: 0
+          log: node.log

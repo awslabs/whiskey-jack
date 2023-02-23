@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ ! Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ ! SPDX-License-Identifier: Apache-2.0
+ !-->
+
+<?import java.net.URL?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<SplitPane fx:id="keyboardRoot" dividerPositions="0.75" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.aws.jag.fxnodeeditor.view.GraphView">
+   <items>
+      <ScrollPane fx:id="scrollPane">    
+          <stylesheets>
+              <URL value="@nodeeditor.css" />
+          </stylesheets>
+          <content>
+              <AnchorPane fx:id="view" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="200.0" styleClass="nodeEditor" />
+          </content>
+         <contextMenu>
+            <ContextMenu fx:id="contextMenu" />
+         </contextMenu>
+      </ScrollPane>
+      <ScrollPane fitToHeight="true" fitToWidth="true">
+         <content>
+            <TreeView fx:id="navTree" prefHeight="200.0" prefWidth="200.0" />
+         </content>
+      </ScrollPane>
+   </items>
+</SplitPane>
