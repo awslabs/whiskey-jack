@@ -23,12 +23,13 @@ public class Layout {
                 byUid.put(fg.getUid(), new LNode(fg));
             });
             // create upstream links
-            byUid.values().forEach(f -> {
-                f.view.ports.values().forEach(in -> {
-                    var bug = (Port) in;
-                    if(bug.isConnected()) {
-                        bug.forEach(o->f.addUpstream(byUid.get(o.otherEnd(bug).within.getUid())));
-                    }
+            byUid.values().forEach((LNode lnode) -> {
+                ((Collection<Port>) lnode.view.ports.values()).forEach((Port port) -> {
+                    if(port.isRightSide())
+                        port.forEachArc((Arc o) -> {
+                            var uid = o.otherEnd(port).within.getUid();
+                            lnode.addUpstream(byUid.get(uid));
+                        });
                 });
             });
             ordered = byUid.values().stream()
@@ -56,8 +57,8 @@ public class Layout {
             for(var i = 0; i < ncols; i++)
                 columns[i] = new Column(i);
             ordered.forEach(n -> columns[n.column].add(n));
-            for(var i = 1; i<ncols; i++) {
-                columns[i-1].labelInputOrder();
+            for(var i = 1; i < ncols; i++) {
+                columns[i - 1].labelInputOrder();
                 columns[i].sort();
             }
         } else {
@@ -105,6 +106,36 @@ public class Layout {
             });
         pt.play();
     }
+    public Layout center() {
+        if(!byUid.isEmpty()) {
+            var first = byUid.values().stream().findFirst().get();
+            var xmin = first.x1;
+            var xmax = xmin + first.w;
+            var ymin = first.y1;
+            var ymax = ymin + first.w;
+            var bounds = first.view.getView().getParent().getBoundsInLocal();
+            for(var l: byUid.values()) {
+                if(l.x1 < xmin)
+                    xmin = l.x1;
+                if(l.x1 + l.w > xmax)
+                    xmax = l.x1 + l.w;
+                if(l.y1 < ymin)
+                    ymin = l.y1;
+                if(l.y1 + l.h > ymax)
+                    ymax = l.y1 + l.h;
+            }
+            var cx0 = (xmin + xmax) / 2;
+            var cy0 = (ymin + ymax) / 2;
+            var dx = bounds.getCenterX() - cx0;
+            var dy = bounds.getCenterY() - cy0;
+            for(var l: byUid.values()) {
+                l.x1 += dx;
+                l.y1 += dy;
+            }
+        }
+        return this;
+    }
+
     private class Column {
         final ArrayList<LNode> nodes = new ArrayList<>();
         final int columnNumber;
@@ -131,7 +162,7 @@ public class Layout {
 //                    p.vizorder = ++pos;
         }
         public void sort() {
-            nodes.sort((a,b)->{
+            nodes.sort((a, b) -> {
                 return rank(a) - rank(b);
             });
         }
@@ -139,14 +170,16 @@ public class Layout {
             var n = ln.view;
             var sum = 0;
             var count = 0;
-            for(var oneEnd:n.ports.values())
-                for(var arc:(Port)oneEnd) {
-                    sum += arc.otherEnd((Port)oneEnd).metadata.y;
-                    count += 1;
-                }
-            return count==0 ? 0 : sum/count;
+            for(var oneEnd: ((Collection<Port>) n.ports.values()))
+                if(oneEnd.isRightSide())
+                    for(Arc arc: ((Port) oneEnd).allArcs()) {
+                        sum += arc.otherEnd((Port) oneEnd).metadata.getY();
+                        count += 1;
+                    }
+            return count == 0 ? 0 : sum / count;
         }
     }
+
     private class LNode { // Layout Node
         private final NodeView view;
         private final double x0, y0, w, h;
@@ -174,11 +207,11 @@ public class Layout {
         @Override
         public String toString() {
             return view.getName() + ":"
-                    + x0 + "->" + x1 + ", " + y0 + "->" + y1;
+                   + x0 + "->" + x1 + ", " + y0 + "->" + y1;
         }
         void assignColumns(String caller, int level) {
             if(inParentChain)
-                Dlg.error("Loop involving " + view.getName(), null);
+                throw new Error("Loop involving " + view.getName(), null);
             else {
                 if(level > column) {
                     column = level;

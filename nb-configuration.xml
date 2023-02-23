@@ -57,5 +57,6 @@ Any value defined here will override the pom.xml file value but is only applicab
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.alignMultilineBinaryOp>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.alignMultilineBinaryOp>
         <netbeans.hint.jdkPlatform>JDK_17</netbeans.hint.jdkPlatform>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapCaseStatements>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapCaseStatements>
+        <netbeans.hint.licensePath>${project.basedir}/licenseheader.txt</netbeans.hint.licensePath>
     </properties>
 </project-shared-configuration>

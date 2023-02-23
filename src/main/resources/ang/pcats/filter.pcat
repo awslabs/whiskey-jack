@@ -2,26 +2,26 @@
     children:
       clamp:
         in:
-          v: 0
+          in: 0
           min: 0
           max: 100
         out:
-          v: 0
+          out: 0
       expmean:
         in:
-          v: 0
+          in: 0
           window: 10
         out:
-          v: 0
+          out: 0
       boxmean:
         in:
-          v: 0
+          in: 0
           window: 10
         out:
-          v: 0
+          out: 0
       ratelimit:
         in:
-          v: 0
+          in: 0
           limit: 2
         out:
-          v: 0
+          out: 0

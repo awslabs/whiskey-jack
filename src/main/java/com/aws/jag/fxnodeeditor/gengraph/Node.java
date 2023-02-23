@@ -84,7 +84,7 @@ public class Node<T extends Node> extends GraphPart<T> {
             sb.append(p.getKey()).append('=');
             var v = p.getValue();
             if(v.isConnected()) {
-                v.forEach(new Consumer<Arc>() {
+                v.forEachArc(new Consumer<Arc>() {
                     char pfx = '{';
                     @Override
                     public void accept(Arc a) {
@@ -95,7 +95,7 @@ public class Node<T extends Node> extends GraphPart<T> {
                 });
                 sb.append('}');
             } else
-                sb.append(v.constantValue);
+                sb.append(v.getValue());
         }
         sb.append(']');
         return sb;
@@ -110,7 +110,9 @@ public class Node<T extends Node> extends GraphPart<T> {
     public void forEachPort(Consumer<? super Port> f) {
         ports.values().forEach(f);
     }
-    public boolean hasPorts() { return !ports.isEmpty(); }
+    public boolean hasPorts() {
+        return !ports.isEmpty();
+    }
     @Override
     protected void collectMore(Map<String, Object> map) {
         super.collectMore(map);
@@ -120,7 +122,7 @@ public class Node<T extends Node> extends GraphPart<T> {
     }
     public Port defaultPort(boolean in) {
         var dp = metadata.defaultPort(in);
-        return dp==null ? null : getPort(dp.getName());
+        return dp == null ? null : getPort(dp.getName());
     }
 //    @Override
     public void populateFrom(Node other) {
@@ -139,24 +141,30 @@ public class Node<T extends Node> extends GraphPart<T> {
     public void populateFrom(Map map) {
         super.populateFrom(map);
         setUid(get(map, "uid", null));
-        populatePorts(map,"ports",false);
-        populatePorts(map,"in",true);
-        populatePorts(map,"out",false);
+        populatePorts(map, "ports", false, false);
+        populatePorts(map, "in", true, true); // these two lines are compatibility with an old format
+        populatePorts(map, "out", false, true);
     }
-    private void populatePorts(Map map, String key, boolean in) {
-        var m = getMap(map,key);
-//        if(!m.isEmpty()) dump(m, "populatePorts "+key);
-        getMap(map, key).forEach((k,v) -> {
-            if(v instanceof Map pm) {
-                var p = ports.get(k);
-                if(p == null) {
-                    p = getContext().newPort(this, MetaPort.meta);
-                    ports.put(k, p);
-                    p.setName(k);
-                }
-                if(in) pm.put("in", in);
-                p.populateFrom(pm);
+    private void populatePorts(Map map, String key, boolean in, boolean rename) {
+        getMap(map, key).forEach((k, v) -> {
+            if(rename && k.equals("v"))
+                k = in ? "in" : "out";
+            var p = ports.get(k);
+            if(p == null) {
+                p = getContext().newPort(this, MetaPort.meta);
+                ports.put(k, p);
+                p.setName(k);
             }
+            Map vmap;
+            if(v instanceof Map pm)
+                vmap = pm;
+            else {
+                vmap = new HashMap();
+                vmap.put("value", v);
+            }
+            if(in)
+                vmap.put("in", true);
+            p.populateFrom(vmap);
         });
     }
 }

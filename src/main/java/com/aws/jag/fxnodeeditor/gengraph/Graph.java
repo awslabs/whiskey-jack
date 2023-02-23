@@ -58,7 +58,7 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
         other.forEach(node->{
             // once all nodes exist, copy the interconnection graph
             node.forEachPort(port->{
-                ((Port)port).forEach(a->{
+                ((Port)port).forEachArc(a->{
                     // Each arc in the graph
                     // locate the endpoints of the arc in the new graph
                     var n1 = get(a.oneEnd().within.getUid());

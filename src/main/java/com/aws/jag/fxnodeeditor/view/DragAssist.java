@@ -13,7 +13,7 @@ public class DragAssist {
     public static final DataFormat draggingOutArc = new DataFormat("node arc");
     public static final Object dummy = new Serializable() {
     };
-    public static Arc createArc;
+    public static PortView createArc;
     public static MetaNode createNode;
     public static double targetX;
     public static double targetY;

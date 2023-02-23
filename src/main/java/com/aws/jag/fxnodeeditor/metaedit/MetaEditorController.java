@@ -110,8 +110,8 @@ public class MetaEditorController implements Initializable {
                 currentPort.markDirty();
             }
             var value = meValue.getText();
-            if(!Objects.equals(value, currentPort.defaultValue)) {
-                currentPort.defaultValue = value;
+            if(!Objects.equals(value, currentPort.getValue())) {
+                currentPort.setValue(value);
                 currentPort.markDirty();
             }
             var type = meType.getValue();
@@ -121,9 +121,9 @@ public class MetaEditorController implements Initializable {
             }
         }
         if(ae != null) {
-            meIsInput.setSelected(ae.in);
+            meIsInput.setSelected(ae.isRightSide());
             meParameterName.setText(ae.getName());
-            meValue.setText(Coerce.toString(ae.defaultValue));
+            meValue.setText(Coerce.toString(ae.getValue()));
             meParamDesc.setText(ae.getDescription());
             meType.selectionModelProperty().get().select(ae.getType().getName());
             currentPort = ae;

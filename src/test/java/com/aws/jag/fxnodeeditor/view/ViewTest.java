@@ -25,9 +25,9 @@ public class ViewTest extends Application {
             m = metaMeta.createIfAbsent("Strange")
                     .setDescription("add two things together")
                     .setDomain(Domain.device);
-            MetaPort.of("in", null, m, Type.int_t, 0, true);
-            MetaPort.of("b", null, m, Type.int_t, 0, true);
-            MetaPort.of("out", null, m, Type.int_t, 0, false);
+            MetaPort.of("in", null, m, Type.double_t, 0, true);
+            MetaPort.of("b", null, m, Type.double_t, 0, true);
+            MetaPort.of("out", null, m, Type.double_t, 0, false);
             n = new Node(testGraph, m);
             n.getPort("in").setValue(42);
             n.getPort("b").setValue(1);

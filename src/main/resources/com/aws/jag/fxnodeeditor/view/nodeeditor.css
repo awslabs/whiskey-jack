@@ -46,6 +46,10 @@
     -fx-background-color: #DDFFDD;
     -fx-font-size: 13;
 }
+.selected {
+    -fx-stroke: #99FF00;
+    -fx-stroke-width: 5;
+}
 CubicCurve {
     -fx-fill: transparent;
     -fx-stroke: #FF9900;

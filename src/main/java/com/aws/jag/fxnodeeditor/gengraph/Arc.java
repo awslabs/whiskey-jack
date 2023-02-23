@@ -51,16 +51,16 @@ public class Arc extends GraphPart<Arc> {
         b.appendRefTo(sb);
     }
     public Port inOutPort(boolean in) {
-        return a.metadata.in==in ? a : b;
+        return a.metadata.isRightSide()==in ? a : b;
     }
     public boolean connectsTo(Port x) {
         return x == a || x == b;
     }
     public static void connect(Port a, Port b) {
-        if(!a.connectsTo(b))
+        if(a!=null && b!=null && !a.connectsTo(b))
             a.getContext().newArc(a, b);
     }
-    public void disconnect() {
+    public void delete() {
         a.remove(this);
         b.remove(this);
     }

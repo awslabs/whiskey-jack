@@ -59,8 +59,7 @@ public class MetaNode extends Node<MetaNode> {
     }
     private void populateSubnodes(Map values, String key) {
         getMap(values, key).forEach((k,v)->{
-//            System.out.println("Subnode "+k);dump(v);
-//            NodeLibrary.singleton.createIfAbsent(fullname(k)).populateFrom((Map)v);
+//            Collectable.dump(v, "Subnode "+k+" ("+key+")");
             createIfAbsent(k).populateFrom((Map)v);
         });
     }
@@ -116,7 +115,7 @@ public class MetaNode extends Node<MetaNode> {
         var priority = 0;
         var magicName = in ? "in" : "out";
         for(var p: ports.values())
-            if(p instanceof MetaPort mp && mp.in == in)
+            if(p instanceof MetaPort mp && mp.isRightSide() == in)
                 if(mp.getName().equals(magicName))
                     return mp;
                 else {
@@ -169,10 +168,10 @@ public class MetaNode extends Node<MetaNode> {
        meta root isn't known (cuz, this is it) so there's an odd null-text in the
        Node constructor to handle this */
     public static final MetaNode metaMeta = new MetaNode().setName("meta-meta");
-    int count(boolean in) {
+    int count(boolean right) {
         var slot = 0;
         for(var p: ports.values())
-            if(((MetaPort) p).in == in)
+            if(((MetaPort) p).isRightSide() == right)
                 slot++;
         return slot;
     }

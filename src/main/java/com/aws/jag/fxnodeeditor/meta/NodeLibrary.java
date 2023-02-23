@@ -72,7 +72,7 @@ public class NodeLibrary {
     }
     private Void load(String tag, Path from, InputStream in) throws IOException {
         var v = GraphView.fileio.readValue(in, Object.class);
-//                System.out.println(Utils.deepToString(v, 80));
+//Collectable.dump(v,from.toString());
         if(v instanceof Map m) {
             var rootName = Coerce.get(m, "name", "");
             var node = (!rootName.isEmpty() ? createIfAbsent(rootName)

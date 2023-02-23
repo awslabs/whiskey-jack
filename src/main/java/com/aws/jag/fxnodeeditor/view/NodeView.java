@@ -17,7 +17,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.*;
 import javax.annotation.*;
 
-public class NodeView extends Node {
+public class NodeView extends Node implements Selectable {
     public NodeView(@Nonnull GraphView parent, @Nonnull Node original) {
         super(parent, original.metadata);
         init();
@@ -71,12 +71,14 @@ public class NodeView extends Node {
         tp.setOnMouseEntered(mouseEvent -> {
             if(!mouseEvent.isPrimaryButtonDown())
                 tp.setCursor(Cursor.HAND);
+            getContext().setHovered(this);
             mouseEvent.consume();
         });
         tp.setOnMouseExited(mouseEvent -> {
             if(!mouseEvent.isPrimaryButtonDown())
                 tp.setCursor(Cursor.DEFAULT);
             mouseEvent.consume();
+            getContext().setHovered(null);
         });
     }
     private void init() {
@@ -112,15 +114,17 @@ public class NodeView extends Node {
             @Override
             public void accept(Port P) {
                 var p = (PortView) P;
-                var in = p.metadata.in;
+                var right = p.metadata.isRightSide();
                 contents.add(p.getView(),
-                        in ? 0 : 1,
-                        in ? inrow++ : outrow++);
+                        right ? 0 : 1,
+                        right ? inrow++ : outrow++);
             }
         });
     }
-    void delete() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    @Override
+    public void delete() {
+        ports.values().forEach(p->((PortView)p).forEachArc(a->a.delete()));
+        getContext().getView().getChildren().remove(getView());
     }
     public void setTitle(String s) {
         title.setText(s);

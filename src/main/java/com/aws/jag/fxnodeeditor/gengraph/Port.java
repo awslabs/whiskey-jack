@@ -10,10 +10,10 @@ import java.util.*;
 import java.util.function.*;
 import javax.annotation.*;
 
-public class Port extends Collectable implements Iterable<Arc> {
+public class Port extends Collectable {
     public final MetaPort metadata;
     public final Node within;
-    public Object constantValue; // used when disconnected
+    private Object constantValue; // used when disconnected
     private List<Arc> arcs;
     public boolean isConnected() {
         return arcs != null;
@@ -22,13 +22,9 @@ public class Port extends Collectable implements Iterable<Arc> {
         within = wi;
         metadata = m != null ? m : (MetaPort) this;  // Metaport's metadata is a circular reference.
     }
-    @Override
-    public Iterator<Arc> iterator() {
-        return arcs.iterator();
-    }
     public void populateFrom(Port other) {
         constantValue = other.constantValue;
-        other.forEach(a -> System.out.println("  mk arc " + a));
+        other.forEachArc(a -> System.out.println("  mk arc " + a));
     }
     public void populateFrom(Map values) {
         constantValue = getOpt(values,"value",constantValue);
@@ -46,8 +42,8 @@ public class Port extends Collectable implements Iterable<Arc> {
             arcs = new ArrayList<>();
         arcs.add(a);
     }
-    @Override
-    public void forEach(Consumer<? super Arc> f) {
+    public Iterable<Arc> allArcs() { return arcs==null ? Collections.emptyList() : arcs; }
+    public void forEachArc(Consumer<? super Arc> f) {
         if(arcs != null)
             arcs.forEach(f);
     }
@@ -103,6 +99,12 @@ public class Port extends Collectable implements Iterable<Arc> {
     public Type getType() {
         return metadata.getType();
     }
+    public boolean isRightSide() {
+        return metadata.isRightSide();
+    }
+    public boolean isLeftSide() {
+        return !metadata.isRightSide();
+    }
     @Override
     public String toString() {
         return "Port<" + within.getName() + "." + getName() + ">";
@@ -116,4 +118,5 @@ public class Port extends Collectable implements Iterable<Arc> {
         if(original!=null)
             original.getPort(getName()).setValue(v);
     }
+    public Object getValue() { return constantValue; }
 }

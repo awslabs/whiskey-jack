@@ -12,16 +12,18 @@ import java.util.stream.*;
 
 public abstract class GraphPart<T extends GraphPart> extends Collectable {
     private String message;  // situation-specific message (eg. an error)
-    private String name;
+    private String name = "unsetName";
     public abstract String getDescription(); // describe this part
     public String getMessage() { return message; }
-    public String getName() { return name==null ? "unnamed" : name; }
+    public String getName() { return name==null ? "nullName" : name; }
     public boolean isNamed() { return name!=null; }
     public T setDescription(String d) { // describe this part
         throw new IllegalAccessError("can't edit metadata.");
     }
     public T setName(String n) {
-        name = n;
+        if(n!=null) name = n;
+        else
+            System.out.println("Null setName "+name);
         return (T) this;
     }
     public T setMessage(String m) {
@@ -83,7 +85,7 @@ public abstract class GraphPart<T extends GraphPart> extends Collectable {
         putOpt(map, "message", message);
     }
     public void populateFrom(Map<String,Object> values) {
-        name = get(values,"name",null);
+        name = get(values,"name",name);
         message = get(values,"message",null);
     }
     private Map<Class,Object> sidecars;

@@ -29,6 +29,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.*;
 import static javafx.scene.input.KeyCode.*;
 import javafx.scene.layout.*;
+import javafx.stage.*;
 
 public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  implements Initializable {
     public final static PseudoClass HOVER_PSEUDO_CLASS = PseudoClass.getPseudoClass("hover");
@@ -55,7 +56,7 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
     @FXML
     private javafx.scene.Node keyboardRoot;
     static final Preferences pref = userNodeForPackage(GraphView.class);
-    public Object hovered;
+    private Selectable hovered;
     public javafx.scene.Node dragNode;
     public final Map<String, NodeView> nByUid = new ConcurrentHashMap<>();
     public final MetaNodeTreeModel mNodeTreeModel = new MetaNodeTreeModel();
@@ -138,19 +139,15 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
         mi.setOnAction(evt -> make(n));
     }
     void keyTyped(KeyEvent c) {
+        System.out.println("Typed "+c);
         switch(c.getCode()) {
             default -> {
                 return;
             }
             case DELETE, BACK_SPACE -> {
-                switch(hovered) {
-                    default ->
-                        Dlg.error("Hover over a node or arc to delete it");
-                    case NodeView n ->
-                        n.delete();
-//                    case InArc in ->
-//                        in.setIncoming(null);
-                }
+                System.out.println("  DEL "+getHovered());
+                forEachSelected(s->s.delete());
+                clearSelection();
             }
             case HOME -> {
 //                switch(hovered) {
@@ -192,13 +189,14 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
         }
     }
     void quitAction(ActionEvent evt) {
-        System.exit(0);
+        ((Stage)scrollPane.getScene().getWindow()).close();
+//        System.exit(0);
     }
     void newAction(ActionEvent evt) {
         clearAll();
     }
     void layoutAction() {
-        new Layout(nByUid.values()).trivialLayout().apply();
+        new Layout(nByUid.values()).trivialLayout().center().apply();
     }
     public boolean loadFile(String p) {
 //        System.out.println("String "+p);
@@ -233,12 +231,12 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
         pane.setUserData(view);
 //        getView().getChildren().add(pane);
         ix++;
-        if(hovered instanceof Arc arc) {
+        if(getHovered() instanceof Arc arc) {
             var in0 = arc.inOutPort(true);
             var in = view.defaultPort(true);
             var out0 = arc.inOutPort(false);
             var out = view.defaultPort(false);
-            arc.disconnect();
+            arc.delete();
             if(out0 != null && in != null)
                 newArc((PortView) out0, (PortView) in);
             if(out != null && in0 != null)
@@ -382,5 +380,32 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
     ).configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
     public AnchorPane getView() {
         return view;
+    }
+    public void clearSelection() {
+        selectionSet.forEach(s->s.getView().getStyleClass().remove("selected"));
+        selectionSet.clear();
+    }
+    public void addToSelection(Selectable s) {
+        s.getView().getStyleClass().add("selected");
+        selectionSet.add(s);
+    }
+    public void forEachSelected(Consumer<Selectable> func) {
+        if(selectionSet.isEmpty()) {
+            if(getHovered()!=null)
+                func.accept(getHovered());
+        } else selectionSet.forEach(func);
+    }
+    private final Set<Selectable> selectionSet = new HashSet<>();
+    /**
+     * @return the hovered
+     */
+    public Selectable getHovered() {
+        return hovered;
+    }
+    /**
+     * @param hovered the hovered to set
+     */
+    public void setHovered(Selectable hovered) {
+        this.hovered = hovered;
     }
 }
