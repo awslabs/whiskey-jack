@@ -43,6 +43,7 @@ public class Domain extends Collectable {
     public static final Domain device = of("device");
     public static final Domain gateway = of("gateway");
     public static final Domain cloud = of("cloud");
+    public static final Domain browser = of("browser");
     public static final Domain any = of("any");
     public static final Domain err = of("err");
     @Override
