@@ -1,4 +1,4 @@
-# FX Node Editor
+# Architecture Diagram Editor
 
 	Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 	SPDX-License-Identifier: Apache-2.0
@@ -26,3 +26,4 @@ in the spirit of the one found in
 It can be employed to edit all manner of node diagrams.
 
 At least, eventually: right now it's a work in progress.
+![screenshot](NodeEditorScreenshot.png)

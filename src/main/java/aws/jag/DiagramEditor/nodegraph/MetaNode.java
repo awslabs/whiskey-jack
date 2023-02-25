@@ -4,12 +4,10 @@
  */
 package aws.jag.DiagramEditor.nodegraph;
 
-import static aws.jag.DiagramEditor.nodegraph.Domain.*;
 import java.util.*;
 import java.util.function.*;
 
 public class MetaNode extends Node<MetaNode> {
-    private Domain domain = any;
     private final Map<String, MetaNode> subnodes = new HashMap<>();
     private final MetaNode parent;
     private String description;
@@ -18,10 +16,12 @@ public class MetaNode extends Node<MetaNode> {
         if(p == null && (p = metaMeta) == null)
             p = this;  // only used when creating metaMeta
         parent = p;
+        domain = Domain.any;
     }
     private MetaNode() {  // only called when constructing metaMeta
         super(metaGraph, null);  // the null MetaNode argument is magically handled in Node
         parent = this;
+        domain = Domain.any;
     }
     public boolean isRoot() {
         return metaMeta == this;
@@ -102,11 +102,13 @@ public class MetaNode extends Node<MetaNode> {
     public static MetaNode lookup(String uid) {
         return null;
     }
+    @Override
     public Domain getDomain() {
         return domain;
     }
+    @Override
     public MetaNode setDomain(Domain d) {
-        domain = d;
+        domain = d==null || d==Domain.unknown ? Domain.any : d;
         return this;
     }
     @Override

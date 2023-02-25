@@ -12,6 +12,7 @@ import javax.annotation.*;
 
 public class Node<T extends Node> extends GraphPart<T> {
     private String uid;
+    protected Domain domain = Domain.unknown;
     private final Graph context;
     public final MetaNode metadata;
     public Node<T> copiedFrom;
@@ -55,6 +56,14 @@ public class Node<T extends Node> extends GraphPart<T> {
 //        System.out.println("UID: " + u);
         return u;
     }
+    public Domain getDomain() {
+        return domain==Domain.unknown ? metadata.getDomain() : domain;
+    }
+    public T setDomain(Domain d) {
+        domain = d==null || d==Domain.any ? Domain.unknown : d;
+        return (T) this;
+    }
+    
     @Override
     public void appendRefTo(StringBuilder sb) {
         sb.append(uid);

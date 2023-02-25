@@ -46,6 +46,7 @@ public class Domain extends Collectable {
     public static final Domain browser = of("browser");
     public static final Domain any = of("any");
     public static final Domain err = of("err");
+    public static final Domain unknown = of("unknown");
     @Override
     public String toString() {
         return name;
