@@ -4,15 +4,10 @@
  */
 package aws.jag.DiagramEditor.metadata;
 
+import aws.jag.DiagramEditor.nodegraph.*;
 import aws.jag.DiagramEditor.nodeviewerfx.Dlg;
 import aws.jag.DiagramEditor.nodeviewerfx.GraphView;
-import aws.jag.DiagramEditor.util.Utils;
-import aws.jag.DiagramEditor.util.Coerce;
-import aws.jag.DiagramEditor.util.Collectable;
-import aws.jag.DiagramEditor.util.CommitableReader;
-import aws.jag.DiagramEditor.util.CommitableWriter;
-import aws.jag.DiagramEditor.nodegraph.Node;
-import aws.jag.DiagramEditor.nodegraph.MetaNode;
+import aws.jag.DiagramEditor.util.*;
 import static aws.jag.DiagramEditor.util.Utils.*;
 import java.io.*;
 import java.nio.file.*;
@@ -27,7 +22,7 @@ import javafx.event.*;
 public class NodeLibrary {
     private NodeLibrary(){} // use singleton to access
     public void forAll(Consumer<MetaNode> f) {
-        MetaNode.metaMeta.forEachDescendent(f);
+        MetaNode.metaMeta.forEachLeaf(f);
     }
     public MetaNode createIfAbsent(String name) {
         if(isEmpty(name) || "root".equals(name))
@@ -66,7 +61,7 @@ public class NodeLibrary {
     }
     public void load(String tag, Path fn) {
         try {
-//            System.out.println("load " + tag + " " + fn);
+            System.out.println("load " + tag + " " + fn);
             CommitableReader.of(fn).read(in -> load(tag, fn, in));
         } catch(IOException ex) {
             Dlg.error("Couldn't load " + fn, ex);
@@ -94,8 +89,8 @@ public class NodeLibrary {
     public void initialize() {
         try( var in = new BufferedReader(new InputStreamReader(this.getClass().getResource("/ang/pcats/pcat.list").openStream()))) {
             in.lines().forEach(l -> {
-//                System.out.println("list: " + l);
                 try {
+                    System.out.println("load resource "+l);
                     load(l.substring(0, l.length() - 5),
                             Config.configDir.resolve("pcat").resolve(l),
                             this.getClass().getResource("/ang/pcats/" + l).openStream());
@@ -115,4 +110,35 @@ public class NodeLibrary {
     }
     private static final Pattern joiners = Pattern.compile(" *[.,:/] *");
     public static final NodeLibrary singleton = new NodeLibrary();
+    private Map<Domain,Map<Type,List<MetaNode>>> dtInMap;
+    public void forEachNodeThatTakes(Domain d, Type t, Consumer<MetaNode> f) {
+        getNodesThatTake(d,t).forEach(f);
+        getNodesThatTake(Domain.any, t).forEach(f);
+        getNodesThatTake(d, Type.any_t).forEach(f);
+        getNodesThatTake(Domain.any, Type.any_t).forEach(f);
+    }
+    private List<MetaNode> getNodesThatTake(Domain d, Type t) {
+        var dtim = dtInMap;
+        if(dtim==null) {
+            dtInMap = dtim = new HashMap<>();
+            System.out.println("Init DT map");
+            forAll(mn->{
+                var din = mn.defaultPort(true);
+                var dout = mn.defaultPort(false);
+                if(din!=null && dout!=null) {
+                    var nd = din.getDomain();
+                    var nt = din.getType();
+                    var dmap = dtInMap.get(nd);
+                    if(dmap==null) dtInMap.put(nd, dmap = new HashMap<>());
+                    var list = dmap.get(nt);
+                    if(list==null) dmap.put(nt, list = new ArrayList<>());
+                    list.add(mn);
+                }
+            });
+        }
+        Map<Type,List<MetaNode>> dm = dtim.get(d);
+        if(dm==null) return Collections.EMPTY_LIST;
+        List<MetaNode> ret = dm.get(t);
+        return ret==null ? Collections.EMPTY_LIST : ret;
+    }
 }

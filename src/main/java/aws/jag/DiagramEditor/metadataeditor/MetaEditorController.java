@@ -124,7 +124,7 @@ public class MetaEditorController implements Initializable {
             }
         }
         if(ae != null) {
-            meIsInput.setSelected(ae.isRightSide());
+            meIsInput.setSelected(ae.isOutputSide());
             meParameterName.setText(ae.getName());
             meValue.setText(Coerce.toString(ae.getValue()));
             meParamDesc.setText(ae.getDescription());

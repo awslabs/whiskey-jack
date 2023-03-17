@@ -5,9 +5,9 @@
 
 package aws.jag.DiagramEditor.nodeviewerfx;
 
-import aws.jag.DiagramEditor.nodegraph.Node;
-import aws.jag.DiagramEditor.nodegraph.Port;
-import aws.jag.DiagramEditor.nodegraph.MetaPort;
+import aws.jag.DiagramEditor.nodegraph.*;
+import aws.jag.DiagramEditor.util.*;
+import java.util.*;
 import javafx.geometry.*;
 //import com.aws.jag.fxnodeeditor.graph.*;
 import javafx.scene.control.*;
@@ -42,8 +42,10 @@ public class PortView extends Port implements Selectable {
         view = new Label("");
         setViewText();
         view.setGraphicTextGap(4);
-        var in = metadata.isRightSide();
-        view.getStyleClass().add(in ? "inPort" : "outPort");
+        var in = metadata.isInputSide();
+        var cssClass = view.getStyleClass();
+        cssClass.add(in ? "in" : "out");
+        cssClass.add("port");
         var img = new ImageView(rightArrow);
         img.setFitHeight(10);
         img.setPreserveRatio(true);
@@ -59,7 +61,9 @@ public class PortView extends Port implements Selectable {
                     TextInputDialog td = new TextInputDialog(String.valueOf(getValue()));
                     td.setHeaderText(metadata.getName());
                     td.setTitle("Enter new value");
-                    setValue(td.showAndWait().get());
+                    var v = td.showAndWait();
+                    setValue(v.isEmpty() ? null : Utils.parseObject(v.get()));
+                    ((GraphView)getContext()).checkTypes();
                 });
                 view.setOnDragDetected(evt -> {
                     DragAssist.dragClean();
@@ -142,14 +146,25 @@ public class PortView extends Port implements Selectable {
                 */
 //        }
     }
+    @Override
+    public PortView setMessage(ErrorCode ec, String m) {
+        if(!Objects.equals(m, getMessage())) {
+            super.setMessage(ec, m);
+            Tooltip.install(view, m == null ? null : new Tooltip(m));
+            var css = view.getStyleClass();
+            if(ec!=ErrorCode.allIsWell) css.add("error");
+            else        css.remove("error");
+        }
+        return this;
+    }
     public Point2D getPosition(Transform area) {
         try {
             var nv = (NodeView) within;
-            var box = nv.isExpanded() ? getView() : nv.getView();
+            var box = nv.isExpanded() ? view : nv.getView();
             var lbl = box.getBoundsInLocal();
             var t = box.getLocalToSceneTransform();
             var ret = t.transform(lbl.getMinX(), lbl.getHeight() / 2);
-            if(!isRightSide()) ret = ret.add(lbl.getWidth(), 0);
+            if(isOutputSide()) ret = ret.add(lbl.getWidth(), 0);
             return area.inverseTransform(ret);
         } catch(NonInvertibleTransformException ex) {
             Dlg.error("getPosition error", ex);
@@ -162,11 +177,12 @@ public class PortView extends Port implements Selectable {
         setViewText();
     }
     public void setViewText() {
-        view.setText(!metadata.isRightSide() || isConnected() ? metadata.getName() : metadata.getName()+"="+getValue());
+        view.setText(metadata.isOutputSide() || isConnected() || getValue()==null? metadata.getName() : metadata.getName()+"="+getValue());
     }
     public void reposition(Transform t) {
         forEachArc(a->((ArcView)a).reposition(t));
     }
+    @Override
     public javafx.scene.Node getView() { return view; }
     @Override
     public String toString() {

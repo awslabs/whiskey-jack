@@ -121,6 +121,15 @@ public final class Utils {
     public static boolean isEmpty(Map<?, ?> s) {
         return s == null || s.isEmpty();
     }
+    public static boolean isEmpty(Object s) {
+        return switch(s) {
+            case null -> true;
+            default -> false;
+            case Collection c -> c.isEmpty();
+            case CharSequence cs -> cs.isEmpty();
+            case Map m -> m.isEmpty();
+        };
+    }
 
     public static <T extends Collection> T nullEmpty(T s) {
         return s == null || s.isEmpty() ? null : s;
@@ -420,6 +429,7 @@ public final class Utils {
      * @return  the result of parsing */
     public static Object parseObject(String s) {
         return switch(s = s.trim()) {
+            case "" -> null;
             case null ->
                 null;
             case "true" ->

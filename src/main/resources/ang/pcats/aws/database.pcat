@@ -1,6 +1,7 @@
 ---
 children:
     dynamo:
+        domain: cloud
         in:
             insertion: 0
             id: none
@@ -8,13 +9,15 @@ children:
             query: 0
 
     timestream:
+        domain: cloud
         in:
-            insertion: 0
+            v: any
             id: none
         out:
-            query: 0
+            out: table
 
     fleetwise:
+        domain: cloud
         in:
             insertion: 0
             id: none
@@ -22,6 +25,7 @@ children:
             query: 0
 
     aurora:
+        domain: cloud
         in:
             insertion: 0
             id: none

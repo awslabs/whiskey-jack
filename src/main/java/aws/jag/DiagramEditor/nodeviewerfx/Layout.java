@@ -26,7 +26,7 @@ public class Layout {
             // create upstream links
             byUid.values().forEach((LNode lnode) -> {
                 ((Collection<Port>) lnode.view.ports.values()).forEach((Port port) -> {
-                    if(port.isRightSide())
+                    if(port.isInputSide())
                         port.forEachArc((Arc o) -> {
                             var uid = o.otherEnd(port).within.getUid();
                             lnode.addUpstream(byUid.get(uid));
@@ -172,7 +172,7 @@ public class Layout {
             var sum = 0;
             var count = 0;
             for(var oneEnd: ((Collection<Port>) n.ports.values()))
-                if(oneEnd.isRightSide())
+                if(oneEnd.isInputSide())
                     for(Arc arc: ((Port) oneEnd).allArcs()) {
                         sum += arc.otherEnd((Port) oneEnd).metadata.getY();
                         count += 1;

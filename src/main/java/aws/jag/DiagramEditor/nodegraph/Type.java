@@ -16,6 +16,7 @@ public class Type extends Collectable {
         name = n;
         all.put(n, this);
     }
+    @SuppressWarnings("unused")
     public static Type guess(Object value) {
         return switch(value) {
 //            case Float f ->
@@ -59,6 +60,10 @@ public class Type extends Collectable {
     public static void forEachType(Consumer<Type> f) {
         all.values().forEach(f);
     }
+    public boolean compatibleWith(Type t) {
+        return t == this || t == any_t || this == any_t
+                 || t == err_t || this == err_t;
+    }
     public static Collection<String> allTypes() {
         return all.values().stream()
                 .map(Type::getName)
@@ -73,6 +78,8 @@ public class Type extends Collectable {
     public static final Type int_t = new Type("integer"); // ?
     public static final Type string_t = new Type("string");
     public static final Type json_t = new Type("json");
+    public static final Type table_t = new Type("table");
+    public static final Type html_t = new Type("html");
     public static final Type object_t = new Type("object"); // ?
 
     public static final Type err_t = new Type("err");

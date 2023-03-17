@@ -4,7 +4,8 @@
  */
 package aws.jag.DiagramEditor.nodegraph;
 
-import aws.jag.DiagramEditor.util.Collectable;
+import static aws.jag.DiagramEditor.nodegraph.ErrorCode.*;
+import aws.jag.DiagramEditor.util.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.*;
@@ -12,6 +13,7 @@ import java.util.stream.*;
 
 public abstract class GraphPart<T extends GraphPart> extends Collectable {
     private String message;  // situation-specific message (eg. an error)
+    private ErrorCode errorCode = ErrorCode.allIsWell;
     private String name = "unsetName";
     public abstract String getDescription(); // describe this part
     public String getMessage() { return message; }
@@ -26,12 +28,15 @@ public abstract class GraphPart<T extends GraphPart> extends Collectable {
             System.out.println("Null setName "+name);
         return (T) this;
     }
-    public T setMessage(String m) {
+    public T setMessage(ErrorCode ec, String m) {
+        errorCode = ec==null ? allIsWell : ec;
         message = m;
         return (T) this;
     }
+    public final T setMessage(String m) {
+        return setMessage(allIsWell, m);
+    }
     public abstract Graph getContext();
-//    protected abstract void copyFromImpl(T source);
     @Override
     public abstract String toString(); // firce subclasses to implement toString
     private aListener listeners;
@@ -83,10 +88,23 @@ public abstract class GraphPart<T extends GraphPart> extends Collectable {
         putOpt(map, "op", opcode());
         putOpt(map, "name", getName());
         putOpt(map, "message", message);
+        if(sidecars!=null && !sidecars.isEmpty()) {
+            Map<String,Object> side = new HashMap<>();
+            sidecars.forEach((k,v)->{
+                var vo = asObject(v);
+                if(!Utils.isEmpty(vo))
+                    side.put(k.getName(), asObject(v));
+            });
+            if(!side.isEmpty())
+                putOpt(map,"sidecars",side);
+        }
     }
     public void populateFrom(Map<String,Object> values) {
         name = get(values,"name",name);
         message = get(values,"message",null);
+        getMap(values,"sidecars").forEach((k,v)->{
+            System.out.println("Populating sidecar "+k+Utils.deepToString(v));
+        });
     }
     private Map<Class,Object> sidecars;
     public <T> T sidecar(Class<T> cl) {

@@ -9,13 +9,30 @@ import java.util.*;
 public class Arc extends GraphPart<Arc> {
     private final Port a;
     private final Port b;
-    @SuppressWarnings("LeakingThisInConstructor")
+    @SuppressWarnings({"LeakingThisInConstructor","OverridableMethodCallInConstructor"})
     public Arc(Port A, Port B) {
         assert A != null && B != null;
+        if(B.isOutputSide() && A.isInputSide()) {
+            // ensure that a (oneEnd) is on the right side of it's node,
+            // and b (otherEnd) is on the left.  Conventionally, think of
+            // the left side as containing inputs, and the right side
+            // containing outputs
+            var t = A;
+            A = B;
+            B = t;
+            System.out.println("Swap "+A+" "+B);
+        }
         a = A;
         b = B;
         a.add(this);
         b.add(this);
+        var an = a.within;
+        var bn = b.within;
+        if(bn.getDomain()==Domain.any)
+            bn.setDomain(a.getDomain());
+        else if(an.getDomain()==Domain.any)
+            an.setDomain(b.getDomain());
+        getContext().checkTypes();
     }
     @Override
     public Graph getContext() {
@@ -47,11 +64,11 @@ public class Arc extends GraphPart<Arc> {
     @Override
     public void appendRefTo(StringBuilder sb) {
         a.appendRefTo(sb);
-        sb.append('-');
+        sb.append("->");
         b.appendRefTo(sb);
     }
     public Port inOutPort(boolean in) {
-        return a.metadata.isRightSide()==in ? a : b;
+        return a.metadata.isOutputSide()==in ? b : a;
     }
     public boolean connectsTo(Port x) {
         return x == a || x == b;
@@ -78,6 +95,8 @@ public class Arc extends GraphPart<Arc> {
     }
     @Override
     public String toString() {
-        return "Arc<" + getName() + ">";
+        StringBuilder sb = new StringBuilder();
+        appendRefTo(sb);
+        return sb.toString();
     }
 }

@@ -4,9 +4,8 @@
  */
 package aws.jag.DiagramEditor.nodeviewerfx;
 
+import aws.jag.DiagramEditor.nodegraph.*;
 import aws.jag.DiagramEditor.util.Utils;
-import aws.jag.DiagramEditor.nodegraph.Port;
-import aws.jag.DiagramEditor.nodegraph.MetaNode;
 import aws.jag.DiagramEditor.nodegraph.Node;
 import java.util.*;
 import java.util.function.*;
@@ -94,17 +93,20 @@ public class NodeView extends Node implements Selectable {
         contents.getColumnConstraints().addAll(flushLeft, flushRight);
         contents.getStyleClass().add("nodeItem");
         pane.setFillWidth(true);
-        pane.getStyleClass().setAll("fgpane");
-        titleRegion.getStyleClass().setAll("fgtitle");
-        title.getStyleClass().setAll("fgtitletext");
-        openClose.getStyleClass().setAll("open");
+        pane.getStyleClass().add("fgpane");
+        titleRegion.getStyleClass().add("fgtitle");
+        title.getStyleClass().add("fgtitletext");
+        openClose.getStyleClass().add("open");
         pane.getChildren().setAll(titleRegion);
         openClose.setOnMouseReleased(e -> setExpanded(!isExpanded()));
         setTitle(metadata.getName());
         setTooltip(metadata.getDescription());
         installPorts();
         setExpanded(true);
+        establishDomain(null, getDomain());
+        getContext().checkTypes();
     }
+    @Override
     public VBox getView() {
         return pane;
     }
@@ -115,17 +117,21 @@ public class NodeView extends Node implements Selectable {
             @Override
             public void accept(Port P) {
                 var p = (PortView) P;
-                var right = p.metadata.isRightSide();
+                var output = p.metadata.isOutputSide();
                 contents.add(p.getView(),
-                        right ? 0 : 1,
-                        right ? inrow++ : outrow++);
+                        output ? 1 : 0,
+                        output ? outrow++ : inrow++);
             }
         });
     }
     @Override
-    public void delete() {
-        ports.values().forEach(p->((PortView)p).forEachArc(a->a.delete()));
+    public void delete() { 
+        /* save arcs in a seperate list to avoid ConcurrentModificationException */
+        var arcs = new ArrayList<Arc>(5);
+        ports.values().forEach(p -> ((PortView) p).forEachArc(a -> arcs.add(a)));
+        arcs.forEach(a -> a.delete());
         getContext().getView().getChildren().remove(getView());
+        getContext().nByUid.remove(getUid());
     }
     public void setTitle(String s) {
         title.setText(s);
@@ -138,11 +144,10 @@ public class NodeView extends Node implements Selectable {
                 Tooltip.install(titleRegion, tip);
             } else
                 tip.setText(tooltip);
-        else
-            if(tip != null) {
-                Tooltip.uninstall(titleRegion, tip);
-                tip = null;
-            }
+        else if(tip != null) {
+            Tooltip.uninstall(titleRegion, tip);
+            tip = null;
+        }
     }
     public final void setExpanded(boolean b) {
         if(b != expanded) {
@@ -160,13 +165,30 @@ public class NodeView extends Node implements Selectable {
         return expanded;
     }
     @Override
+    public NodeView setDomain(Domain d) {
+        var d0 = getDomain();
+        super.setDomain(d);
+        var d1 = getDomain();
+        System.out.println("NV setDomain " + d0 + "->" + d1);
+        if(d0 != d1)
+            establishDomain(d0, d1);
+        return this;
+    }
+    private void establishDomain(Domain d0, Domain d1) {
+        var s = pane.getStyleClass();
+        if(d0 != null)
+            s.remove(d0.getStyleName());
+        if(d1 != null)
+            s.add(d1.getStyleName());
+    }
+    @Override
     protected void collectMore(Map map) {
         super.collectMore(map);
         putOpt(map, "x", pane.getLayoutX());
         putOpt(map, "y", pane.getLayoutY());
         putOpt(map, "expanded", isExpanded());
     }
-    
+
     private static final Image closeArrow = new Image(NodeView.class.getResourceAsStream("CloseArrow.png"));
     private static final Insets noPadding = new Insets(0, 0, 0, 0);
     private static final ColumnConstraints flushLeft = new ColumnConstraints();

@@ -8,6 +8,7 @@ children:
             data: 0
 
     sqs:
+        domain: cloud
         in:
             data: 0
             target: none
@@ -15,8 +16,28 @@ children:
             data: 0
 
     mqtt:
+        domain: any
         in:
             data: 0
             target: none
         out:
             data: 0
+    streamManager:
+        domain: device
+        in:
+            in:
+                type: any
+                domain: device
+        out:
+            out:
+                type: any
+                domain: cloud
+    graphana:
+        domain: cloud
+        in:
+            in:
+                type: table
+        out:
+            out:
+                type: html
+                domain: browser

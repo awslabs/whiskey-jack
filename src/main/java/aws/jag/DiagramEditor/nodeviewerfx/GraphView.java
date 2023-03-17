@@ -4,6 +4,7 @@
  */
 package aws.jag.DiagramEditor.nodeviewerfx;
 
+import aws.jag.DiagramEditor.infer.*;
 import aws.jag.DiagramEditor.util.Exec;
 import aws.jag.DiagramEditor.util.Utils;
 import aws.jag.DiagramEditor.util.CommitableWriter;
@@ -81,6 +82,12 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
                 addMenu(n, namePath);
             }
         });
+        var run = new MenuItem("Run");
+        run.setOnAction(ae->new CodeGenerator().Scan(this));
+        contextMenu.getItems().add(run);
+        var infer = new MenuItem("Infer");
+        infer.setOnAction(ae->new InferIntermediates().Scan(this));
+        contextMenu.getItems().add(infer);
         var fileActions = new Menu("File");
         contextMenu.getItems().add(fileActions);
         fileActions.getItems().addAll(
@@ -231,16 +238,16 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
     }
     public NodeView make(MetaNode n) {
 //        System.out.println("Creating " + n);
-        var view = new NodeView(this, n);
-        var pane = view.getView();
-        pane.setUserData(view);
+        var nodeView = new NodeView(this, n);
+        var pane = nodeView.getView();
+        pane.setUserData(nodeView);
 //        getView().getChildren().add(pane);
         ix++;
         if(getHovered() instanceof Arc arc) {
             var in0 = arc.inOutPort(true);
-            var in = view.defaultPort(true);
+            var in = nodeView.defaultPort(true);
             var out0 = arc.inOutPort(false);
-            var out = view.defaultPort(false);
+            var out = nodeView.defaultPort(false);
             arc.delete();
             if(out0 != null && in != null)
                 newArc((PortView) out0, (PortView) in);
@@ -262,7 +269,7 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
         }
 //        makeDraggable(pane);
         getView().requestFocus();
-        return view;
+        return nodeView;
     }
     @Override
     public void add(NodeView model) {
@@ -291,6 +298,26 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
                 nByUid.values().forEach(n
                         -> n.forEachPort(port -> ((PortView) port).setViewText()));
             });
+    }
+    private final AtomicBoolean checkTypes = new AtomicBoolean(false);
+    @Override
+    public void checkTypes() {
+        if(!checkTypes.getAndSet(true))
+            Platform.runLater(() -> {
+                checkTypes.set(false);
+                new TypeCheck().Scan(this);
+            });
+    }
+    private final AtomicBoolean doInferIntermediates = new AtomicBoolean(false);
+//    @Override
+    public void inferIntermediates() {
+        if(!doInferIntermediates.getAndSet(true)) {
+            checkTypes();
+            Platform.runLater(() -> {
+                doInferIntermediates.set(false);
+                new InferIntermediates().Scan(this);
+            });
+        }
     }
     @Override
     public Object collect() {

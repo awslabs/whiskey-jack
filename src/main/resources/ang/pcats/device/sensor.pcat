@@ -1,51 +1,60 @@
 ---
 children:
     temperature:
+        domain: device
         in:
             id: none
         out:
-            v: 0
+            v: double
     brightness:
+        domain: device
         in:
             id: none
         out:
-            v: 0
+            v: double
     humidity:
+        domain: device
         in:
             id: none
         out:
-            v: 0
+            v: double
     touch:
+        domain: device
         in:
             id: none
         out:
-            v: 
+            v: false
     switch:
+        domain: device
         in:
             id: none
         out:
             v: false
     distance:
+        domain: device
         in:
             id: none
         out:
-            v: 0
+            v: double
     angle:
+        domain: device
         in:
             id: none
         out:
-            v: 0
+            v: double
     pressure:
+        domain: device
         in:
             id: none
         out:
-            v: 0
+            v: double
     motion:
+        domain: device
         in:
             id: none
         out:
             v: 0
     camera:
+        domain: device
         out:
-            image:
-                type: image
+            image: image

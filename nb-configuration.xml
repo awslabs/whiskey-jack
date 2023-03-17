@@ -58,5 +58,8 @@ Any value defined here will override the pom.xml file value but is only applicab
         <netbeans.hint.jdkPlatform>JDK_17</netbeans.hint.jdkPlatform>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapCaseStatements>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapCaseStatements>
         <netbeans.hint.licensePath>${project.basedir}/licenseheader.txt</netbeans.hint.licensePath>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapAfterLambdaArrow>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapAfterLambdaArrow>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapLambdaArrow>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapLambdaArrow>
+        <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapIfStatement>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapIfStatement>
     </properties>
 </project-shared-configuration>

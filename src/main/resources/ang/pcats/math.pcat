@@ -1,11 +1,17 @@
 ---
 children:
+  greater:
+        in:
+            a: double
+            b: double
+        out:
+            out: boolean
   sum:
     in:
-      a: 0
-      b: 0
+      a: double
+      b: double
     out:
-      v: 0
+      v: double
   diff:
     in:
       a: 0

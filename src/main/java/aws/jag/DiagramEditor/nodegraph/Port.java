@@ -9,26 +9,31 @@ import aws.jag.DiagramEditor.util.Collectable;
 import static aws.jag.DiagramEditor.nodegraph.GraphPart.*;
 import java.util.*;
 import java.util.function.*;
-import javax.annotation.*;
 
 public class Port extends Collectable {
     public final MetaPort metadata;
+    public Domain domain = Domain.unknown;
+    private ErrorCode errorCode;
     public final Node within;
     private Object constantValue; // used when disconnected
     private List<Arc> arcs;
     public boolean isConnected() {
         return arcs != null;
     }
-    public Port(@Nonnull Node wi, MetaPort m) {
+    public Port(Node wi, MetaPort m) {
         within = wi;
         metadata = m != null ? m : (MetaPort) this;  // Metaport's metadata is a circular reference.
     }
     public void populateFrom(Port other) {
         constantValue = other.constantValue;
+        domain = other.domain;
         other.forEachArc(a -> System.out.println("  mk arc " + a));
     }
     public void populateFrom(Map values) {
         constantValue = getOpt(values,"value",constantValue);
+        String d = getOpt(values,"domain",(String) null);
+        if(d!=null)
+            setDomain(Domain.of(d));
         getCollection(values, "arcs").forEach(s->getContext().addConnection(s.toString()));
     }
     public void remove(Arc a) {
@@ -58,6 +63,10 @@ public class Port extends Collectable {
                     return true;
         return false;
     }
+    public boolean compatibleWith(Port b) {
+        return getDomain().compatibleWith(b.getDomain())
+                && getType().compatibleWith(b.getType());
+    }
     public void connectTo(Port n) {
         Arc.connect(this, n);
     }
@@ -71,6 +80,7 @@ public class Port extends Collectable {
         putOpt(map, "arcs", arcs);
 //        putOpt(map, "meta", metadata.getUid());
         putOpt(map, "value", constantValue);
+        if(domain != Domain.unknown) putOpt(map, "domain", domain);
     }
     public Graph getContext() {
         return within.getContext();
@@ -100,11 +110,23 @@ public class Port extends Collectable {
     public Type getType() {
         return metadata.getType();
     }
-    public boolean isRightSide() {
-        return metadata.isRightSide();
+    public Domain getDomain() {
+        return domain == Domain.unknown ? within.getDomain() : domain;
     }
-    public boolean isLeftSide() {
-        return !metadata.isRightSide();
+    public Port setDomain(Domain d) {
+        System.out.println("Port setDomain "+getFullName()+"->"+d);
+        if(d==within.getDomain()) d = Domain.unknown;
+        domain = d;
+        return this;
+    }
+    public boolean isOutputSide() {
+        return metadata.isOutputSide();
+    }
+    public boolean isInputSide() {
+        return !metadata.isOutputSide();
+    }
+    public boolean isUnboundOK() {
+        return metadata.isUnboundOK();
     }
     @Override
     public String toString() {
@@ -120,4 +142,15 @@ public class Port extends Collectable {
             original.getPort(getName()).setValue(v);
     }
     public Object getValue() { return constantValue; }
+    private String message;
+    public final String getMessage() { return message; }
+    public Port setMessage(ErrorCode ec, String m) {
+        errorCode = ec==null ? ErrorCode.allIsWell : ec;
+        message = m;
+        return this;
+}
+    public final Port setMessage(String m) {
+        return setMessage(ErrorCode.allIsWell, m);
+    }
+    public ErrorCode getErrorCode() { return errorCode; }
 }

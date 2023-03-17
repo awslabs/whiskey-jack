@@ -11,6 +11,7 @@ public class MetaNode extends Node<MetaNode> {
     private final Map<String, MetaNode> subnodes = new HashMap<>();
     private final MetaNode parent;
     private String description;
+    private MetaPort dfltIn, dfltOut;
     private MetaNode(MetaNode p) {
         super(metaGraph, metaMeta);
         if(p == null && (p = metaMeta) == null)
@@ -27,6 +28,7 @@ public class MetaNode extends Node<MetaNode> {
         return metaMeta == this;
     }
     public void addChild(MetaNode mn) {
+        System.out.println(" addChild "+mn.getName());
         subnodes.put(mn.getName(), mn);
     }
     public void removeChild(MetaNode mn) {
@@ -35,10 +37,10 @@ public class MetaNode extends Node<MetaNode> {
     public void forEachChild(Consumer<MetaNode> f) {
         subnodes.values().forEach(f);
     }
-    public void forEachDescendent(Consumer<MetaNode> f) {
-        subnodes.values().forEach(m->{
-            f.accept(m);
-            m.forEachDescendent(f);
+    public void forEachLeaf(Consumer<MetaNode> f) {
+        if(subnodes.isEmpty()) f.accept(this);
+        else subnodes.values().forEach(m -> {
+            m.forEachLeaf(f);
         });
     }
     public boolean hasChildren() {
@@ -52,15 +54,15 @@ public class MetaNode extends Node<MetaNode> {
         super.populateFrom(values);
 //        System.out.println("Populate MetaNode");
 //        dump(values);
-        setDomain(Domain.of(get(values,"domain",getDomain().toString())));
-        setDescription(get(values,"description",getDescription()));
-        populateSubnodes(values,"subnodes");
-        populateSubnodes(values,"children"); // compatibility for old name
+        setDomain(Domain.of(get(values, "domain", getDomain().toString())));
+        setDescription(get(values, "description", getDescription()));
+        populateSubnodes(values, "subnodes");
+        populateSubnodes(values, "children"); // compatibility for old name
     }
     private void populateSubnodes(Map values, String key) {
-        getMap(values, key).forEach((k,v)->{
+        getMap(values, key).forEach((k, v) -> {
 //            Collectable.dump(v, "Subnode "+k+" ("+key+")");
-            createIfAbsent(k).populateFrom((Map)v);
+            createIfAbsent(k).populateFrom((Map) v);
         });
     }
     @Override
@@ -72,7 +74,11 @@ public class MetaNode extends Node<MetaNode> {
         return "metanode";
     }
     public MetaNode createIfAbsent(String name) {
-        return subnodes.computeIfAbsent(name, n -> new MetaNode(MetaNode.this).setName(n));
+        return subnodes.computeIfAbsent(name, n ->
+                {
+                    System.out.println("    CIA "+n);
+            return new MetaNode(MetaNode.this).setName(n);
+        });
     }
     @Override
     public MetaNode setDescription(String d) {
@@ -108,27 +114,31 @@ public class MetaNode extends Node<MetaNode> {
     }
     @Override
     public MetaNode setDomain(Domain d) {
-        domain = d==null || d==Domain.unknown ? Domain.any : d;
+        domain = d == null || d == Domain.unknown ? Domain.any : d;
         return this;
     }
     @Override
     public MetaPort defaultPort(boolean in) {
-        MetaPort ret = null;
-        var priority = 0;
-        var magicName = in ? "in" : "out";
-        for(var p: ports.values())
-            if(p instanceof MetaPort mp && mp.isRightSide() == in)
-                if(mp.getName().equals(magicName))
-                    return mp;
-                else {
-                    var tp = 1;
-                    if(!mp.isConnected())
-                        tp = 2;
-                    if(tp > priority) {
-                        priority = tp;
-                        ret = mp;
+        MetaPort ret = in ? dfltIn : dfltOut;
+        if(ret == null) {
+            var priority = 0;
+            var magicName = in ? "in" : "out";
+            for(var p: ports.values())
+                if(p instanceof MetaPort mp && mp.isInputSide() == in)
+                    if(mp.getName().equals(magicName))
+                        return mp;
+                    else {
+                        var tp = 1;
+                        if(!mp.isConnected())
+                            tp = 2;
+                        if(tp > priority) {
+                            priority = tp;
+                            ret = mp;
+                        }
                     }
-                }
+            if(in) dfltIn = ret;
+            else dfltOut = ret;
+        }
         return ret;
     }
     public void markDirty() {
@@ -170,10 +180,10 @@ public class MetaNode extends Node<MetaNode> {
        meta root isn't known (cuz, this is it) so there's an odd null-text in the
        Node constructor to handle this */
     public static final MetaNode metaMeta = new MetaNode().setName("meta-meta");
-    int count(boolean right) {
+    int count(boolean output) {
         var slot = 0;
         for(var p: ports.values())
-            if(((MetaPort) p).isRightSide() == right)
+            if(((MetaPort) p).isOutputSide() == output)
                 slot++;
         return slot;
     }

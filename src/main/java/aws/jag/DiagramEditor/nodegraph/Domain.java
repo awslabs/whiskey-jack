@@ -15,9 +15,11 @@ import java.util.stream.*;
  */
 public class Domain extends Collectable {
     private final String name;
+    private final String styleName;
     @SuppressWarnings("LeakingThisInConstructor")
     private Domain(String n) {
         name = n;
+        styleName = name+"Domain";
     }
     @Override
     public void appendRefTo(StringBuilder sb) {
@@ -28,7 +30,8 @@ public class Domain extends Collectable {
         return name;
     }
     public boolean compatibleWith(Domain d) {
-        return d == this || d == any || this == any;
+        return d == this || d == any || this == any
+                 || d == err || this == err;
     }
     private static final Map<String, Domain> domains = new ConcurrentHashMap<>();
     public static final Domain of(String name) {
@@ -39,6 +42,7 @@ public class Domain extends Collectable {
                 .map(Domain::toString)
                 .collect(Collectors.toList());
     }
+    public String getStyleName() { return styleName; }
     
     public static final Domain device = of("device");
     public static final Domain gateway = of("gateway");

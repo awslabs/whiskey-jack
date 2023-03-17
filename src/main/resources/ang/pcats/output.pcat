@@ -1,10 +1,24 @@
 ---
 
     children:
-      chart:
+      webchart:
+        domain: browser
         in:
-          v: 0
+          v: table
+        out:
+            out: html
+      webpage:
+        domain: browser
+        in:
+          v: html
+          layout:
+            type: html
+            unboundok: true
+      localchart:
+        domain: device
+        in:
+          v: double
       log:
         in:
-          v: 0
-          log: node.log
+          v: double 
+          filename: node.log

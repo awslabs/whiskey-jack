@@ -19,6 +19,7 @@
     -fx-background-radius: 7;
     -fx-border-radius: 7;
     -fx-padding: 7;
+    -fx-stroke: black;
     -fx-background-color: #eee
 }
 .fgpane.selected {
@@ -37,10 +38,22 @@
 .arrow {
     -fx-background-insets: 20 0 0 0;
 }
-.outPort {
+.port {
 }
-.inPort {
-
+.port.error {
+    -fx-background-color: #fbb;
+}
+.deviceDomain {
+    -fx-effect: dropshadow( gaussian, #99FF44, 15, 0.3, 0, 0)
+}
+.cloudDomain {
+    -fx-effect: dropshadow( gaussian, #FF9900, 15, 0.3, 0, 0)
+}
+.browserDomain {
+    -fx-effect: dropshadow( gaussian, #55AAFF, 15, 0.3, 0, 0)
+}
+.anyDomain {
+    -fx-effect: dropshadow( gaussian, yellow, 15, 0.3, 0, 0)
 }
 .good {
     -fx-background-color: #DDFFDD;
@@ -56,10 +69,13 @@ CubicCurve {
     -fx-stroke-width: 2;
     -fx-view-order: -1;
 }
+CubicCurve.error {
+    -fx-stroke: #FF0000;
+}
 CubicCurve:hover {
     -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.3),4,0,2,3);
-    -fx-stroke-width: 4;
+    -fx-stroke-width: 6;
 }
 .fgpane:hover {
-    -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.3),4,0,2,3);
+    -fx-background-color: #fff
 }

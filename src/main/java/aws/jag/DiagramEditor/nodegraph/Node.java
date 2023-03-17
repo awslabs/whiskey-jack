@@ -17,7 +17,7 @@ public class Node<T extends Node> extends GraphPart<T> {
     public final MetaNode metadata;
     public Node<T> copiedFrom;
     public final Map<String, Port> ports = new LinkedHashMap<>();
-    @SuppressWarnings("LeakingThisInConstructor")
+    @SuppressWarnings({"LeakingThisInConstructor", "OverridableMethodCallInConstructor"})
     public Node(@Nonnull Graph parent, MetaNode mn) {
         context = parent;
         if(mn == null) {
@@ -25,14 +25,14 @@ public class Node<T extends Node> extends GraphPart<T> {
             setName("NoName");
         } else
             setName(mn.getName());
-        parent.add(this);
         metadata = mn;
-//        System.out.println("Meta " + mn.getName() + " " + mn.ports.size());
+        parent.add(this);
         mn.ports.entrySet().forEach(e -> {
             var p = context.newPort(this, e.getValue().metadata);
             ports.put(e.getKey(), p);
             p.populateFrom(e.getValue());
         });
+        setDomain(getDomain()); // to trigger change notification
     }
     @Override
     public Graph getContext() {
@@ -57,10 +57,10 @@ public class Node<T extends Node> extends GraphPart<T> {
         return u;
     }
     public Domain getDomain() {
-        return domain==Domain.unknown ? metadata.getDomain() : domain;
+        return domain == Domain.unknown ? metadata.getDomain() : domain;
     }
     public T setDomain(Domain d) {
-        domain = d==null || d==Domain.any ? Domain.unknown : d;
+        domain = d == null || d == Domain.any || d == metadata.getDomain() ? Domain.unknown : d;
         return (T) this;
     }
     
@@ -154,10 +154,10 @@ public class Node<T extends Node> extends GraphPart<T> {
         populatePorts(map, "in", true, true); // these two lines are compatibility with an old format
         populatePorts(map, "out", false, true);
     }
-    private void populatePorts(Map map, String key, boolean in, boolean rename) {
+    private void populatePorts(Map map, String key, boolean input, boolean rename) {
         getMap(map, key).forEach((k, v) -> {
             if(rename && k.equals("v"))
-                k = in ? "in" : "out";
+                k = input ? "in" : "out";
             var p = ports.get(k);
             if(p == null) {
                 p = getContext().newPort(this, MetaPort.meta);
@@ -168,11 +168,17 @@ public class Node<T extends Node> extends GraphPart<T> {
             if(v instanceof Map pm)
                 vmap = pm;
             else {
+//                if("out".equals(k) && v instanceof CharSequence cs)
+//                    System.out.println("  outv "+v);
                 vmap = new HashMap();
-                vmap.put("value", v);
+                var possibleT = Type.of(String.valueOf(v));
+                /* If it looks like a type, it is a type.  Otherwise it's a value. */
+                if(possibleT != null  && possibleT != Type.any_t)
+                    vmap.put("type", possibleT.getName());
+                else vmap.put("value", v);
             }
-            if(in)
-                vmap.put("in", true);
+            if(!input)
+                vmap.put("output", true);
             p.populateFrom(vmap);
         });
     }

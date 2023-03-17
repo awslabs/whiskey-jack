@@ -1,22 +1,32 @@
 ---
 children:
     servo:
+        domain: device
         in:
-            v: 0
+            v: double
             id: none
     solenoid:
+        domain: device
         in:
             v: false
             id: none
     heater:
+        domain: device
         in:
-            v: 0
+            v: double
             id: none
     lamp:
+        domain: device
         in:
-            v: 0
+            v: double
+            id: none
+    alarm:
+        domain: device
+        in:
+            v: false
             id: none
     motor:
+        domain: device
         in:
-            v: 0
+            v: double
             id: none

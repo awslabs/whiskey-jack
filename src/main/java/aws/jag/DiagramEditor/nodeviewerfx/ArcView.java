@@ -5,7 +5,10 @@
 package aws.jag.DiagramEditor.nodeviewerfx;
 
 import aws.jag.DiagramEditor.nodegraph.Arc;
+import aws.jag.DiagramEditor.nodegraph.*;
+import static aws.jag.DiagramEditor.nodegraph.ErrorCode.*;
 import static aws.jag.DiagramEditor.nodeviewerfx.GraphView.HOVER_PSEUDO_CLASS;
+import java.util.*;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.shape.*;
@@ -17,13 +20,14 @@ public class ArcView extends Arc implements Selectable {
     @SuppressWarnings("unused")
     public ArcView(PortView a, PortView b) {
         super(a, b);
-        System.out.println("arc from " + a.getName() + " to " + b.getName());
+//        a.getView().getStyleClass().remove("disconnected");
+//        b.getView().getStyleClass().remove("disconnected");
     }
     @Override
     public GraphView getContext() {
         return (GraphView) super.getContext();
     }
-
+    @Override
     public CubicCurve getView() {
         var r = view;
         if(r == null) {
@@ -65,6 +69,17 @@ public class ArcView extends Arc implements Selectable {
         // TODO Platform.runLater(() -> setViewText());
     }
     @Override
+    public ArcView setMessage(ErrorCode ec, String m) {
+        if(!Objects.equals(m, getMessage())) {
+            super.setMessage(ec, m);
+            Tooltip.install(getView(), m == null ? null : new Tooltip(m));
+            var css = getView().getStyleClass();
+            if(ec!=allIsWell) css.add("error");
+            else        css.remove("error");
+        }
+        return this;
+    }
+    @Override
     public void delete() {
         super.delete();
         if(view != null) {
@@ -76,12 +91,12 @@ public class ArcView extends Arc implements Selectable {
         var curve = getView();
         if(oneEnd() instanceof PortView a0 && otherEnd() instanceof PortView b0) {
             PortView a, b;
-            if(b0.isRightSide()) {
-                a = a0;
-                b = b0;
-            } else {
+            if(b0.isOutputSide()) {
                 a = b0;
                 b = a0;
+            } else {
+                a = a0;
+                b = b0;
             }
             var out = a.getPosition(area);
             var ox = out.getX();
@@ -90,14 +105,14 @@ public class ArcView extends Arc implements Selectable {
             var ix = in.getX();
             var iy = in.getY();
 //                var midX = (in.getX() + out.getX()) / 2;
-            var delta = ox<=ix ? Integer.min(100, ((int)(ix-ox))/3) : 100;
+            var delta = ox <= ix ? Integer.min(100, ((int) (ix - ox)) / 3) : 100;
             curve.setStartX(ox);
             curve.setStartY(oy);
 //                curve.setControlX1(midX);
-            curve.setControlX1(ox + (a.metadata.isRightSide() ? -delta : delta));
+            curve.setControlX1(ox + (a.metadata.isOutputSide() ? delta : -delta));
             curve.setControlY1(oy);
 //                curve.setControlX2(midX);
-            curve.setControlX2(ix + (b.metadata.isRightSide() ? -delta : delta));
+            curve.setControlX2(ix + (b.metadata.isOutputSide() ? delta : -delta));
             curve.setControlY2(iy);
             curve.setEndX(ix);
             curve.setEndY(iy);
