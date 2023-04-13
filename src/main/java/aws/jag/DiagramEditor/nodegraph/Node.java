@@ -173,7 +173,7 @@ public class Node<T extends Node> extends GraphPart<T> {
                 vmap = new HashMap();
                 var possibleT = Type.of(String.valueOf(v));
                 /* If it looks like a type, it is a type.  Otherwise it's a value. */
-                if(possibleT != null  && possibleT != Type.any_t)
+                if(possibleT != null  && possibleT != Type.any)
                     vmap.put("type", possibleT.getName());
                 else vmap.put("value", v);
             }

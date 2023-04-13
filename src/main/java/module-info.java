@@ -5,6 +5,7 @@ module com.aws.jag.fxnodeeditor {
     requires javafx.graphics;
     requires java.base;
     requires java.prefs;
+    requires io.github.classgraph;
     requires jsr305;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.annotation;

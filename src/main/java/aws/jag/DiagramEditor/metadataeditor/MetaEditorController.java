@@ -4,12 +4,9 @@
  */
 package aws.jag.DiagramEditor.metadataeditor;
 
-import aws.jag.DiagramEditor.nodeviewerfx.Dlg;
-import aws.jag.DiagramEditor.nodeviewerfx.GraphView;
+import aws.jag.DiagramEditor.nodeviewerfx.*;
 import aws.jag.DiagramEditor.util.Coerce;
-import aws.jag.DiagramEditor.nodegraph.Type;
-import aws.jag.DiagramEditor.nodegraph.MetaNode;
-import aws.jag.DiagramEditor.nodegraph.MetaPort;
+import aws.jag.DiagramEditor.nodegraph.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -32,12 +29,12 @@ public class MetaEditorController implements Initializable {
     }
     public static void launch() {
         if(singleton == null) try {
-            var root = (Parent)new FXMLLoader(MetaEditorController.class.getResource("MetaEditor.fxml")).load();
+            var root = (Parent) new FXMLLoader(MetaEditorController.class.getResource("MetaEditor.fxml")).load();
             var scene = new Scene(root, 600, 800);
             stage = new Stage();
             stage.setTitle("Product catalog entry editor");
             stage.setScene(scene);
-        } catch(IOException|Error ex) {
+        } catch(IOException | Error ex) {
             Dlg.error("Launching meta editor dialog", ex);
         }
     }
@@ -70,10 +67,13 @@ public class MetaEditorController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         System.out.println("Meta edit");
-        meDomain.getItems().addAll("Anywhere", "Device", "AWS", "Network", "With neighbor");
-        meType.getItems().addAll(Type.allTypes());
+        for(var d: Domain.allInteresting())
+            meDomain.getItems().add(d.getName());
+        for(var t: Type.allInteresting())
+            meType.getItems().add(t.getName());
         meParamList.getSelectionModel().selectedItemProperty()
-                .addListener(e -> selectParam(meParamList.getSelectionModel().getSelectedItem()));
+                .addListener(e ->
+                        selectParam(meParamList.getSelectionModel().getSelectedItem()));
         populate(first);
     }
     @FXML
@@ -85,7 +85,7 @@ public class MetaEditorController implements Initializable {
         System.out.println("meDelete");
     }
     private void populate(MetaNode mn) {
-        if(mn==current) return;
+        if(mn == current) return;
         current = mn;
         selectParam(null);
         if(mn != null) {
@@ -94,13 +94,13 @@ public class MetaEditorController implements Initializable {
             meDescription.setText(mn.getDescription());
             var items = meParamList.getItems();
             items.clear();
-            mn.forEachPort(p -> items.add((MetaPort)p));
+            mn.forEachPort(p -> items.add((MetaPort) p));
         }
     }
     private MetaPort currentPort;
     private void selectParam(MetaPort ae) {
         if(currentPort == ae) return;
-        if(currentPort!=null) {
+        if(currentPort != null) {
             var name = meParameterName.getText();
             if(!Objects.equals(name, currentPort.getName())) {
                 currentPort.setName(name);

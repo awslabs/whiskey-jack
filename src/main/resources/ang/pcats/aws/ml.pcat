@@ -4,7 +4,7 @@ children:
         domain: with neighbor
         description: The model data that is output from training for use in recognition
         in:
-            id: none
+            id: string
         out:
             model: 
                 type: mlmodel
@@ -13,10 +13,10 @@ children:
             An algorithm that takes in some model data to use in recognizing
             images and emit events describing everything recognized.        
         in:
-            model:
-                type: mlmodel
             image:
                 type: image
+            model:
+                type: mlmodel
         out:
             recognition:
                 type: event

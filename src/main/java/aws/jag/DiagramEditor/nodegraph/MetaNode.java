@@ -12,6 +12,7 @@ public class MetaNode extends Node<MetaNode> {
     private final MetaNode parent;
     private String description;
     private MetaPort dfltIn, dfltOut;
+    private float weight = 1; // how "expensive" is this computation
     private MetaNode(MetaNode p) {
         super(metaGraph, metaMeta);
         if(p == null && (p = metaMeta) == null)
@@ -52,8 +53,7 @@ public class MetaNode extends Node<MetaNode> {
     @Override
     public void populateFrom(Map values) {
         super.populateFrom(values);
-//        System.out.println("Populate MetaNode");
-//        dump(values);
+        setWeight(get(values, "weight", weight));
         setDomain(Domain.of(get(values, "domain", getDomain().toString())));
         setDescription(get(values, "description", getDescription()));
         populateSubnodes(values, "subnodes");
@@ -61,7 +61,6 @@ public class MetaNode extends Node<MetaNode> {
     }
     private void populateSubnodes(Map values, String key) {
         getMap(values, key).forEach((k, v) -> {
-//            Collectable.dump(v, "Subnode "+k+" ("+key+")");
             createIfAbsent(k).populateFrom((Map) v);
         });
     }
@@ -74,11 +73,7 @@ public class MetaNode extends Node<MetaNode> {
         return "metanode";
     }
     public MetaNode createIfAbsent(String name) {
-        return subnodes.computeIfAbsent(name, n ->
-                {
-                    System.out.println("    CIA "+n);
-            return new MetaNode(MetaNode.this).setName(n);
-        });
+        return subnodes.computeIfAbsent(name, n -> new MetaNode(MetaNode.this).setName(n));
     }
     @Override
     public MetaNode setDescription(String d) {
@@ -91,20 +86,8 @@ public class MetaNode extends Node<MetaNode> {
         putOpt(map, "domain", getDomain());
         putOpt(map, "description", description);
         putOpt(map, "subnodes", subnodes);
+        if(weight!=1) putOpt(map, "weight", Float.toString(weight));
     }
-//    public MetaNode add(MetaPort p) {  TODO delete
-//        if(p.getName() == null || ports.containsKey(p.getName())) {
-//            // generate locally-unique name to ease testing
-//            int i = 0;
-//            var nm = "";
-//            do
-//                nm = "P" + ++i;
-//            while(ports.containsKey(nm));
-//            p.setName(nm);
-//        }
-//        ports.put(p.getName(), p);
-//        return this;
-//    }
     public static MetaNode lookup(String uid) {
         return null;
     }
@@ -186,5 +169,11 @@ public class MetaNode extends Node<MetaNode> {
             if(((MetaPort) p).isOutputSide() == output)
                 slot++;
         return slot;
+    }
+    public float getWeight() { return weight; }
+    public MetaNode setWeight(float w) {
+        if(w<=0) w = 1;
+        weight = w;
+        return this;
     }
 }

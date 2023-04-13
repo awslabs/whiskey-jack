@@ -102,6 +102,9 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     public void inferIntermediates() {
         // Try to fix the graph
     }
+    public void layoutNodes() {
+        // if this graph is being made visible (via a view) tidy it up
+    }
     public N newNode(MetaNode mn) {
         try {
             return nodeClass.getConstructor(this.getClass(), MetaNode.class).newInstance(this, mn);

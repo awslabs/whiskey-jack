@@ -7,7 +7,6 @@ package aws.jag.DiagramEditor.nodegraph;
 import aws.jag.DiagramEditor.util.Collectable;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.*;
 
 /**
  * Right now this is essentially just an enum, but I've built it as a class
@@ -37,11 +36,14 @@ public class Domain extends Collectable {
     public static final Domain of(String name) {
         return domains.computeIfAbsent(name, n->new Domain(n));
     }
-    public static Collection<String> allDomains() {
-        return domains.values().stream()
-                .map(Domain::toString)
-                .collect(Collectors.toList());
+    public static Domain[] allInteresting() {
+        if(interesting==null)
+            interesting = domains.values().stream()
+                    .filter(f->f!=any && f!=err && f!=unknown)
+                    .toArray(n->new Domain[n]);
+        return interesting;
     }
+    private static Domain[] interesting;
     public String getStyleName() { return styleName; }
     
     public static final Domain device = of("device");
@@ -51,8 +53,11 @@ public class Domain extends Collectable {
     public static final Domain any = of("any");
     public static final Domain err = of("err");
     public static final Domain unknown = of("unknown");
+    public String getName() {
+        return name;
+    }
     @Override
     public String toString() {
-        return name;
+        return getName();
     }
 }

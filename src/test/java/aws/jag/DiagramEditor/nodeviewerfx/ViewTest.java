@@ -22,6 +22,7 @@ import org.junit.jupiter.api.*;
 //import com.aws.jag.fxnodeeditor.view.;
 
 public class ViewTest extends Application {
+    /*
     MetaNode m;
     Node n, o;
     public ViewTest() {
@@ -29,10 +30,10 @@ public class ViewTest extends Application {
             System.out.print("ViewTest");
             m = metaMeta.createIfAbsent("Strange")
                     .setDescription("add two things together")
-                    .setDomain(Domain.device);
-            MetaPort.of("in", null, m, Type.double_t, 0, false);
-            MetaPort.of("b", null, m, Type.double_t, 0, false);
-            MetaPort.of("out", null, m, Type.json_t, 0, true);
+                    .setDomain(Domain.gateway);
+            MetaPort.of("in", null, m, Type.tuple, 0, false);
+            MetaPort.of("b", null, m, Type.number, 0, false);
+            MetaPort.of("out", null, m, Type.tuple, 0, true);
             n = new Node(testGraph, m);
             n.getPort("in").setValue(42);
             n.getPort("b").setValue(1);
@@ -52,6 +53,7 @@ public class ViewTest extends Application {
         System.out.println("ViewTest testSomeMethod");
         annotate();
     }
+    */
 
     public void annotate(/*AnchorPane nodeEditor*/) {
 //        testGraph.dump();

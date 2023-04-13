@@ -4,29 +4,29 @@ children:
         domain: device
         in:
             v: double
-            id: none
+            id: string
     solenoid:
         domain: device
         in:
             v: false
-            id: none
+            id: string
     heater:
         domain: device
         in:
             v: double
-            id: none
+            id: string
     lamp:
         domain: device
         in:
             v: double
-            id: none
+            id: string
     alarm:
         domain: device
         in:
             v: false
-            id: none
+            id: string
     motor:
         domain: device
         in:
             v: double
-            id: none
+            id: string

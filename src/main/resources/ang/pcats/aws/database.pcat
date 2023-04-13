@@ -4,15 +4,15 @@ children:
         domain: cloud
         in:
             insertion: 0
-            id: none
+            id: string
         out:
             query: 0
 
     timestream:
         domain: cloud
         in:
-            v: any
-            id: none
+            v: tuple
+            id: string
         out:
             out: table
 
@@ -20,7 +20,7 @@ children:
         domain: cloud
         in:
             insertion: 0
-            id: none
+            id: string
         out:
             query: 0
 
@@ -28,6 +28,6 @@ children:
         domain: cloud
         in:
             insertion: 0
-            id: none
+            id: string
         out:
             query: 0

@@ -8,9 +8,12 @@ import aws.jag.DiagramEditor.nodegraph.*;
 import aws.jag.DiagramEditor.nodeviewerfx.Dlg;
 import aws.jag.DiagramEditor.nodeviewerfx.GraphView;
 import aws.jag.DiagramEditor.util.*;
+import io.github.classgraph.*;
 import static aws.jag.DiagramEditor.util.Utils.*;
 import java.io.*;
+import java.nio.charset.*;
 import java.nio.file.*;
+import static java.nio.file.Path.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.regex.*;
@@ -20,7 +23,8 @@ import javafx.event.*;
  * A library of meta nodes. The "product catalog"
  */
 public class NodeLibrary {
-    private NodeLibrary(){} // use singleton to access
+    private NodeLibrary() {
+    } // use singleton to access
     public void forAll(Consumer<MetaNode> f) {
         MetaNode.metaMeta.forEachLeaf(f);
     }
@@ -38,7 +42,7 @@ public class NodeLibrary {
 //        saveAllAs(rootPath.resolve("total.mn"));
     }
     public void saveAllAs(Path p) {
-        try( var out = CommitableWriter.abandonOnClose(p)) {
+        try(var out = CommitableWriter.abandonOnClose(p)) {
 //            Collectable.dump(Collectable.asObject(MetaNode.metaMeta));
             GraphView.fileio.writeValue(out, Collectable.asObject(MetaNode.metaMeta));
             out.commit();
@@ -86,20 +90,27 @@ public class NodeLibrary {
             Dlg.error("Bad data in", from.toString(), Utils.deepToString(v, 80));
         return null;
     }
+    static final Pattern tagPart = Pattern.compile("ang/pcats/*([^.]*)\\.pcat");
     public void initialize() {
-        try( var in = new BufferedReader(new InputStreamReader(this.getClass().getResource("/ang/pcats/pcat.list").openStream()))) {
-            in.lines().forEach(l -> {
-                try {
-                    System.out.println("load resource "+l);
-                    load(l.substring(0, l.length() - 5),
-                            Config.configDir.resolve("pcat").resolve(l),
-                            this.getClass().getResource("/ang/pcats/" + l).openStream());
-                } catch(IOException ex) {
-                    Dlg.error("Couldn't read default parts catalog " + l, ex);
-                }
-            });
-        } catch(IOException ex) {
-            Dlg.error("Couldn't load default parts catalog", ex);
+        System.out.println("_____\nLoading standard library");
+        try(var scanResult = new ClassGraph().acceptPaths("ang/pcats").scan()) {
+            scanResult.getResourcesWithExtension("pcat")
+                    .getURIs().forEach(uri ->
+                    {
+                        try {
+                            var tag = "unknown";
+                            Matcher m = tagPart.matcher(uri.toString());
+                            if(m.find()) {
+                                tag = m.group(1);
+                            } else
+                                System.out.println("Unexpected resource: "+uri);
+                            var l = uri.toURL();
+                            System.out.println("tag: "+tag+"  URI: " + uri + "  URL: " + l);
+                            load(tag, null, l.openStream());
+                        } catch(IOException ex) {
+                            Dlg.error("Couldn't read default parts catalog ", ex);
+                        }
+                    });
         }
         try {
             Config.scanConfig("pcat", (a, b) -> load(a, Path.of(b)));
@@ -110,35 +121,48 @@ public class NodeLibrary {
     }
     private static final Pattern joiners = Pattern.compile(" *[.,:/] *");
     public static final NodeLibrary singleton = new NodeLibrary();
-    private Map<Domain,Map<Type,List<MetaNode>>> dtInMap;
+    private Map<Domain, Map<Type, List<MetaNode>>> dtInMap;
     public void forEachNodeThatTakes(Domain d, Type t, Consumer<MetaNode> f) {
-        getNodesThatTake(d,t).forEach(f);
-        getNodesThatTake(Domain.any, t).forEach(f);
-        getNodesThatTake(d, Type.any_t).forEach(f);
-        getNodesThatTake(Domain.any, Type.any_t).forEach(f);
+        if(t == Type.any)
+            for(var t0: Type.allInteresting())
+                getNodesThatTake(d, t0).forEach(f);
+        else if(d == Domain.any)
+            for(var d0: Domain.allInteresting())
+                getNodesThatTake(d0, t).forEach(f);
+        else {
+            getNodesThatTake(d, t).forEach(f);
+            getNodesThatTake(Domain.any, t).forEach(f);
+            getNodesThatTake(d, Type.any).forEach(f);
+            getNodesThatTake(Domain.any, Type.any).forEach(f);
+        }
     }
     private List<MetaNode> getNodesThatTake(Domain d, Type t) {
         var dtim = dtInMap;
-        if(dtim==null) {
+        if(dtim == null) {
             dtInMap = dtim = new HashMap<>();
             System.out.println("Init DT map");
-            forAll(mn->{
+            forAll(mn -> {
                 var din = mn.defaultPort(true);
                 var dout = mn.defaultPort(false);
-                if(din!=null && dout!=null) {
+                if(din != null && dout != null) {
+                    if(dout.compatibleWith(din)) {
+                        System.out.println("NOP " + mn.getName() + " " + din.getDomain() + "," + din.getType().getName()
+                                           + " -> " + dout.getDomain() + "," + dout.getType().getName());
+                        return;
+                    }
                     var nd = din.getDomain();
                     var nt = din.getType();
                     var dmap = dtInMap.get(nd);
-                    if(dmap==null) dtInMap.put(nd, dmap = new HashMap<>());
+                    if(dmap == null) dtInMap.put(nd, dmap = new HashMap<>());
                     var list = dmap.get(nt);
-                    if(list==null) dmap.put(nt, list = new ArrayList<>());
+                    if(list == null) dmap.put(nt, list = new ArrayList<>());
                     list.add(mn);
                 }
             });
         }
-        Map<Type,List<MetaNode>> dm = dtim.get(d);
-        if(dm==null) return Collections.EMPTY_LIST;
+        Map<Type, List<MetaNode>> dm = dtim.get(d);
+        if(dm == null) return Collections.EMPTY_LIST;
         List<MetaNode> ret = dm.get(t);
-        return ret==null ? Collections.EMPTY_LIST : ret;
+        return ret == null ? Collections.EMPTY_LIST : ret;
     }
 }

@@ -9,7 +9,7 @@ import java.util.*;
 import javax.annotation.*;
 
 public class MetaPort extends Port {
-    private Type type = Type.any_t;
+    private Type type = Type.any;
 //    public Object defaultValue;
     private String name;
     private String description;
@@ -66,13 +66,13 @@ public class MetaPort extends Port {
     public void populateFrom(Map values) {
         super.populateFrom(values);
 //        System.out.println("PopulateFrom");dump(values);
-        var tt = getOpt(values, "type", getType().toString());
+//        var tt = getOpt(values, "type", getType().toString());
 //        if(String.valueOf(tt).contains("double"))
 //            System.out.println("Yikes: "+getFullName()+": "+tt+" "+tt.getClass());
         setType(Type.of(getOpt(values, "type", getType().getName())));
         setName(getOpt(values, "name", getName()));
 //        setValue(getOpt(values, "defaultValue", getValue()));
-        if(getValue() != null && getType() == Type.any_t)
+        if(getValue() != null && getType() == Type.any)
             setType(Type.guess(getValue()));
         setDescription(getOpt(values, "description", getDescription()));
 //        setOutputSide((boolean) getOpt(values, "in", isOutputSide()));// TODO: can be removed, eventually

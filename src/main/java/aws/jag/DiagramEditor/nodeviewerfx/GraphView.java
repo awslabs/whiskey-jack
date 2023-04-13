@@ -33,7 +33,6 @@ import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
-import static javafx.scene.input.KeyCode.*;
 import javafx.scene.layout.*;
 import javafx.stage.*;
 
@@ -85,8 +84,9 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
         var run = new MenuItem("Run");
         run.setOnAction(ae->new CodeGenerator().Scan(this));
         contextMenu.getItems().add(run);
-        var infer = new MenuItem("Infer");
+        var infer = new MenuItem("Fix");
         infer.setOnAction(ae->new InferIntermediates().Scan(this));
+        infer.setAccelerator(KeyCombination.valueOf("Shortcut+F"));
         contextMenu.getItems().add(infer);
         var fileActions = new Menu("File");
         contextMenu.getItems().add(fileActions);
@@ -94,7 +94,7 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
                 mkaction("Open", this::openAction, KeyCode.O),
                 mkaction("Save", this::saveAction, KeyCode.S),
                 mkaction("New", this::newAction, KeyCode.N),
-                mkaction("Layout", e -> layoutAction(), KeyCode.L),
+                mkaction("Layout", e -> layoutNodes(), KeyCode.L),
                 mkaction("Export All Meta", NodeLibrary.singleton::exportAction, KeyCode.X),
                 mkaction("Quit", this::quitAction, KeyCode.Q)
         );
@@ -207,9 +207,6 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
     void newAction(ActionEvent evt) {
         clearAll();
     }
-    void layoutAction() {
-        new Layout(nByUid.values()).trivialLayout().center().apply();
-    }
     public boolean loadFile(String p) {
 //        System.out.println("String "+p);
         if(p != null) try {
@@ -253,7 +250,7 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
                 newArc((PortView) out0, (PortView) in);
             if(out != null && in0 != null)
                 newArc((PortView) out, (PortView) in0);
-            Platform.runLater(() -> layoutAction());
+            layoutNodes();
         }
         var lp = getView().screenToLocal(DragAssist.targetX, DragAssist.targetY);
         if(lp != null) {
@@ -304,18 +301,31 @@ public class GraphView extends Graph<NodeView,PortView,ArcView,GraphView>  imple
     public void checkTypes() {
         if(!checkTypes.getAndSet(true))
             Platform.runLater(() -> {
+                adjustNames();
                 checkTypes.set(false);
                 new TypeCheck().Scan(this);
             });
     }
     private final AtomicBoolean doInferIntermediates = new AtomicBoolean(false);
-//    @Override
+    @Override
     public void inferIntermediates() {
         if(!doInferIntermediates.getAndSet(true)) {
             checkTypes();
             Platform.runLater(() -> {
                 doInferIntermediates.set(false);
                 new InferIntermediates().Scan(this);
+            });
+        }
+    }
+    private final AtomicBoolean doLayoutNodes = new AtomicBoolean(false);
+    @Override
+    public void layoutNodes() {
+        adjustNames();
+        if(!doLayoutNodes.getAndSet(true)) {
+            checkTypes();
+            Platform.runLater(() -> {
+                doLayoutNodes.set(false);
+                new Layout(nByUid.values()).trivialLayout().center().apply();
             });
         }
     }

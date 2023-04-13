@@ -58,7 +58,8 @@ public class PortView extends Port implements Selectable {
         view.setContentDisplay(in ? ContentDisplay.LEFT : ContentDisplay.RIGHT);
 //        if(in) {
                 if(in) view.setOnMouseClicked(evt -> {
-                    TextInputDialog td = new TextInputDialog(String.valueOf(getValue()));
+                    var ov = getValue();
+                    TextInputDialog td = new TextInputDialog(ov==null ? "" : String.valueOf(ov));
                     td.setHeaderText(metadata.getName());
                     td.setTitle("Enter new value");
                     var v = td.showAndWait();
@@ -104,7 +105,7 @@ public class PortView extends Port implements Selectable {
                         if(n.hasPorts()) {
                             connectTo(n.defaultPort(!in));
                         }
-                        getContext().layoutAction();
+                        getContext().layoutNodes();
                     }
                     evt.setDropCompleted(true);
                     evt.consume();

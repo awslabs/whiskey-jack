@@ -74,6 +74,16 @@ public abstract class Collectable {
         var v = m.get(k);
         return v == null ? dflt : v.toString();
     }
+    public static float get(Map m, String k, float dflt) {
+        var v = m.get(k);
+        try {
+        return v == null ? dflt : v instanceof Number nv ? nv.floatValue()
+                : Float.parseFloat(v.toString());
+        } catch(NumberFormatException ioe) {
+            System.out.println(ioe);
+            return dflt;
+        }
+    }
     public static Collection<Object> getCollection(Map m, String k) {
         return m == null ? Collections.emptyList() : Coerce.toCollection(m.get(k));
     }

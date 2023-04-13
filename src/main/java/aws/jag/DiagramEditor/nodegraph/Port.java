@@ -132,6 +132,9 @@ public class Port extends Collectable {
     public String toString() {
         return "Port<" + within.getName() + "." + getName() + ">";
     }
+    public String dtString() {
+        return getName()+'['+getDomain()+','+getType().getName()+']';
+    }
     public final void setParsedValue(String v) {
         setValue(Utils.parseObject(v));
     }

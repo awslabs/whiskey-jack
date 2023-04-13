@@ -5,6 +5,7 @@
 package aws.jag.DiagramEditor.nodegraph;
 
 import aws.jag.DiagramEditor.util.Collectable;
+import static aws.jag.DiagramEditor.util.Utils.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -19,24 +20,18 @@ public class Type extends Collectable {
     @SuppressWarnings("unused")
     public static Type guess(Object value) {
         return switch(value) {
-//            case Float f ->
-//                double_t;
-//            case Double d ->
-//                double_t;
-//            case Number n ->
-//                int_t;
             case Number n ->
-                double_t;
+                number;
             case Boolean b ->
-                bool_t;
+                bool;
             case String s ->
-                string_t;
+                string;
             case Map m ->
-                json_t;
+                tuple;
             case null ->
-                any_t;
+                any;
             default ->
-                object_t;
+                object;
         };
     }
     @Override
@@ -52,35 +47,38 @@ public class Type extends Collectable {
     }
     @Override
     public String toString() {
-        return "Type<" + getName() + ">";
+        return getName();
     }
     public static Type of(String name) {
-        return all.get(name);
+        return isEmpty(name) ? null : all.get(name);
     }
     public static void forEachType(Consumer<Type> f) {
         all.values().forEach(f);
     }
-    public boolean compatibleWith(Type t) {
-        return t == this || t == any_t || this == any_t
-                 || t == err_t || this == err_t;
+    public static Type[] allInteresting() {
+        if(interesting==null)
+            interesting = all.values().stream().filter(f->f!=any && f!=err).toArray(n->new Type[n]);
+        return interesting;
     }
-    public static Collection<String> allTypes() {
-        return all.values().stream()
-                .map(Type::getName)
-                .collect(Collectors.toList());
+    public boolean compatibleWith(Type t) {
+        return t == this || t == any || this == any
+                 || t == err || this == err;
     }
 
     private static final Map<String, Type> all = new HashMap();
-    public static final Type any_t = new Type("any");
-    public static final Type bool_t = new Type("boolean");
-    public static final Type double_t = new Type("double");
-    public static final Type image_t = new Type("image"); // ?
-    public static final Type int_t = new Type("integer"); // ?
-    public static final Type string_t = new Type("string");
-    public static final Type json_t = new Type("json");
-    public static final Type table_t = new Type("table");
-    public static final Type html_t = new Type("html");
-    public static final Type object_t = new Type("object"); // ?
+    private static Type[] interesting;
+    public static final Type any = new Type("any");
+    public static final Type bool = new Type("boolean");
+    public static final Type number = new Type("double"); // ?
+    public static final Type event = new Type("event");
+    public static final Type image = new Type("image"); // ?
+//    public static final Type index = new Type("integer"); // ?
+    public static final Type string = new Type("string");
+    public static final Type tuple = new Type("tuple");
+    public static final Type table = new Type("table");
+    public static final Type html = new Type("html");
+    public static final Type mlmodel = new Type("mlmodel");
+    public static final Type object = new Type("object"); // ?
 
-    public static final Type err_t = new Type("err");
+    public static final Type err = new Type("err");
 }

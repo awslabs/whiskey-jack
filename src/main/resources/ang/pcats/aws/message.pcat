@@ -3,7 +3,7 @@ children:
     kinesis:
         in:
             data: 0
-            target: none
+            target: string
         out:
             data: 0
 
@@ -11,17 +11,21 @@ children:
         domain: cloud
         in:
             data: 0
-            target: none
+            target: string
         out:
             data: 0
 
-    mqtt:
+    mqttreceive:
         domain: any
         in:
-            data: 0
-            target: none
+            target: string
         out:
-            data: 0
+            data: tuple
+    mqttsend:
+        domain: any
+        in:
+            data: tuple
+            target: string
     streamManager:
         domain: device
         in:
@@ -30,7 +34,7 @@ children:
                 domain: device
         out:
             out:
-                type: any
+                type: tuple
                 domain: cloud
     graphana:
         domain: cloud

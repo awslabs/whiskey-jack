@@ -1,9 +1,10 @@
 ---
 children:
-  greater:
+  if:
         in:
             a: double
             b: double
+            expr: a>b
         out:
             out: boolean
   sum:
@@ -23,6 +24,6 @@ children:
       a: 0
       b: 0
       c: 0
-      expr: whatever
+      expr: string
     out:
       v: 0
