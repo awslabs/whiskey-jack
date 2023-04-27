@@ -20,19 +20,22 @@ public class Dlg {
     public static void error(Object... o) {
         new Dlg().show(true, o);
     }
+    public static void note(Object... o) {
+        new Dlg().show(false, o);
+    }
     private Dlg() {
     }
     private void show(boolean isError, Object... o) {
         var d = new Dialog();
+        d.initOwner(GraphView.rootWindow());
         body.getStyleClass().clear();
         if(isError) {
-            var img = new ImageView(errorIcon);
-            img.setPreserveRatio(true);
-            img.setFitHeight(64);
-            d.setGraphic(img);
+            d.setGraphic(img(errorIcon));
             body.getStyleClass().add("errorDialog");
-        } else
+        } else {
+            d.setGraphic(img(noteIcon));
             body.getStyleClass().add("noteDialog");
+        }
         var dp = d.getDialogPane();
         dp.getStyleClass().add(isError ? "error" : "note");
         dp.setContent(body);
@@ -41,7 +44,17 @@ public class Dlg {
         d.setTitle(title == null ? "Error" : title);
         dp.getButtonTypes().add(ButtonType.OK);
         dp.getStylesheets().add(Dlg.class.getResource("error.css").toExternalForm());
+        dp.setMinWidth(Region.USE_COMPUTED_SIZE);
+        dp.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        dp.setMaxWidth(1000);
+        d.setResizable(true);
         d.showAndWait();
+    }
+    private ImageView img(Image i) {
+        var img = new ImageView(i);
+            img.setPreserveRatio(true);
+            img.setFitHeight(64);
+            return img;
     }
     private String addStuff(Object o, String style) {
         if(o == null)
@@ -92,9 +105,7 @@ public class Dlg {
                 v.add(l);
             }
     }
-    public static void note(Object... o) {
-        new Dlg().show(false, o);
-    }
     static final private Image errorIcon = new Image(NodeView.class.getResourceAsStream("Oops.png"));
+    static final private Image noteIcon = new Image(NodeView.class.getResourceAsStream("OK.png"));
 
 }

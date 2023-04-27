@@ -14,7 +14,7 @@ public class InferIntermediates implements Scanner {
     TreeSet<CandidateSolution> workablePaths = new TreeSet<>(byWeight);
     Graph context;
     @Override
-    public <T extends Graph> void Scan(T g) {
+    public void Scan(Graph g) {
         System.out.println("Inferring intermediates");
         context = g;
         if(g.typeMismatches.isEmpty()) {

@@ -74,11 +74,11 @@ public abstract class Collectable {
         var v = m.get(k);
         return v == null ? dflt : v.toString();
     }
-    public static float get(Map m, String k, float dflt) {
+    public static double get(Map m, String k, double dflt) {
         var v = m.get(k);
         try {
-        return v == null ? dflt : v instanceof Number nv ? nv.floatValue()
-                : Float.parseFloat(v.toString());
+            return v == null ? dflt : v instanceof Number nv ? nv.doubleValue()
+                    : Double.parseDouble(v.toString());
         } catch(NumberFormatException ioe) {
             System.out.println(ioe);
             return dflt;

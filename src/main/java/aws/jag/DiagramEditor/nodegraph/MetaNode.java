@@ -11,6 +11,7 @@ public class MetaNode extends Node<MetaNode> {
     private final Map<String, MetaNode> subnodes = new HashMap<>();
     private final MetaNode parent;
     private String description;
+    private String pathName;
     private MetaPort dfltIn, dfltOut;
     private float weight = 1; // how "expensive" is this computation
     private MetaNode(MetaNode p) {
@@ -29,7 +30,7 @@ public class MetaNode extends Node<MetaNode> {
         return metaMeta == this;
     }
     public void addChild(MetaNode mn) {
-        System.out.println(" addChild "+mn.getName());
+        System.out.println(" addChild " + mn.getName());
         subnodes.put(mn.getName(), mn);
     }
     public void removeChild(MetaNode mn) {
@@ -41,8 +42,8 @@ public class MetaNode extends Node<MetaNode> {
     public void forEachLeaf(Consumer<MetaNode> f) {
         if(subnodes.isEmpty()) f.accept(this);
         else subnodes.values().forEach(m -> {
-            m.forEachLeaf(f);
-        });
+                m.forEachLeaf(f);
+            });
     }
     public boolean hasChildren() {
         return !subnodes.isEmpty();
@@ -50,10 +51,18 @@ public class MetaNode extends Node<MetaNode> {
     public MetaNode getParent() {
         return parent;
     }
+    public String getPath() {
+        var s = pathName;
+        if(s == null)
+            s = pathName = parent == null || parent == this || parent == metaMeta
+                 ? getName()
+                 : parent.getPath() + '/' + getName();
+        return s;
+    }
     @Override
     public void populateFrom(Map values) {
         super.populateFrom(values);
-        setWeight(get(values, "weight", weight));
+        setWeight((float)get(values, "weight", weight));
         setDomain(Domain.of(get(values, "domain", getDomain().toString())));
         setDescription(get(values, "description", getDescription()));
         populateSubnodes(values, "subnodes");
@@ -73,7 +82,8 @@ public class MetaNode extends Node<MetaNode> {
         return "metanode";
     }
     public MetaNode createIfAbsent(String name) {
-        return subnodes.computeIfAbsent(name, n -> new MetaNode(MetaNode.this).setName(n));
+        return subnodes.computeIfAbsent(name, n ->
+                new MetaNode(MetaNode.this).setName(n));
     }
     @Override
     public MetaNode setDescription(String d) {
@@ -86,7 +96,7 @@ public class MetaNode extends Node<MetaNode> {
         putOpt(map, "domain", getDomain());
         putOpt(map, "description", description);
         putOpt(map, "subnodes", subnodes);
-        if(weight!=1) putOpt(map, "weight", Float.toString(weight));
+        if(weight != 1) putOpt(map, "weight", Float.toString(weight));
     }
     public static MetaNode lookup(String uid) {
         return null;
@@ -170,9 +180,11 @@ public class MetaNode extends Node<MetaNode> {
                 slot++;
         return slot;
     }
-    public float getWeight() { return weight; }
+    public float getWeight() {
+        return weight;
+    }
     public MetaNode setWeight(float w) {
-        if(w<=0) w = 1;
+        if(w <= 0) w = 1;
         weight = w;
         return this;
     }

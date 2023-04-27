@@ -60,6 +60,7 @@ public class PortView extends Port implements Selectable {
                 if(in) view.setOnMouseClicked(evt -> {
                     var ov = getValue();
                     TextInputDialog td = new TextInputDialog(ov==null ? "" : String.valueOf(ov));
+                    td.initOwner(GraphView.rootWindow());
                     td.setHeaderText(metadata.getName());
                     td.setTitle("Enter new value");
                     var v = td.showAndWait();

@@ -8,7 +8,7 @@ import java.io.*;
 import java.util.*;
 
 public class Tokenizer {
-    private final BufferedReader in;
+    private final Reader in;
     private char nextc;
     private static final char EOTchar = (char) 4;  // see asciitable.com
     int line = 1, col;
@@ -17,6 +17,9 @@ public class Tokenizer {
     private int labPosition, labLimit;
     public Tokenizer(Reader in0) {
         in = in0 instanceof BufferedReader inb ? inb : new BufferedReader(in0);
+    }
+    public Tokenizer(String s) {
+        in = new StringReader(s);
     }
     private char getc() throws IOException {
         var ret = nextc;
@@ -39,19 +42,25 @@ public class Tokenizer {
     private void pushbackc(char c) {
         nextc = c;
     }
+    /**
+     * Get the next token
+     */
     public Token get() throws IOException {
-        return labPosition>=labLimit ? actuallyGetToken() : lab[labPosition++];
+        var t = labPosition >= labLimit ? actuallyGetToken() : lab[labPosition++];
+        return t;
     }
+    /**
+     * * peek ahead <i>n</i> tokens.peek(0) returns the same result at get()
+     */
     public Token peek(int n) throws IOException {
-        if(labPosition>=labLimit) {
+        if(labPosition >= labLimit)
             labPosition = labLimit = 0;
-        }
-        while(labLimit-labPosition <= n) {
-            if(labLimit>=lab.length)
-                lab = Arrays.copyOf(lab,lab.length*2);
+        while(labLimit - labPosition <= n) {
+            if(labLimit >= lab.length)
+                lab = Arrays.copyOf(lab, lab.length * 2);
             lab[labLimit++] = actuallyGetToken();
         }
-        return lab[labPosition+n];
+        return lab[labPosition + n];
     }
     public Token actuallyGetToken() throws IOException {
         char c;
@@ -62,7 +71,7 @@ public class Tokenizer {
             do {
                 sb.append(c);
                 c = getc();
-            } while(Character.isJavaIdentifierPart(c));
+            } while(Character.isJavaIdentifierPart(c) && c!=EOTchar);
             pushbackc(c);
             return Token.identifier(sb.toString());
         }
@@ -75,15 +84,14 @@ public class Tokenizer {
                 if(c == '.')
                     if(seendot) break;
                     else seendot = true;
-            } while(Character.isDigit(c) || c=='.');
+            } while(Character.isDigit(c) || c == '.');
+            pushbackc(c);
             // TODO handle E+n exponent notation
             // TODO handle 0x..., nnL, ...
             try {
                 var parsed = Double.parseDouble(sb.toString());
                 var asInt = (int) parsed;
-//                var dl = parsed-asInt;
-//                System.out.println("NUM "+sb+" "+dl+"  "+(asInt==parsed)+"  "+(dl==0));
-                return Token.number(asInt == parsed ? (Number) Integer.valueOf(asInt) : (Number) Double.valueOf(parsed));
+                return Token.number(asInt == parsed ? (Number) asInt : (Number) parsed);
             } catch(NumberFormatException nfe) {
                 syntaxError("Can't parse " + sb + " (" + nfe.getMessage() + '"');
             }
@@ -119,13 +127,26 @@ public class Tokenizer {
             t = tn;
             c = getc();
         }
-        if(t.token == null) syntaxError("Unknown symbol");
-        return t.token;
+        pushbackc(c);
+        var ret = t.token;
+        if(ret == null) syntaxError("Unknown symbol: '" + c + "'");
+        if(ret==SlashSlashCOMMENT) {
+            while((c = getc())!='\n' && c!=EOTchar) {}
+            return actuallyGetToken();
+        }
+        if(ret==SlashStarCOMMENT) {
+            var prev = ' ';
+            while((c = getc())!=EOTchar) {
+                if(c=='/' && prev == '*') break;
+                prev = c;
+            }
+            return actuallyGetToken();
+        }
+        return ret;
     }
-    private void syntaxError(String error) throws SyntaxError {
+    public void syntaxError(String error) throws SyntaxError {
         throw new SyntaxError(error, this);
     }
-    public static final Token EOF = Token.keyword("-EOF-");
 
     private static Trie tokenRoot = new Trie((char) 0, null);
 
@@ -174,7 +195,21 @@ public class Tokenizer {
             define(op).setToken(token);
         return token;
     }
-    public static final Token UNKNOWN = operator("¡unknown!");
+    public static Token keyword(String key, String... ops) {
+        var token = Token.keyword(key);
+        for(var op: ops)
+            define(op).setToken(token);
+        return token;
+    }
+    public static final Token EOF = Token.keyword("-EOF-");
+    public static final Token UNKNOWN = operator(" ¡unknown!");
+    public static final Token HASPROPERTIES = operator(" ¡hasproperties!");
+    public static final Token LPAREN = operator("(");
+    public static final Token RPAREN = operator(")");
+    public static final Token LSQUARE = operator("[");
+    public static final Token RSQUARE = operator("]");
+    public static final Token LBRACE = operator("{");
+    public static final Token RBRACE = operator("}");
     public static final Token LT = operator("<");
     public static final Token LE = operator("<=", "≤");
     public static final Token GT = operator(">");
@@ -182,16 +217,38 @@ public class Tokenizer {
     public static final Token EQ = operator("==", "≡");
     public static final Token NE = operator("!=", "≠");
     public static final Token NOT = operator("!", "¬");
+    public static final Token DOT = operator(".");
+    public static final Token COLON = operator(":");
+    public static final Token COMMA = operator(",");
+    public static final Token SEMI = operator(";");
+    public static final Token DECLAREASSIGN = operator(":=");
+    public static final Token DECLAREASSIGNFINAL = operator(":==");
     public static final Token ASSIGN = operator("=", "←");
     public static final Token ANDAND = operator("&&", "∧");
+    public static final Token AND = operator("&");
+    public static final Token PLUS = operator("+");
+    public static final Token MINUS = operator("-", "−"); // minus sign \u2212
+    public static final Token OR = operator("|");
     public static final Token OROR = operator("||", "∨");
     public static final Token DIVIDE = operator("/", "÷");
     public static final Token MULTIPLY = operator("*", "×");
     public static final Token QUESTION = operator("?", "→", "⇒");
-    public static final Token NULL = Token.keyword("null");
-    static {
-        define("∅").setToken(NULL); // empty set
-    }
     public static final Token SlashSlashCOMMENT = operator("//");
     public static final Token SlashStarCOMMENT = operator("/*");
+    public static final Token NULL = keyword("null", "∅"); // empty set \u2205
+    public static final Token RETURN = keyword("return", "∴"); // therefore \u2234˙
+    public static final Token IF = keyword("if");
+    public static final Token ELSE = keyword("else");
+    public static final Token FOR = keyword("for", "∀"); // for all \u2200
+    public static final Token ELEMENTOF = operator("∈"); // element of \u2208
+    public static final Token DO = keyword("do");
+    public static final Token WHILE = keyword("while");
+    public static final Token SWITCH = keyword("switch");
+    public static final Token CASE = keyword("case");
+    public static final Token DEFAULT = keyword("default");
+    
+    
+    public static int typeTableSize() {
+        return Token.typeTableSize();
+    }
 }

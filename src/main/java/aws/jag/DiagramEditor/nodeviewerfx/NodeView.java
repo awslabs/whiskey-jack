@@ -4,6 +4,7 @@
  */
 package aws.jag.DiagramEditor.nodeviewerfx;
 
+import aws.jag.DiagramEditor.metadata.*;
 import aws.jag.DiagramEditor.nodegraph.*;
 import aws.jag.DiagramEditor.util.Utils;
 import aws.jag.DiagramEditor.nodegraph.Node;
@@ -34,6 +35,18 @@ public class NodeView extends Node implements Selectable {
         } catch(Throwable t) {
             Dlg.error("Error adding node", t);
         }
+    }
+    public static NodeView of(Map contents, GraphView parent) {
+        var mnode = NodeLibrary.singleton.createIfAbsent(get(contents, "metapath", "node/unknown"));
+        var node = new NodeView(parent, mnode);
+        node.populateFrom(contents);
+        return node;
+    }
+    @Override
+    public void populateFrom(Map map) {
+        super.populateFrom(map);
+        pane.setLayoutX(get(map, "x", 0));
+        pane.setLayoutY(get(map, "y", 0));
     }
     @Override
     public GraphView getContext() {
@@ -131,7 +144,7 @@ public class NodeView extends Node implements Selectable {
         ports.values().forEach(p -> ((PortView) p).forEachArc(a -> arcs.add(a)));
         arcs.forEach(a -> a.delete());
         getContext().getView().getChildren().remove(getView());
-        getContext().nByUid.remove(getUid());
+        getContext().remove(getUid());
     }
     public void setTitle(String s) {
         title.setText(s);

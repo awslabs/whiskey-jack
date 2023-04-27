@@ -61,5 +61,8 @@ Any value defined here will override the pom.xml file value but is only applicab
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapAfterLambdaArrow>true</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapAfterLambdaArrow>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapLambdaArrow>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapLambdaArrow>
         <org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapIfStatement>WRAP_IF_LONG</org-netbeans-modules-editor-indent.text.x-java.CodeStyle.project.wrapIfStatement>
+        <org-netbeans-spi-editor-hints-projects.text.x-java.error-in-javadoc.availabilityfalse>false</org-netbeans-spi-editor-hints-projects.text.x-java.error-in-javadoc.availabilityfalse>
+        <org-netbeans-spi-editor-hints-projects.text.x-java.error-in-javadoc.scope>protected</org-netbeans-spi-editor-hints-projects.text.x-java.error-in-javadoc.scope>
+        <org-netbeans-spi-editor-hints-projects.text.x-java.error-in-javadoc.enabled>false</org-netbeans-spi-editor-hints-projects.text.x-java.error-in-javadoc.enabled>
     </properties>
 </project-shared-configuration>

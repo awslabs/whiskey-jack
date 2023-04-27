@@ -6,6 +6,6 @@ package aws.jag.DiagramEditor.infer;
 
 import aws.jag.DiagramEditor.nodegraph.*;
 
-public interface Scanner {
-    public <T extends Graph> void Scan(T g);
+public interface Scanner  {
+    public void Scan(Graph g);
 }

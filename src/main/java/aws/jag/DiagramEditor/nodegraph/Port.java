@@ -4,6 +4,7 @@
  */
 package aws.jag.DiagramEditor.nodegraph;
 
+import aws.jag.DiagramEditor.nodegraph.Graph.PendingConnection;
 import aws.jag.DiagramEditor.util.Utils;
 import aws.jag.DiagramEditor.util.Collectable;
 import static aws.jag.DiagramEditor.nodegraph.GraphPart.*;
@@ -34,7 +35,13 @@ public class Port extends Collectable {
         String d = getOpt(values,"domain",(String) null);
         if(d!=null)
             setDomain(Domain.of(d));
-        getCollection(values, "arcs").forEach(s->getContext().addConnection(s.toString()));
+        getCollection(values, "arcs").forEach(s->{
+            if(s instanceof Map arc) {
+                getContext().addConnection(new PendingConnection(this,
+                        (String) arc.get("toUid"),
+                        (String) arc.get("toPort")));
+            }
+        });
     }
     public void remove(Arc a) {
         if(arcs != null) {
@@ -77,8 +84,18 @@ public class Port extends Collectable {
         return ret;
     }
     protected void collectMore(Map<String,Object> map) {
-        putOpt(map, "arcs", arcs);
-//        putOpt(map, "meta", metadata.getUid());
+        if(arcs!=null) {
+            List<Map> arcList = new ArrayList<>(1);
+            for(var thisArc:arcs)
+                if(thisArc.oneEnd()==this) {
+                    var nmap = new HashMap();
+                    var otherEnd = thisArc.otherEnd();
+                    putOpt(nmap,"toUid",otherEnd.within.getUid());
+                    putOpt(nmap,"toPort",otherEnd.getName());
+                    arcList.add(nmap);
+                }
+            putOpt(map, "arcs", arcList);
+        }
         putOpt(map, "value", constantValue);
         if(domain != Domain.unknown) putOpt(map, "domain", domain);
     }

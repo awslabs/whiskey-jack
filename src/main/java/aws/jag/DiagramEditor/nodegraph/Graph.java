@@ -10,21 +10,24 @@ import java.util.*;
 import java.util.function.*;
 
 public class Graph<N extends Node, P extends Port, A extends Arc, G extends Graph> extends GraphPart<Graph<N, P, A, G>>/*sic*//*sic*//*sic*//*sic*/ {
-    private final Map<String, N> map = new HashMap<>();
+    public static final String graphFileExtension = "ade"; // Architecture Diagram Editor
+    protected final Map<String, N> nByUid = new HashMap<>();
     private final Class<N> nodeClass;
     private final Class<P> portClass;
     private final Class<A> arcClass;
-    private final List<String> pendingConnections = new ArrayList<>();
     public Graph(Class<N> n, Class<P> p, Class<A> a) {
         nodeClass = n;
         portClass = p;
         arcClass = a;
     }
     public N get(String uid) {
-        return map.get(uid);
+        return nByUid.get(uid);
+    }
+    public void remove(String uid) {
+        nByUid.remove(uid);
     }
     public GraphPart computeIfAbsent(String uid, Function<String, N> f) {
-        return map.computeIfAbsent(uid, f);
+        return nByUid.computeIfAbsent(uid, f);
     }
     public P getPort(String s) {
         var dot = s.indexOf('.');
@@ -51,9 +54,6 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     public void appendRefTo(StringBuilder sb) {
         sb.append("Graph:").append(getClass().getName());
     }
-    public void addConnection(String con) {
-        pendingConnections.add(con);
-    }
 //    @Override
     public void populateFrom(Graph<? super Node, ? super Port, ? super Arc, ? super Graph> other) {
         other.forEachNode(n -> newNode(n)); // copy the nodes
@@ -77,8 +77,8 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
             });
         });
     }
-    public void forEachNode(Consumer<? super Node> f) {
-        map.values().forEach(f);
+    public void forEachNode(Consumer<Node> f) {
+        nByUid.values().forEach(f);
     }
     public void forEachPort(Consumer<Port> f) {
         forEachNode((var n) -> n.forEachPort(f));
@@ -152,14 +152,22 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
             throw new IllegalStateException("Couldn't create arc " + a + "<>" + b, ex);
         }
     }
+    public void error(Object... o) {
+        System.out.print("ERROR: ");
+        for(var l:o) System.out.println("\t"+l);
+    }
+    public void note(Object... o) {
+        System.out.print("ERROR: ");
+        for(var l:o) System.out.println("\t"+l);
+    }
     public void add(N aThis) {
-        map.put(aThis.getUid(), aThis);
+        nByUid.put(aThis.getUid(), aThis);
     }
     public void remove(N aThis) {
-        map.remove(aThis.getUid());
+        nByUid.remove(aThis.getUid());
     }
     public void copyTo(Graph dest) {
-        map.values().forEach(v -> dest.newNode(v));
+        nByUid.values().forEach(v -> dest.newNode(v));
     }
     @Override
     public void populateFrom(Map values) {
@@ -170,7 +178,7 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     }
     public void dump(PrintStream p) {
         p.println("\nGraph " + getName());
-        map.values().forEach(n -> System.out.println("  " + n));
+        nByUid.values().forEach(n -> System.out.println("  " + n));
         if(!pendingConnections.isEmpty()) {
             p.println("\tPending Connections:");
             pendingConnections.forEach(s -> p.println("\t\t" + s));
@@ -179,6 +187,19 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     public void dump() {
         dump(System.out);
     }
-    public List<Arc> typeMismatches = new ArrayList<>();
+    public final Collection<Arc> typeMismatches = new ArrayList<>();
+    public final Collection<String> otherErrors = new ArrayList<>();
     public boolean allOK = false;
+    
+    private final List<PendingConnection> pendingConnections = new ArrayList<>();
+    public void clearConnections() {
+        pendingConnections.clear();
+    }
+    public void forEachConnection(Consumer<PendingConnection> f) {
+        pendingConnections.forEach(f);
+    }
+    public void addConnection(PendingConnection con) {
+        pendingConnections.add(con);
+    }
+    public record PendingConnection(Port from, String toUid, String toPort){}
 }

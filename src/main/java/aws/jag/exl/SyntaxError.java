@@ -11,7 +11,7 @@ import java.io.*;
 public class SyntaxError extends IOException {
     final int line, col;
     public SyntaxError(String msg, Tokenizer where) {
-        super(msg);
+        super(where.line+"@"+where.col+": "+msg);
         line = where.line;
         col = where.col;
     }

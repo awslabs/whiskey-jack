@@ -4,6 +4,7 @@
  */
 package aws.jag.DiagramEditor.metadata;
 
+import aws.jag.DiagramEditor.nodegraph.*;
 import aws.jag.DiagramEditor.util.Utils;
 import aws.jag.DiagramEditor.util.CommitableWriter;
 import aws.jag.DiagramEditor.nodeviewerfx.Dlg;
@@ -16,8 +17,7 @@ import java.util.function.*;
 import java.util.regex.*;
 
 public class Config {
-    public static final Path configDir = Utils.homePath(".ang");
-//    private static final Path configDir = Path.of("/Users/jag/Dropbox/NetBeansProjects/FXNodeEditor/FXNodeEditor/src/main/resources/ang");
+    public static final Path configDir = Utils.homePath("."+Graph.graphFileExtension);
     private static final Path propFile = configDir.resolve("config.properties");
     private static final Properties props = new Properties();
     static {

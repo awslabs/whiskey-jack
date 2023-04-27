@@ -2,24 +2,35 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package aws.jag.exl;
 
 import java.util.*;
 
-
 public class Token {
-    private static final int identifierType = 0;
-    private static final int stringType = 1;
-    private static final int numberType = 2;
+    public static final int identifierType = 0;
+    public static final int stringType = 1;
+    public static final int numberType = 2;
     private static int typeSequence = numberType;
     private final String body;
     private final int type;
     private final Number num;
-    private Token(String b, int t, Number n) { body = b; type = t; num = n; }
-    @Override public String toString() { return type+":"+(getBody()!=null ? getBody() : getNum()); }
+    private Token(String b, int t, Number n) {
+        body = b;
+        type = t;
+        num = n;
+    }
+    @Override
+    public String toString() {
+        return "〖" + (getBody() != null ? getBody() : getNum()) + "〗";
+    }
+    public StringBuilder appendTo(StringBuilder sb) {
+        if(sb == null) sb = new StringBuilder();
+        if(body != null) sb.append(body);
+        else sb.append(num);
+        return sb;
+    }
     private static Token of(String s, int t) {
-        return cache.computeIfAbsent(s, S->new Token(S, t, null));
+        return cache.computeIfAbsent(s, S -> new Token(S, t, null));
     }
     public static Token string(String s) {
         return new Token(s, stringType, null);
@@ -31,9 +42,10 @@ public class Token {
         return of(s, ++typeSequence);
     }
     public static Token number(Number n) {
+//        System.out.println("Token N " + 2);
         return new Token(null, numberType, n);
     }
-    private static final Map<String,Token> cache = new HashMap<>();
+    private static final Map<String, Token> cache = new HashMap<>();
     public String getBody() {
         return body;
     }
@@ -43,8 +55,47 @@ public class Token {
     public Number getNum() {
         return num;
     }
-    public boolean isIdentifier() { return type==identifierType; }
-    public boolean isString() { return type==stringType; }
-    public boolean isNumber() { return type==numberType; }
-    public boolean isKeyword() { return type>numberType; }
+    @Override
+    public int hashCode() {
+        return switch(type) {
+            case identifierType ->
+                body.hashCode();
+            case stringType ->
+                body.hashCode();
+            case numberType ->
+                num.hashCode();
+            default ->
+                type;
+        };
+    }
+    @Override
+    public boolean equals(Object t) {
+        return t == this
+                ? true
+                : t instanceof Token T
+                        ? switch(type) {
+            case stringType ->
+                body.equals(T.body);
+            case numberType ->
+                num.equals(T.num);
+            default ->
+                false;
+        }
+                : false;
+    }
+    public boolean isIdentifier() {
+        return type == identifierType;
+    }
+    public boolean isString() {
+        return type == stringType;
+    }
+    public boolean isNumber() {
+        return type == numberType;
+    }
+    public boolean isKeyword() {
+        return type > numberType;
+    }
+    public static int typeTableSize() {
+        return typeSequence + 1;
+    }
 }

@@ -10,7 +10,7 @@
                 <goal>javafx:run</goal>
             </goals>
             <properties>
-                <exec.vmArgs>--enable-preview</exec.vmArgs>
+                <exec.vmArgs>--enable-preview -ea</exec.vmArgs>
             </properties>
         </action>
         <action>
@@ -21,6 +21,7 @@
             </goals>
             <properties>
                 <jpda.listen>true</jpda.listen>
+                <exec.vmArgs>--enable-preview -ea</exec.vmArgs>
             </properties>
         </action>
         <action>
@@ -50,7 +51,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:3.0.0:exec</goal>
             </goals>
             <properties>
-                <exec.vmArgs>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</exec.vmArgs>
+                <exec.vmArgs>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address} --enable-preview -ea</exec.vmArgs>
                 <exec.args>${exec.vmArgs} -classpath %classpath --enable-preview ${exec.mainClass} ${exec.appArgs}</exec.args>
                 <exec.executable>java</exec.executable>
                 <exec.mainClass>${packageClassName}</exec.mainClass>
@@ -106,7 +107,7 @@
             </goals>
             <properties>
                 <test>${packageClassName}</test>
-                <exec.vmArgs>--enable-preview</exec.vmArgs>
+                <exec.vmArgs>--enable-preview -ea</exec.vmArgs>
             </properties>
         </action>
         <action>
@@ -118,7 +119,36 @@
                 <goal>test</goal>
             </goals>
             <properties>
-                <exec.vmArgs>--enable-preview</exec.vmArgs>
+                <exec.vmArgs>--enable-preview -ea</exec.vmArgs>
+            </properties>
+        </action>
+        <action>
+            <actionName>build</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>install</goal>
+            </goals>
+            <properties>
+                <exec.vmArgs>--enable-preview -ea</exec.vmArgs>
+            </properties>
+        </action>
+        <action>
+            <actionName>run.single.main</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:3.1.0:exec</goal>
+            </goals>
+            <properties>
+                <exec.vmArgs></exec.vmArgs>
+                <exec.args>-ea ${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
+                <exec.executable>java</exec.executable>
+                <exec.mainClass>${packageClassName}</exec.mainClass>
+                <exec.classpathScope>${classPathScope}</exec.classpathScope>
             </properties>
         </action>
     </actions>

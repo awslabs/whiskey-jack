@@ -46,15 +46,28 @@ public class Node<T extends Node> extends GraphPart<T> {
         if(uid != null)
             getContext().remove(this);
         uid = u;
-        if(u != null)
+        if(u != null) {
+            uids.add(u);
             getContext().add(this);
+        }
     }
     public String getUid() {
         var u = uid;
         if(u == null)
-            uid = u = uniquePrefix + sequenceNumber.incrementAndGet();
-//        System.out.println("UID: " + u);
+            uid = u = genUID(getName());
         return u;
+    }
+    private final static HashMap<String, AtomicInteger> uidMap = new HashMap<>();
+    private final static Set<String> uids = new HashSet<>();
+    public synchronized static String genUID(String pfx) {
+        while(true) {
+            var candidate = pfx + uidMap.computeIfAbsent(pfx, nm ->
+                    new AtomicInteger(-1)).incrementAndGet();
+            if(!uids.contains(candidate)) {
+                uids.add(candidate);
+                return candidate;
+            }
+        }
     }
     public Domain getDomain() {
         return domain == Domain.unknown ? metadata.getDomain() : domain;
@@ -63,7 +76,7 @@ public class Node<T extends Node> extends GraphPart<T> {
         domain = d == null || d == Domain.any || d == metadata.getDomain() ? Domain.unknown : d;
         return (T) this;
     }
-    
+
     @Override
     public void appendRefTo(StringBuilder sb) {
         sb.append(uid);
@@ -75,7 +88,7 @@ public class Node<T extends Node> extends GraphPart<T> {
     }
     @Override
     public String opcode() {
-        return "node";
+        return getName();
     }
     @Override
     public String toString() {
@@ -116,7 +129,7 @@ public class Node<T extends Node> extends GraphPart<T> {
                 .append(getUid());
         return sb;
     }
-    public void forEachPort(Consumer<? super Port> f) {
+    public void forEachPort(Consumer<Port> f) {
         ports.values().forEach(f);
     }
     public boolean hasPorts() {
@@ -128,6 +141,7 @@ public class Node<T extends Node> extends GraphPart<T> {
         putOpt(map, "ports", ports);
         putOpt(map, "uid", getUid());
         putOpt(map, "meta", metadata.getUid());
+        putOpt(map, "metapath", metadata.getPath());
     }
     public Port defaultPort(boolean in) {
         var dp = metadata.defaultPort(in);
@@ -173,7 +187,7 @@ public class Node<T extends Node> extends GraphPart<T> {
                 vmap = new HashMap();
                 var possibleT = Type.of(String.valueOf(v));
                 /* If it looks like a type, it is a type.  Otherwise it's a value. */
-                if(possibleT != null  && possibleT != Type.any)
+                if(possibleT != null && possibleT != Type.any)
                     vmap.put("type", possibleT.getName());
                 else vmap.put("value", v);
             }
