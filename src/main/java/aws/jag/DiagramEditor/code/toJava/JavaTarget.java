@@ -2,8 +2,9 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package aws.jag.exl.toJava;
+package aws.jag.DiagramEditor.code.toJava;
 
+import aws.jag.DiagramEditor.code.CodeTarget;
 import aws.jag.DiagramEditor.nodegraph.*;
 import aws.jag.exl.*;
 import java.util.*;

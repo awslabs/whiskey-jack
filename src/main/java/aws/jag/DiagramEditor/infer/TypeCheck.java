@@ -7,8 +7,7 @@ package aws.jag.DiagramEditor.infer;
 import aws.jag.DiagramEditor.nodegraph.*;
 import java.util.function.*;
 
-public class TypeCheck implements Scanner {
-    @Override
+public class TypeCheck {
     public void Scan(Graph g) {
         var sb = new StringBuilder();
         var errors = g.typeMismatches;

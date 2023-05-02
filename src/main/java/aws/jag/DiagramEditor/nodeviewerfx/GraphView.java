@@ -4,6 +4,7 @@
  */
 package aws.jag.DiagramEditor.nodeviewerfx;
 
+import aws.jag.DiagramEditor.code.CodeGenerator;
 import aws.jag.DiagramEditor.infer.*;
 import aws.jag.DiagramEditor.util.Exec;
 import aws.jag.DiagramEditor.util.Utils;

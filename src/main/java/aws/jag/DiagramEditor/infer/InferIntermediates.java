@@ -10,10 +10,9 @@ import aws.jag.DiagramEditor.nodeviewerfx.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
-public class InferIntermediates implements Scanner {
+public class InferIntermediates {
     TreeSet<CandidateSolution> workablePaths = new TreeSet<>(byWeight);
     Graph context;
-    @Override
     public void Scan(Graph g) {
         System.out.println("Inferring intermediates");
         context = g;

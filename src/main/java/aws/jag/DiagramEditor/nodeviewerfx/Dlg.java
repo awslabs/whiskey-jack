@@ -40,6 +40,7 @@ public class Dlg {
         dp.getStyleClass().add(isError ? "error" : "note");
         dp.setContent(body);
         addStuff(o, "dlgTitle");
+        if(body.getChildren().isEmpty() && !isError) return;
         dp.setExpandableContent(expandable);
         d.setTitle(title == null ? "Error" : title);
         dp.getButtonTypes().add(ButtonType.OK);

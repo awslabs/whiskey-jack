@@ -77,6 +77,7 @@ public class Exec implements Closeable {
     }
 
     public Exec setenv(String key, CharSequence value) {
+        if(environment==null) environment = new HashMap<>();
         environment.put(key, value instanceof String ? (String) value : Coerce.toString(value));
         return this;
     }
@@ -353,7 +354,8 @@ public class Exec implements Closeable {
         String[] command = getCommand();
 //        logger.atTrace().kv("decorated command", String.join(" ", command)).log();
         ProcessBuilder pb = new ProcessBuilder();
-        pb.environment().putAll(environment);
+        pb.environment().putAll(defaultEnvironment);
+        if(environment!=null) pb.environment().putAll(environment);
         process = pb.directory(dir).command(command).start();
 //        pid = Processes.newPidProcess(process).getPid();
         return process;

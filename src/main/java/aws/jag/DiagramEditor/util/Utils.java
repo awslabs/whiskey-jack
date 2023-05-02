@@ -38,7 +38,7 @@ public final class Utils {
      * @return error if any.
      */
     @SuppressWarnings({"PMD.UnnecessaryLocalBeforeReturn", "PMD.AvoidCatchingThrowable", "UseSpecificCatch"})
-    public static Throwable close(Object closeable) {
+    public static Object/*Throwable*/ close(Object closeable) {
         if(closeable instanceof Closeable c) try {
             c.close();
         } catch(Throwable t) {
