@@ -10,7 +10,7 @@ import java.util.*;
 
 public class CodeGeneratorPlugin {
     private final ClassInfo ci;
-    private GenerateCode generator;
+    private DomainGenerationController generator;
     private final Glob glob;
     private final int score;
     private final String[] interfaces;
@@ -36,7 +36,7 @@ public class CodeGeneratorPlugin {
         glob = Glob.compile(globPattern);
         score = globPattern.length();
     }
-    public CodeGeneratorPlugin(String pattern, GenerateCode gc, String... infs) {
+    public CodeGeneratorPlugin(String pattern, DomainGenerationController gc, String... infs) {
         ci = null;
         glob = Glob.compile(pattern);
         score = pattern.length();
@@ -48,9 +48,9 @@ public class CodeGeneratorPlugin {
     }
     public int score() { return score; }
     @SuppressWarnings({"PMD.UnnecessaryLocalBeforeReturn", "PMD.AvoidCatchingThrowable", "UseSpecificCatch"})
-    public GenerateCode getGenerator() throws IllegalStateException {
+    public DomainGenerationController getGenerator() throws IllegalStateException {
         if(generator == null) try {
-            generator = (GenerateCode) Class.forName(ci.getName()).getConstructor().newInstance();
+            generator = (DomainGenerationController) Class.forName(ci.getName()).getConstructor().newInstance();
         } catch(Throwable t) {
             t.printStackTrace(System.out);
             throw new IllegalStateException(t.getMessage(), t);

@@ -14,13 +14,15 @@ import java.util.*;
 public class CodeTarget implements Closeable {
     public static final Path genDir = Path.of("/tmp/wjg");
     private final Writer out;
-    Path destination;
+    private int indent = 0;
+    private boolean bol = true; // beginning of line
+    private Path destination;
     public CodeTarget(Domain d) {
         out = output(d);
     }
     private Writer output(Domain d) {
         try {
-            destination = genDir.resolve(d.getName() + ".java");
+            destination = genDir.resolve(d.getName() + "." + extension());
             return Files.newBufferedWriter(destination, StandardOpenOption.CREATE);
         } catch(IOException ex) {
             return new PrintWriter(System.out);
@@ -33,39 +35,35 @@ public class CodeTarget implements Closeable {
         return "txt";
     }
     public CodeTarget append(CharSequence s) {
-        try {
-            out.append(s);
-        } catch(IOException ex) {
-        }
+        var limit = s.length();
+        for(var i = 0; i < limit; i++)
+            append(s.charAt(i));
         return this;
     }
     public CodeTarget append(char s) {
         try {
+            if(s == '\n') bol = true;
+            else if(bol) {
+                for(int i = indent; --i >= 0;)
+                    out.append("    ");
+                bol = false;
+            }
             out.append(s);
         } catch(IOException ex) {
         }
         return this;
     }
+    public CodeTarget appendln(CharSequence s) {
+        return append(s).ln();
+    }
     public CodeTarget append(Object s) {
-        try {
-            out.append(String.valueOf(s));
-        } catch(IOException ex) {
-        }
-        return this;
+        return append(String.valueOf(s));
     }
     public CodeTarget append(Expression e) {
-        try {
-            out.append(String.valueOf(e));
-        } catch(IOException ex) {
-        }
-        return this;
+        return append(String.valueOf(e));
     }
-    public CodeTarget nl() {
-        try {
-            out.append("\n");
-        } catch(IOException ex) {
-        }
-        return this;
+    public CodeTarget ln() {
+        return append("\n");
     }
     public CodeTarget comment(CharSequence... s) {
         if(s != null && s.length > 0) {
@@ -74,6 +72,21 @@ public class CodeTarget implements Closeable {
                 append(" * ").append(c).append('\n');
             append(" */\n");
         }
+        return this;
+    }
+    public CodeTarget indent() {
+        indent++;
+        return this;
+    }
+    public CodeTarget outdent() {
+        if(indent > 0) indent--;
+        return this;
+    }
+    public int getIndent() {
+        return indent;
+    }
+    public CodeTarget setIndent(int i) {
+        indent = i;
         return this;
     }
     @Override

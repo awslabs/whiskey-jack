@@ -9,8 +9,9 @@ import aws.jag.DiagramEditor.nodegraph.*;
 import java.util.*;
 
 
-public interface GenerateCode {
+public interface DomainGenerationController {
     default void prescan(){}
     public void generate(List<Node> nodes, CodeTarget target);
     default void close(){}
+    default CodeTarget makeOutput(Domain d) { return new CodeTarget(d); }
 }

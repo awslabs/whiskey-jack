@@ -1,3 +1,7 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 module com.aws.jag.fxnodeeditor {
     requires javafx.controls;
     requires javafx.fxml;

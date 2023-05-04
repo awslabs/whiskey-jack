@@ -80,15 +80,25 @@ public class CodeGenerator {
     }
 
     private class OneDomain implements Closeable {
-        final GenerateCode generator;
+        final DomainGenerationController generator;
         final Domain domain;
+        String targetToken;
         final List<Node> nodes = new ArrayList<>();
         CodeTarget out;
         OneDomain(Domain d) {
-            generator = findPlugin("/greengrass/app/java", GenerateCode.class);
+            var framework = // TODO the real thing
+                    d==Domain.device ? "greengrass"
+                    : d==Domain.cloud ? "apprunner"
+                    : d==Domain.browser ? "jquery"
+                    : "nothing";
+            var style = "app";
+            var language = "java";
+            targetToken = "/"+d+"/"+framework+"/"+style+"/"+language;
+            generator = findPlugin(targetToken, DomainGenerationController.class);
             domain = d;
-            out = new JavaTarget(d);
+            out = generator.makeOutput(d);
             messages.add("Generating " + out.getPath());
+            messages.add(" target token: "+targetToken);
         }
         void prescan() {
             generator.prescan();
@@ -96,29 +106,7 @@ public class CodeGenerator {
         void generate() {
             messages.add(domain + ": " + nodes.size() + " nodes");
             out.comment("Code for domain " + domain);
-            nodes.forEach(n -> {
-                Collection<String> header = new ArrayList<>();
-                header.add("Node " + n.getName());
-                n.forEachPort((Consumer<Port>) (p -> {
-                    header.add((p.isInputSide() ? "in  " : "out ") + p.getType() + '\t' + p.getName() + '\t' + p.isConnected());
-                }));
-                out.nl().comment(header);
-                var expr = n.getPort("expr");
-                if(expr != null && !expr.isConnected()) {
-                    var ocode = expr.getValue();
-                    if(ocode instanceof String code)
-                        try {
-                        var parsed = new Parser(new Tokenizer(code)).expression();
-                        out.comment("Parsed " + code + " as " + parsed);
-                        out.append("public boolean test() {\n\treturn ")
-                                .append(parsed)
-                                .append(";\n}\n");
-                    } catch(IOException ex) {
-                        out.comment("Error parsing body:", ex.toString());
-                        ex.printStackTrace(System.out);
-                    }
-                }
-            });
+            generator.generate(nodes, out);
         }
         @Override
         public void close() {
