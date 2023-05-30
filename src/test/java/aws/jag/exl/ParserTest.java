@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.exl;
@@ -28,7 +28,7 @@ public class ParserTest {
         System.out.println("equals: " + Expression.of(Token.number(2)).equals(Expression.of(Token.number(2))));
         assertEquals(Expression.of(Token.number(2)), Expression.of(Token.number(2)));
         assertEquals(Expression.of(Token.number(2)), new Parser(new Tokenizer("2")).term());
-        assertEquals(Expression.of(Tokenizer.LPAREN, Expression.of(Token.identifier("f")),
+        assertEquals(Expression.of(Vocabulary.INVOKE, Expression.of(Token.identifier("f")),
                 Expression.of(Token.number(42))),
                 new Parser(new Tokenizer("f(42)")).term());
     }
@@ -53,7 +53,7 @@ public class ParserTest {
         T("a={x:5}");
         T("a={x:5+2}");
         T("a={x:5,y:/*xyz\nqq*/7} // whatever\n");
-        U("a={x:5,y:/*xyz\nqq*/7} // whatever\n", "(= a ({ (: x 5) (: y 7)))");
+        U("a={x:5,y:/*xyz\nqq*/7} // whatever\n", "(= a (map: (: x 5) (: y 7)))");
     }
     @Test
     public void t4() throws IOException {
@@ -72,6 +72,24 @@ public class ParserTest {
         aj.close();
         System.out.println();
     }
+    @Test
+    public void t6() throws IOException {
+        var a = x("a+b");
+        var b = x("a+c");
+        Map<String, Object> map = new HashMap<>();
+        map.put("c", 42);
+        map.put("b", "c");
+        System.out.println("T6\t" + a + "\n\t" + b);
+        var A = a.rename(map);
+        var B = b.rename(map);
+        System.out.println("=>\t" + A + "\n\t" + B);
+        assertEquals(A, B);
+        assertEquals(A, x("a+42"));
+        map.put("a", 666);
+        var C = a.rename(map);
+        System.out.println(C);
+        assertEquals(x("666+42"), C);
+    }
     private final Set<String> imports = new HashSet<>();
     public void addImport(String pkg) {
         imports.add(pkg);
@@ -86,7 +104,13 @@ public class ParserTest {
         });
     }
     private Expression x(String e) throws IOException {
+        System.out.println("Parsing "+e);
+        try {
         return new Parser(new Tokenizer(e)).expression();
+        } catch(Throwable t) {
+                t.printStackTrace();
+                throw t;
+                }
     }
     private void T(String e) throws IOException {
         var p = x(e);
@@ -95,7 +119,7 @@ public class ParserTest {
 //        System.out.println("\t"+x(e));
     }
     private void U(String e, String sexpr) throws IOException {
-        assertEquals(x(e).toString(), sexpr);
+        assertEquals(sexpr, x(e).toString());
     }
 
 }

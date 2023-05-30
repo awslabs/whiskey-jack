@@ -1,10 +1,10 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.DiagramEditor.nodegraph;
 
-import aws.jag.DiagramEditor.util.Utils;
+import aws.jag.DiagramEditor.util.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
@@ -81,8 +81,6 @@ public class Node<T extends Node> extends GraphPart<T> {
     public void appendRefTo(StringBuilder sb) {
         sb.append(uid);
     }
-    private static final String uniquePrefix = Utils.generateRandomString(12);
-    private static final AtomicInteger sequenceNumber = new AtomicInteger(0);
     public boolean hasUid() { // rarely needed
         return uid == null;
     }
@@ -160,6 +158,18 @@ public class Node<T extends Node> extends GraphPart<T> {
     public Port getPort(String s) {
         return ports.get(s);
     }
+    public Object getProp(String s, Object dflt) {
+        return metadata.getProp(s, dflt);
+    }
+    public String getStringProp(String s, String dflt) {
+        return Coerce.toString(getProp(s, dflt));
+    }
+    public boolean getBooleanProp(String s, boolean dflt) {
+        return Coerce.toBoolean(getProp(s, dflt));
+    }
+    public int getIntProp(String s, int dflt) {
+        return Coerce.toInt(getProp(s, dflt));
+    }
     @Override
     public void populateFrom(Map map) {
         super.populateFrom(map);
@@ -174,6 +184,8 @@ public class Node<T extends Node> extends GraphPart<T> {
                 k = input ? "in" : "out";
             var p = ports.get(k);
             if(p == null) {
+                if(!(this instanceof MetaNode))
+                  return; // not found in the metadata
                 p = getContext().newPort(this, MetaPort.meta);
                 ports.put(k, p);
                 p.setName(k);

@@ -3,22 +3,28 @@
 ---
 children:
   if:
+        props:
+            code: return expr
         in:
             a: double
             b: double
-            expr: a>b
+            expr: 
+              value: a>b
+              type: code
         out:
             out: boolean
   sum:
     in:
       a: double
       b: double
+      code#: return a+b
     out:
       v: double
   diff:
     in:
       a: 0
       b: 0
+      code#: return a-b
     out:
       v: 0
   eval:
@@ -26,6 +32,9 @@ children:
       a: 0
       b: 0
       c: 0
-      expr: string
+      expr: 
+        value: a+b+c
+        type: code
+      code#: return expr
     out:
       v: 0

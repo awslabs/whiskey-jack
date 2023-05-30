@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.DiagramEditor.nodeviewerfx;
@@ -138,10 +138,11 @@ public class NodeView extends Node implements Selectable {
         });
     }
     @Override
-    public void delete() { 
+    public void delete() {
         /* save arcs in a seperate list to avoid ConcurrentModificationException */
         var arcs = new ArrayList<Arc>(5);
-        ports.values().forEach(p -> ((PortView) p).forEachArc(a -> arcs.add(a)));
+        ports.values().forEach(p -> ((PortView) p).forEachArc(a ->
+                arcs.add(a)));
         arcs.forEach(a -> a.delete());
         getContext().getView().getChildren().remove(getView());
         getContext().remove(getUid());

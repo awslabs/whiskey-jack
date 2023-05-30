@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.DiagramEditor.nodegraph;
@@ -16,7 +16,7 @@ public class Port extends Collectable {
     public Domain domain = Domain.unknown;
     private ErrorCode errorCode;
     public final Node within;
-    private Object constantValue; // used when disconnected
+    private Object value; // used when disconnected
     private List<Arc> arcs;
     public boolean isConnected() {
         return arcs != null;
@@ -26,12 +26,12 @@ public class Port extends Collectable {
         metadata = m != null ? m : (MetaPort) this;  // Metaport's metadata is a circular reference.
     }
     public void populateFrom(Port other) {
-        constantValue = other.constantValue;
+        value = other.value;
         domain = other.domain;
         other.forEachArc(a -> System.out.println("  mk arc " + a));
     }
     public void populateFrom(Map values) {
-        constantValue = getOpt(values,"value",constantValue);
+        value = getOpt(values,"value",value);
         String d = getOpt(values,"domain",(String) null);
         if(d!=null)
             setDomain(Domain.of(d));
@@ -63,6 +63,9 @@ public class Port extends Collectable {
     public int nArcs() {
         return arcs == null ? 0 : arcs.size();
     }
+    public Arc getArc(int i) {
+        return arcs==null || i<0 || i>=arcs.size() ? null : arcs.get(i);
+    }
     public boolean connectsTo(Port x) {
         if(arcs != null)
             for(var a: arcs)
@@ -78,11 +81,6 @@ public class Port extends Collectable {
         Arc.connect(this, n);
     }
     @Override
-    public Object collect() {
-        var ret = new HashMap<String,Object>();
-        collectMore(ret);
-        return ret;
-    }
     protected void collectMore(Map<String,Object> map) {
         if(arcs!=null) {
             List<Map> arcList = new ArrayList<>(1);
@@ -96,7 +94,8 @@ public class Port extends Collectable {
                 }
             putOpt(map, "arcs", arcList);
         }
-        putOpt(map, "value", constantValue);
+        if(value!=metadata.getValue())
+            putOpt(map, "value", value);
         if(domain != Domain.unknown) putOpt(map, "domain", domain);
     }
     public Graph getContext() {
@@ -156,12 +155,12 @@ public class Port extends Collectable {
         setValue(Utils.parseObject(v));
     }
     public void setValue(Object v) {
-        constantValue = v;
+        value = v;
         var original = within.copiedFrom;
         if(original!=null)
             original.getPort(getName()).setValue(v);
     }
-    public Object getValue() { return constantValue; }
+    public Object getValue() { return value; }
     private String message;
     public final String getMessage() { return message; }
     public Port setMessage(ErrorCode ec, String m) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.exl;
@@ -18,24 +18,31 @@ public class Parser {
     }
     Expression term() throws IOException {
         Expression ret;
-        if(tok == Tokenizer.LPAREN) {
+        if(tok == Vocabulary.NULL || tok == Vocabulary.NULL || tok == Vocabulary.NULL) {
+            ret = Expression.of(tok);
+            tok = src.get();
+        }else if(tok == Vocabulary.LPAREN) {
             tok = src.get();
             ret = expression();
-            if(tok == Tokenizer.RPAREN) tok = src.get();
+            if(tok == Vocabulary.RPAREN) tok = src.get();
             else src.syntaxError("missing ')', at '" + tok + "'");
-        } else if(tok == Tokenizer.LBRACE)
-            ret = parseList(null, Tokenizer.LBRACE, Tokenizer.RBRACE);
-        else if(tok == Tokenizer.LSQUARE)
-            ret = parseList(null, Tokenizer.LSQUARE, Tokenizer.RSQUARE);
-        else if(tok.isKeyword())
-            if(tok == Tokenizer.NOT || tok == Tokenizer.MINUS || tok == Tokenizer.PLUS) {
+        } else if(tok == Vocabulary.LBRACE)
+            ret = parseList(null, Vocabulary.BLOCK, Vocabulary.RBRACE);
+        else if(tok == Vocabulary.LSQUARE)
+            ret = parseList(null, Vocabulary.ARRAYLITERAL, Vocabulary.RSQUARE);
+        else if(tok == Vocabulary.NEW) {
+            tok = src.get();
+            ret = Expression.of(Vocabulary.NEW, term());
+        } else if(tok.isKeyword())
+            if(tok == Vocabulary.NOT || tok == Vocabulary.MINUS || tok == Vocabulary.PLUS) {
                 var t = tok;
                 tok = src.get();
                 ret = term();
-                if(tok != Tokenizer.PLUS)
+                if(tok != Vocabulary.PLUS)
                     ret = Expression.of(t, ret);
             } else {
-                src.syntaxError(tok + " shouldn't be at the beginning of a term");
+                if(tok!= Vocabulary.SEMI && tok!=Vocabulary.COMMA)
+                    src.syntaxError(tok + " shouldn't be at the beginning of a term");
                 ret = null;
             }
         else {
@@ -43,29 +50,33 @@ public class Parser {
             tok = src.get();
         }
         while(true)
-            if(tok == Tokenizer.LPAREN)
-                ret = parseList(ret, tok, Tokenizer.RPAREN);
-            else if(tok == Tokenizer.LSQUARE)
-                ret = parseList(ret, tok, Tokenizer.RSQUARE);
-            else if(tok == Tokenizer.LBRACE)
-                ret = parseList(ret, Tokenizer.HASPROPERTIES, Tokenizer.RBRACE);
-            else if(tok == Tokenizer.DOT) {
+            if(tok == Vocabulary.LPAREN)
+                ret = parseList(ret, Vocabulary.INVOKE, Vocabulary.RPAREN);
+            else if(tok == Vocabulary.LSQUARE)
+                ret = parseList(ret, Vocabulary.SUBSCRIPT, Vocabulary.RSQUARE);
+            else if(tok == Vocabulary.LBRACE)
+                ret = parseList(ret, Vocabulary.BLOCK, Vocabulary.RBRACE);
+            else if(tok == Vocabulary.DOT) {
                 Token id = src.get();
                 if(!id.isIdentifier())
                     src.syntaxError("Identifer expected, got " + id);
-                ret = Expression.of(Tokenizer.DOT, ret, Expression.of(id));
+                ret = Expression.of(Vocabulary.DOT, ret, Expression.of(id));
                 tok = src.get();
             } else break;
 //        System.out.println("Term " + ret);
         return ret;
     }
     public Expression expression() throws IOException {
-//        Expression ret = term();
-//        System.out.println("Exp " + ret);;
+        if(tok == Vocabulary.RETURN) {
+            tok = src.get();
+            return tok != Vocabulary.SEMI && tok != Vocabulary.RBRACE
+                    ? Expression.of(Vocabulary.RETURN, expression())
+                    : Expression.of(Vocabulary.RETURN);
+        }
         return expressionTail(term(), 0);
     }
     private Expression expressionTail(Expression LHS, int endPriority) throws IOException {
-        while(tok != Tokenizer.EOF) {
+        while(tok != Vocabulary.EOF) {
             var op = tok;
             var pri = priority[op.getType()];
             if(pri <= endPriority) break;
@@ -73,7 +84,7 @@ public class Parser {
 //            System.out.println("tail "+op+' '+pri+" LHS "+LHS+"  ..."+tok);
             var RHS = expressionTail(term(), pri);
 //            System.out.println("\t RHS "+RHS);
-            if(flatten[op.getType()] && (LHS.kind() == op || RHS.kind() == op)) {
+            if(flatten[op.getType()] && (LHS.getOperator() == op || RHS.getOperator() == op)) {
                 var args = new ArrayList<Expression>(3);
                 extractFlattened(args, LHS, op);
                 extractFlattened(args, RHS, op);
@@ -83,7 +94,7 @@ public class Parser {
         return LHS;
     }
     private void extractFlattened(ArrayList<Expression> args, Expression e, Token op) {
-        if(e.kind() == op)
+        if(e.getOperator() == op)
             e.forEach(f -> extractFlattened(args, f, op));
         else args.add(e);
     }
@@ -94,69 +105,76 @@ public class Parser {
         if(first != null) args.add(first);
         if(tok != closer)
             while(true) {
-                args.add(expression());
-                if(tok != Tokenizer.COMMA)
+                var e = expression();
+                if(e!=null) args.add(e);
+                if(tok != Vocabulary.SEMI && tok != Vocabulary.COMMA)
                     break;
                 tok = src.get();
                 if(tok == closer) break;  // allow trailing comma
             }
         if(tok == closer) tok = src.get();
         else src.syntaxError(closer + " expected, but got " + tok);
+        if(op == Vocabulary.BLOCK && !args.isEmpty() && args.get(0).getOperator() == Vocabulary.COLON)
+            op = Vocabulary.MAPLIT;
         return Expression.of(op, args);
 
     }
     private static void initOpProperties() {
         {
+            Vocabulary.triggerInit();
             var p = new int[Token.typeTableSize()];
             int v = 1;
             Arrays.fill(p, -10);
-//        p[Tokenizer.COMMA.getType()] = v;
-//        p[Tokenizer.SEMI.getType()] = v;
-//        v++;
-            p[Tokenizer.ASSIGN.getType()] = v;
-            p[Tokenizer.DECLAREASSIGN.getType()] = v;
-            p[Tokenizer.DECLAREASSIGNFINAL.getType()] = v;
+//            p[Tokenizer.COMMA.getType()] = v;
+//            p[Tokenizer.SEMI.getType()] = v;
             v++;
-            p[Tokenizer.QUESTION.getType()] = v;
-            p[Tokenizer.COLON.getType()] = v;
+            p[Vocabulary.RARROW.getType()] = v;
             v++;
-            p[Tokenizer.ANDAND.getType()] = v;
-            p[Tokenizer.AND.getType()] = v;
-            p[Tokenizer.OR.getType()] = v;
-            p[Tokenizer.OROR.getType()] = v;
+            p[Vocabulary.ASSIGN.getType()] = v;
+            p[Vocabulary.DECLAREASSIGN.getType()] = v;
+            p[Vocabulary.DECLAREASSIGNFINAL.getType()] = v;
             v++;
-            p[Tokenizer.LT.getType()] = v;
-            p[Tokenizer.LE.getType()] = v;
-            p[Tokenizer.GT.getType()] = v;
-            p[Tokenizer.GE.getType()] = v;
-            p[Tokenizer.EQ.getType()] = v;
-            p[Tokenizer.NE.getType()] = v;
-            p[Tokenizer.ELEMENTOF.getType()] = v;
+            p[Vocabulary.QUESTION.getType()] = v;
+            p[Vocabulary.COLON.getType()] = v;
             v++;
-            p[Tokenizer.PLUS.getType()] = v;
-            p[Tokenizer.MINUS.getType()] = v;
+            p[Vocabulary.ANDAND.getType()] = v;
+            p[Vocabulary.AND.getType()] = v;
+            p[Vocabulary.OR.getType()] = v;
+            p[Vocabulary.OROR.getType()] = v;
             v++;
-            p[Tokenizer.DIVIDE.getType()] = v;
-            p[Tokenizer.MULTIPLY.getType()] = v;
+            p[Vocabulary.INSTANCEOF.getType()] = v;
+            p[Vocabulary.LT.getType()] = v;
+            p[Vocabulary.LE.getType()] = v;
+            p[Vocabulary.GT.getType()] = v;
+            p[Vocabulary.GE.getType()] = v;
+            p[Vocabulary.EQ.getType()] = v;
+            p[Vocabulary.NE.getType()] = v;
+            p[Vocabulary.ELEMENTOF.getType()] = v;
+            v++;
+            p[Vocabulary.PLUS.getType()] = v;
+            p[Vocabulary.MINUS.getType()] = v;
+            v++;
+            p[Vocabulary.DIVIDE.getType()] = v;
+            p[Vocabulary.MULTIPLY.getType()] = v;
             priority = p;
         }
         {
             var p = new boolean[Token.typeTableSize()];
-            p[Tokenizer.ASSIGN.getType()] = true;
-            p[Tokenizer.DECLAREASSIGN.getType()] = true;
-            p[Tokenizer.DECLAREASSIGNFINAL.getType()] = true;
+            p[Vocabulary.ASSIGN.getType()] = true;
+            p[Vocabulary.DECLAREASSIGN.getType()] = true;
+            p[Vocabulary.DECLAREASSIGNFINAL.getType()] = true;
             rightAssoc = p;
         }
         {
             var p = new boolean[Token.typeTableSize()];
-            p[Tokenizer.COMMA.getType()] = true;
-            p[Tokenizer.SEMI.getType()] = true;
-            p[Tokenizer.ANDAND.getType()] = true;
-            p[Tokenizer.AND.getType()] = true;
-            p[Tokenizer.OR.getType()] = true;
-            p[Tokenizer.OROR.getType()] = true;
-            p[Tokenizer.PLUS.getType()] = true;
-            p[Tokenizer.MULTIPLY.getType()] = true;
+            p[Vocabulary.COMMA.getType()] = true;
+            p[Vocabulary.SEMI.getType()] = true;
+            p[Vocabulary.ANDAND.getType()] = true;
+            p[Vocabulary.AND.getType()] = true;
+            p[Vocabulary.OR.getType()] = true;
+            p[Vocabulary.OROR.getType()] = true;
+            p[Vocabulary.PLUS.getType()] = true;
+            p[Vocabulary.MULTIPLY.getType()] = true;
             flatten = p;
         }
     }

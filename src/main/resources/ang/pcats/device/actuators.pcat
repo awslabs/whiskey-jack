@@ -5,30 +5,42 @@ children:
     servo:
         domain: device
         in:
-            v: double
+            in: double
             id: string
+        props:
+            code: setServo(id, in);
     solenoid:
         domain: device
         in:
-            v: false
+            in: false
             id: string
+        props:
+            code: setSolenoid(id, in);
     heater:
         domain: device
         in:
-            v: double
+            in: double
             id: string
+        props:
+            code: setHeater(id, in);
     lamp:
         domain: device
         in:
-            v: double
+            in: double
             id: string
+        props:
+            code: setLamp(id, in);
     alarm:
         domain: device
         in:
-            v: false
+            in: false
             id: string
+        props:
+            code: setAlarm(id, in);
     motor:
         domain: device
         in:
-            v: double
+            in: double
             id: string
+        props:
+            code: setMotor(id, in);

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.DiagramEditor.util;
@@ -124,10 +124,10 @@ public final class Utils {
     public static boolean isEmpty(Object s) {
         return switch(s) {
             case null -> true;
-            default -> false;
             case Collection c -> c.isEmpty();
             case CharSequence cs -> cs.isEmpty();
             case Map m -> m.isEmpty();
+            default -> false;
         };
     }
 
@@ -288,6 +288,14 @@ public final class Utils {
                     }
                     case '\t' -> {
                         sb.append("\\t");
+                        olen += 2;
+                    }
+                    case '\b' -> {
+                        sb.append("\\t");
+                        olen += 2;
+                    }
+                    case '"' -> {
+                        sb.append("\\\"");
                         olen += 2;
                     }
                     default -> {

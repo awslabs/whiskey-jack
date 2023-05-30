@@ -1,9 +1,11 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.exl;
 
+import aws.jag.DiagramEditor.util.*;
+import java.io.*;
 import java.util.*;
 
 public class Token {
@@ -25,7 +27,11 @@ public class Token {
     }
     public StringBuilder appendTo(StringBuilder sb) {
         if(sb == null) sb = new StringBuilder();
-        if(body != null) sb.append(body);
+        if(body != null)
+            if(type == stringType) try {
+                Utils.deepToStringQuoted(body, sb, 99999);
+            } catch(IOException ex) {
+            } else sb.append(body);
         else sb.append(num);
         return sb;
     }

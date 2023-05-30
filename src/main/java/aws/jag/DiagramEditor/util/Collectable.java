@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.DiagramEditor.util;
@@ -17,7 +17,22 @@ import java.util.stream.*;
 public abstract class Collectable {
     /* I should probably be using Jackson's built-in autoserializer, but I
      * like the control I get by hand-rolling */
-    public abstract Object collect();
+    public Object collect() {
+        var ret = new HashMap<String,Object>();
+        collectMore(ret);
+        if(sidecars!=null && !sidecars.isEmpty()) {
+            Map<String,Object> side = new HashMap<>();
+            sidecars.forEach((k,v)->{
+                var vo = asObject(v);
+                if(!Utils.isEmpty(vo))
+                    side.put(k.getName(), vo);
+            });
+            if(!side.isEmpty())
+                putOpt(ret,"sidecars",side);
+        }
+        return ret;
+    }
+    protected void collectMore(Map<String,Object> map) {}
     public static Object asObject(Object c) {
         return switch(c) {
             case null ->
@@ -117,15 +132,6 @@ public abstract class Collectable {
         for(var i = depth; --i >= 0;)
             System.out.print("  ");
         switch(c) {
-            default -> {
-                if(c.getClass().isArray()) {
-                    var len = Array.getLength(c);
-                    System.out.println("[" + len + "]");
-                    for(var i = 0; i < len; i++)
-                        Collectable.dump(Array.get(c, i), depth + 1);
-                } else
-                    System.out.println("what? " + c.getClass());
-            }
             case Collectable o ->
                 System.out.println("Collectable? " + o.getClass() + " = " + o);
             case Collection l -> {
@@ -145,6 +151,78 @@ public abstract class Collectable {
                 System.out.println(n);
             case Boolean b ->
                 System.out.println(b);
+            default -> {
+                if(c.getClass().isArray()) {
+                    var len = Array.getLength(c);
+                    System.out.println("[" + len + "]");
+                    for(var i = 0; i < len; i++)
+                        Collectable.dump(Array.get(c, i), depth + 1);
+                } else
+                    System.out.println("what? " + c.getClass());
+            }
         }
     }
+    private Map<Class,Object> sidecars;
+    public <T> T sidecar(Class<T> cl) {
+        if(sidecars==null) sidecars = new HashMap<>();
+        return (T)sidecars.computeIfAbsent(cl, kcl->{
+            try {
+                var tcl = this.getClass();
+                var allCons = kcl.getConstructors();
+                var best = (Constructor<T>) null;
+                var bscore = 99;
+                for(var cons:allCons) {
+                    var params = cons.getParameterTypes();
+                    var score = switch(params.length) {
+                        default->200;
+                        case 0-> 10;
+                        case 1-> params[0].isAssignableFrom(tcl) ? 5 : 99;
+                    };
+                    if(score<bscore) {
+                        best = cons;
+                        bscore = score;
+                    }
+                }
+                if(best==null) throw new IllegalAccessException("Can't find constructor for "+cl+"("+this.getClass()+")");
+                return (T)(bscore == 10 ? best.newInstance() : best.newInstance(this));
+            } catch(ReflectiveOperationException | RuntimeException  ex) {
+                throw new Error("Trying to create "+cl.getSimpleName(), ex);
+            }
+        });
+    }
+    public void removeSidecar(Class cl) {
+        if(sidecars!=null) {
+            sidecars.remove(cl);
+            if(sidecars.isEmpty()) removeAllSidecars();
+        }
+    }
+    public void removeAllSidecars() {
+        sidecars = null;
+    }
+//    public abstract void populateFrom(T other);
+//    public static Object asObject(Object c) {
+//        return switch(c) {
+//            case null ->
+//                null;
+//            case Collectable o ->
+//                o.collect();
+//            case Collection l ->
+//                l.stream().map(o -> asObject(o)).collect(Collectors.toList());
+//            case Map m -> {
+//                var rm = new LinkedHashMap<>();
+//                m.forEach((k, v) -> rm.put(asObject(k), asObject(v)));
+//                yield rm;
+//            }
+//            default -> {
+//                if(c.getClass().isArray()) {
+//                    var len = Array.getLength(c);
+//                    var list = new ArrayList<Object>();
+//                    for(var i = 0; i < len; i++)
+//                        list.add(asObject(Array.get(c, i)));
+//                    yield list;
+//                }
+//                yield c;
+//            }
+//        };
+//    }
 }

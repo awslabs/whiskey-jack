@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.DiagramEditor.nodegraph;
@@ -8,7 +8,6 @@ import aws.jag.DiagramEditor.util.Collectable;
 import static aws.jag.DiagramEditor.util.Utils.*;
 import java.util.*;
 import java.util.function.*;
-import java.util.stream.*;
 
 public class Type extends Collectable {
     private final String name;
@@ -78,6 +77,7 @@ public class Type extends Collectable {
     public static final Type table = new Type("table");
     public static final Type html = new Type("html");
     public static final Type mlmodel = new Type("mlmodel");
+    public static final Type code = new Type("code");
     public static final Type object = new Type("object"); // ?
 
     public static final Type err = new Type("err");

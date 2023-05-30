@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.DiagramEditor.nodegraph;
@@ -14,6 +14,7 @@ public class MetaNode extends Node<MetaNode> {
     private String pathName;
     private MetaPort dfltIn, dfltOut;
     private float weight = 1; // how "expensive" is this computation
+    private Map<String,Object> props = Map.of();
     private MetaNode(MetaNode p) {
         super(metaGraph, metaMeta);
         if(p == null && (p = metaMeta) == null)
@@ -67,6 +68,7 @@ public class MetaNode extends Node<MetaNode> {
         setDescription(get(values, "description", getDescription()));
         populateSubnodes(values, "subnodes");
         populateSubnodes(values, "children"); // compatibility for old name
+        props = getMap(values, "props");
     }
     private void populateSubnodes(Map values, String key) {
         getMap(values, key).forEach((k, v) -> {
@@ -96,6 +98,7 @@ public class MetaNode extends Node<MetaNode> {
         putOpt(map, "domain", getDomain());
         putOpt(map, "description", description);
         putOpt(map, "subnodes", subnodes);
+        putOpt(map, "props", props);
         if(weight != 1) putOpt(map, "weight", Float.toString(weight));
     }
     public static MetaNode lookup(String uid) {
@@ -104,6 +107,10 @@ public class MetaNode extends Node<MetaNode> {
     @Override
     public Domain getDomain() {
         return domain;
+    }
+    @Override
+    public Object getProp(String s, Object dflt) {
+        return props.getOrDefault(s, dflt);
     }
     @Override
     public MetaNode setDomain(Domain d) {

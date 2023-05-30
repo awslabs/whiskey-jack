@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.DiagramEditor.code;
@@ -9,6 +9,7 @@ import aws.jag.DiagramEditor.util.*;
 import aws.jag.exl.Expression;
 import java.io.*;
 import java.nio.file.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class CodeTarget implements Closeable {
@@ -23,7 +24,9 @@ public class CodeTarget implements Closeable {
     private Writer output(Domain d) {
         try {
             destination = genDir.resolve(d.getName() + "." + extension());
-            return Files.newBufferedWriter(destination, StandardOpenOption.CREATE);
+            return Files.newBufferedWriter(destination,
+                    StandardCharsets.UTF_8, StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
         } catch(IOException ex) {
             return new PrintWriter(System.out);
         }
@@ -53,6 +56,10 @@ public class CodeTarget implements Closeable {
         }
         return this;
     }
+    public CodeTarget nl() {
+        if(!bol) append('\n');
+        return this;
+    }
     public CodeTarget appendln(CharSequence s) {
         return append(s).ln();
     }
@@ -61,6 +68,53 @@ public class CodeTarget implements Closeable {
     }
     public CodeTarget append(Expression e) {
         return append(String.valueOf(e));
+    }
+    public CodeTarget appendDoubleQuoted(CharSequence s) {
+        append('"');
+        appendQuoted(s);
+        append('"');
+        return this;
+    }
+    public CodeTarget appendSingleQuoted(CharSequence s) {
+        append('\'');
+        appendQuoted(s);
+        append('\'');
+        return this;
+    }
+    public CodeTarget appendQuoted(CharSequence s) {
+        var limit = s.length();
+        for(var i = 0; i < limit; i++) {
+            var c = s.charAt(i);
+            switch(c) {
+                case '\n' -> {
+                    append("\\n");
+                    continue;
+                }
+                case '\t' -> {
+                    append("\\t");
+                    continue;
+                }
+                case '\r' -> {
+                    append("\\r");
+                    continue;
+                }
+                case '\b' -> {
+                    append("\\b");
+                    continue;
+                }
+                case '\f' -> {
+                    append("\\f");
+                    continue;
+                }
+                case '\0' -> {
+                    append("\\0");
+                    continue;
+                }
+                case '\'', '"' -> append('\\');
+            }
+            append(c);
+        }
+        return this;
     }
     public CodeTarget ln() {
         return append("\n");
@@ -100,14 +154,28 @@ public class CodeTarget implements Closeable {
             ex.printStackTrace(System.out);
         }
     }
-    public CodeTarget comment(Collection<String> s) {
+//    public CodeTarget comment(Collection<String> s) {
+//        if(s != null && !s.isEmpty()) {
+//            append("/*\n");
+//            s.forEach(c -> append(" * ").append(c).append('\n'));
+//            append(" */\n");
+//        }
+//        return this;
+//    }
+    public CodeTarget comment(Collection<?> s) {
         if(s != null && !s.isEmpty()) {
-            append("/*\n");
-            s.forEach(c -> append(" * ").append(c).append('\n'));
-            append(" */\n");
+            if(preComment != null) append(preComment).append('\n');
+            s.forEach(c -> {
+                if(onComment != null) append(onComment);
+                append(c).append('\n');
+            });
+            if(postComment != null) append(postComment).append('\n');
         }
         return this;
     }
+    protected String preComment = "/*";
+    protected String onComment = " * ";
+    protected String postComment = " */";
     static {
         try {
             Files.createDirectories(genDir);

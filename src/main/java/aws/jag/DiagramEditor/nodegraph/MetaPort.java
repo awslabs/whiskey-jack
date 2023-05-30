@@ -1,16 +1,14 @@
 /*
- * SPDX-FileCopyrightText: Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 package aws.jag.DiagramEditor.nodegraph;
 
-import static aws.jag.DiagramEditor.nodegraph.GraphPart.*;
 import java.util.*;
 import javax.annotation.*;
 
 public class MetaPort extends Port {
     private Type type = Type.any;
-//    public Object defaultValue;
     private String name;
     private String description;
     private boolean outputSide;
@@ -65,23 +63,17 @@ public class MetaPort extends Port {
     @Override
     public void populateFrom(Map values) {
         super.populateFrom(values);
-//        System.out.println("PopulateFrom");dump(values);
-//        var tt = getOpt(values, "type", getType().toString());
-//        if(String.valueOf(tt).contains("double"))
-//            System.out.println("Yikes: "+getFullName()+": "+tt+" "+tt.getClass());
         setType(Type.of(getOpt(values, "type", getType().getName())));
-        setName(getOpt(values, "name", getName()));
-//        setValue(getOpt(values, "defaultValue", getValue()));
-        if(getValue() != null && getType() == Type.any)
-            setType(Type.guess(getValue()));
+        var proposedName = getOpt(values, "name", getName());
+        setName(proposedName);
         setDescription(getOpt(values, "description", getDescription()));
-//        setOutputSide((boolean) getOpt(values, "in", isOutputSide()));// TODO: can be removed, eventually
-//        setOutputSide((boolean) getOpt(values, "right", isOutputSide()));
         setOutputSide((boolean) getOpt(values, "output", isOutputSide()));
-        if(getName().equals("id")) { unboundOK = true; setValue(null); }
+        if(getName().equals("id")) {
+            unboundOK = true;
+            setValue(null);
+        }
         unboundOK = (boolean) getOpt(values, "unboundok", unboundOK);
         setY((int) getOpt(values, "y", getY()));
-//        System.out.println(getFullName()+": "+getType()+" = "+getValue() + "  " +getOpt(values, "type", "-"));
     }
     @Override
     public void add(Arc a) {

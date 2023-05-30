@@ -4,59 +4,65 @@
 children:
     temperature:
         domain: device
+        props:
+#            code: return getTemperature(id)
+            state: ts :== new TemperatureSensor()
+            callback: ts.addTemperatureChangeListener(e->setout(e.getTemperature()))
         in:
             id: string
         out:
-            v: double
+            out: double
     brightness:
         domain: device
         in:
             id: string
         out:
-            v: double
+            out: double
     humidity:
         domain: device
         in:
             id: string
         out:
-            v: double
+            out: double
     touch:
         domain: device
         in:
             id: string
         out:
-            v: false
+            out: false
     switch:
         domain: device
         in:
             id: string
         out:
-            v: false
+            out: false
     distance:
         domain: device
         in:
             id: string
         out:
-            v: double
+            out: double
     angle:
         domain: device
         in:
             id: string
         out:
-            v: double
+            out: double
     pressure:
         domain: device
         in:
             id: string
         out:
-            v: double
+            out: double
     motion:
         domain: device
         in:
             id: string
         out:
-            v: 0
+            out: 0
     camera:
         domain: device
+        in:
+            id: string
         out:
             image: image
