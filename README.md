@@ -1,4 +1,4 @@
-# Architecture Diagram Editor
+# Architecture Diagram Editor ([WhiskeyJack](AboutTheName.md))
 
 	Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 	SPDX-License-Identifier: Apache-2.0
