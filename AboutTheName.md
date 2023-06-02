@@ -1,3 +1,4 @@
+<img src="https://i.reddituploads.com/bbfc8fae3d03499bacbbee5ddc02f070" style="width:50%; float:right; margin-left:5%;" >
 # WhiskeyJack
 The name of this project is not completely random ;-)
 
@@ -8,9 +9,9 @@ They enjoy [stealing food from hikers and their campsites](https://en.wikipedia.
 They can be annoying (if it's your sandwich they stole),
 or hilarious (if it's your brother's sandwich they stole).
 
-This common name is an English approximation to the name of the benevolent [trickster](https://en.wikipedia.org/wiki/Trickster)
+This common name is an English approximation to the First Nations name, that in turn is based on name of the benevolent [trickster](https://en.wikipedia.org/wiki/Trickster)
 [Wisakedjak](https://en.wikipedia.org/wiki/Wisakedjak)
-of First Nations traditional storytelling.
+of traditional storytelling.
 Somewhat like Crow, Coyote or even Loki from other cultures.
 
 I chose the name because there is a fairly high density of tricky pieces of code in this project.
