@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<SplitPane dividerPositions="0.5" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" orientation="VERTICAL" styleClass="meRoot" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="aws.WhiskeyJack.metadataeditor.MetaEditorController">
+   <items>
+      <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+         <children>
+            <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+               <children>
+                  <TextField fx:id="meName" prefHeight="26.0" prefWidth="200.0" promptText="Name" />
+                  <ComboBox fx:id="meDomain" editable="true" prefWidth="150.0" promptText="Domain" />
+                  <Separator maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minWidth="0.0" opacity="0.0" prefWidth="0.0" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="meSave" mnemonicParsing="false" onAction="#doSave" text="Save" />
+               </children>
+            </HBox>
+            <TextArea fx:id="meDescription" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" promptText="Description" VBox.vgrow="ALWAYS" />
+         </children>
+      </VBox>
+      <SplitPane dividerPositions="0.3">
+         <items>
+            <ListView fx:id="meParamList" editable="true" prefHeight="200.0" prefWidth="200.0" />
+            <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+               <children>
+                  <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+                     <children>
+                        <TextField fx:id="meParameterName" promptText="New Parameter Name" />
+                        <ComboBox fx:id="meType" editable="true" prefWidth="100.0" promptText="Type" />
+                        <CheckBox fx:id="meIsInput" mnemonicParsing="false" text="Is Input">
+                           <padding>
+                              <Insets top="3.0" />
+                           </padding>
+                           <HBox.margin>
+                              <Insets left="10.0" />
+                           </HBox.margin>
+                        </CheckBox>
+                        <Separator maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minWidth="0.0" opacity="0.0" prefWidth="0.0" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="meDelete" mnemonicParsing="false" text="Delete" />
+                     </children>
+                  </HBox>
+                  <TextField fx:id="meValue" maxWidth="1.7976931348623157E308" prefHeight="26.0" prefWidth="572.0" promptText="Default Value" />
+                  <TextArea fx:id="meParamDesc" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" promptText="Parameter description" VBox.vgrow="ALWAYS" />
+               </children>
+            </VBox>
+         </items>
+         <tooltip>
+            <Tooltip text="Edit the parameter list here" />
+         </tooltip>
+      </SplitPane>
+   </items>
+</SplitPane>

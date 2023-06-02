@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-module com.aws.jag.fxnodeeditor {
+module aws.WhiskeyJack {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.base;
@@ -15,10 +15,7 @@ module com.aws.jag.fxnodeeditor {
     requires com.fasterxml.jackson.annotation;
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.dataformat.yaml;
-
-    opens aws.jag.DiagramEditor to javafx.fxml;
-//    opens com.aws.jag.fxnodeeditor.graph to javafx.fxml;
-    opens aws.jag.DiagramEditor.metadataeditor to javafx.fxml;
-    opens aws.jag.DiagramEditor.nodeviewerfx to javafx.graphics, javafx.fxml;
-    exports aws.jag.DiagramEditor;
+    opens aws.WhiskeyJack.metadataeditor to javafx.fxml;
+    opens aws.WhiskeyJack.nodeviewerfx to javafx.graphics, javafx.fxml;
+    exports aws.WhiskeyJack;
 }
