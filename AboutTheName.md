@@ -1,4 +1,4 @@
-<img src="https://i.reddituploads.com/bbfc8fae3d03499bacbbee5ddc02f070" style="width:50%; float:right; margin-left:5%;" >
+<img src="https://i.reddituploads.com/bbfc8fae3d03499bacbbee5ddc02f070" width=50% align=right >
 
 # WhiskeyJack
 The name of this project is not completely random ;-)
