@@ -5,14 +5,13 @@
 
 package aws.WhiskeyJack.code;
 
-import aws.WhiskeyJack.nodegraph.Node;
-import aws.WhiskeyJack.nodegraph.Domain;
+import aws.WhiskeyJack.nodegraph.*;
 import java.util.*;
 
 
 public interface DomainGenerationController {
-    default void prescan(Collection<Object> messages){}
+    default void prescan(){}
     public String generate(List<Node> nodes, CodeTarget target);
     default void close(){}
-    default CodeTarget makeOutput(Domain d) { return new CodeTarget(d); }
+    CodeTarget makeOutput();
 }

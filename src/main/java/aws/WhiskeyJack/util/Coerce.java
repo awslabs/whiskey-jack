@@ -4,13 +4,14 @@
  */
 package aws.WhiskeyJack.util;
 
+import static aws.WhiskeyJack.util.Utils.*;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.type.*;
 import com.fasterxml.jackson.databind.*;
-import static aws.WhiskeyJack.util.Utils.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.regex.*;
 import javax.annotation.*;
 
@@ -48,13 +49,13 @@ public final class Coerce {
         if(o instanceof Topic topic)
             o = topic.getOnce();
         return o instanceof Boolean b ? b
-             : o instanceof Number n ? n.intValue() != 0
-             : o != null && switch(o.toString()) {
-                    case "true", "yes", "on", "t", "y", "Y", "1" ->
-                        true;
-                    default ->
-                        false;
-                };
+                : o instanceof Number n ? n.intValue() != 0
+                        : o != null && switch(o.toString()) {
+            case "true", "yes", "on", "t", "y", "Y", "1" ->
+                true;
+            default ->
+                false;
+        };
     }
 
     /**
@@ -92,7 +93,7 @@ public final class Coerce {
         if(o instanceof Number number)
             return number.doubleValue();
         if(o != null) try {
-            return Double.parseDouble(o.toString());
+            return Double.parseDouble(o.toString().trim());
         } catch(NumberFormatException ignore) {
         }
         return 0;
@@ -147,12 +148,14 @@ public final class Coerce {
         if(o.getClass().isArray()) {
             var len = Array.getLength(o);
             var ret = new String[len];
-            for(var i = 0; i < len; i++) {
-                var e = Array.get(o, i);
-                ret[i] = e == null ? "" : e.toString();
-            }
+            for(var i = 0; i < len; i++)
+                ret[i] = String.valueOf(Array.get(o, i));
             return ret;
         }
+        if(o instanceof Collection c)
+            return (String[]) c.stream()
+                    .map(v -> String.valueOf(v))
+                    .toArray(n -> new String[n]);
         var body = o.toString();
         var uw = unwrap.matcher(body);
         if(uw.matches())
@@ -240,7 +243,7 @@ public final class Coerce {
     public static Object toObject(String s) throws JsonProcessingException {
         return isEmpty(s) ? ""
                 : toObject(s, new TypeReference<Object>() {
-        });
+                });
     }
 
     /**
@@ -255,14 +258,14 @@ public final class Coerce {
     public static <T> T toObject(String s, TypeReference<T> t) throws JsonProcessingException {
         return MAPPER.readValue(s, t);
     }
-    
+
     public static Collection<Object> toCollection(Object o) {
-        if(o==null) return Collections.emptyList();
+        if(o == null) return Collections.emptyList();
         if(o.getClass().isArray()) {
             var sz = Array.getLength(o);
-            if(sz==0) return Collections.emptyList();
+            if(sz == 0) return Collections.emptyList();
             var ret = new ArrayList<Object>(sz);
-            for(var i = 0; i<sz; i++)
+            for(var i = 0; i < sz; i++)
                 ret.add(Array.get(o, i));
             return ret;
         }

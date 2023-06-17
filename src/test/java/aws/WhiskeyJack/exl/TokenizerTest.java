@@ -5,6 +5,7 @@
 package aws.WhiskeyJack.exl;
 
 import java.io.*;
+import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

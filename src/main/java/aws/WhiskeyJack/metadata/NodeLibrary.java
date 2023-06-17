@@ -4,23 +4,13 @@
  */
 package aws.WhiskeyJack.metadata;
 
-import aws.WhiskeyJack.util.Collectable;
-import aws.WhiskeyJack.util.CommitableReader;
-import aws.WhiskeyJack.util.CommitableWriter;
-import aws.WhiskeyJack.util.Utils;
-import aws.WhiskeyJack.util.Coerce;
-import aws.WhiskeyJack.nodegraph.MetaNode;
-import aws.WhiskeyJack.nodegraph.Node;
-import aws.WhiskeyJack.nodegraph.Type;
-import aws.WhiskeyJack.nodegraph.Domain;
-import aws.WhiskeyJack.nodeviewerfx.Dlg;
-import aws.WhiskeyJack.nodeviewerfx.GraphView;
-import io.github.classgraph.*;
+import aws.WhiskeyJack.nodegraph.*;
+import aws.WhiskeyJack.nodeviewerfx.*;
+import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Utils.*;
+import io.github.classgraph.*;
 import java.io.*;
-import java.nio.charset.*;
 import java.nio.file.*;
-import static java.nio.file.Path.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.regex.*;

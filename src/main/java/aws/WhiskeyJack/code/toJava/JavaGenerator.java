@@ -4,45 +4,49 @@
  */
 package aws.WhiskeyJack.code.toJava;
 
-import aws.WhiskeyJack.util.Utils;
-import aws.WhiskeyJack.nodegraph.Port;
-import aws.WhiskeyJack.nodegraph.Node;
-import aws.WhiskeyJack.nodegraph.Domain;
-import aws.WhiskeyJack.nodegraph.Type;
-import aws.WhiskeyJack.code.CodeTarget;
-import aws.WhiskeyJack.code.DomainGenerationController;
-import aws.WhiskeyJack.code.Matches;
-import aws.WhiskeyJack.exl.Tokenizer;
-import aws.WhiskeyJack.exl.Expression;
-import aws.WhiskeyJack.exl.Vocabulary;
-import aws.WhiskeyJack.exl.Token;
-import aws.WhiskeyJack.exl.Parser;
+import aws.WhiskeyJack.code.*;
+import aws.WhiskeyJack.exl.*;
+import aws.WhiskeyJack.nodegraph.*;
+import aws.WhiskeyJack.util.*;
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.regex.*;
 
-@Matches("*/java")
-public class JavaGenerator implements DomainGenerationController {
+@GeneratesCodeFor("*/java")
+public class JavaGenerator implements DomainGenerationController,
+        OverallCodeGenerationDriver.needsOuterBuildController {
     String error = null;
     CodeTarget out;
-    Collection<Object> messages;
-    @Override
-    public void prescan(Collection<Object> m) {
-        messages = m;
-    }
+    Set<String> imports = new HashSet<>();
+    Set<String> libraries = new HashSet<>();
+    Set<String> dependencies = new HashSet<>();
+    String className;
+    String packageName = "ade.gen";
     @Override
     public String generate(List<Node> nodes, CodeTarget out) {
         this.out = out;
         // TODO aws.WhiskeyJack.code.toJava.JavaGenerator.generate Not implemented
         System.out.println("  Whoo! " + this);
         var m = Pattern.compile("^([^.]*)\\..*").matcher(out.getPath().getFileName().toString());
-        var cn = m.group(m.matches() ? 1 : 0);
-        out.append("package ade.gen;\n\npublic class ")
-                .append(cn)
+        className = m.group(m.matches() ? 1 : 0);
+        nodes.forEach(n -> n.sidecar(NodeGenerationInfo.class));
+        nodes.forEach(n -> {
+            for(var im: n.getStringListProp("import"))
+                imports.add(im);
+            for(var lib: n.getStringListProp("library"))
+                libraries.add(lib);
+            for(var dep: n.getStringListProp("dependencies"))
+                dependencies.add(dep);
+        });
+        out.append("package ").append(packageName).append(";\n");
+        imports.forEach(im -> out.append("import ").append(im).append(";\n"));
+        out.comment(libraries);
+        out.append("public class ")
+                .append(className)
                 .append(" {\n")
                 .indent();
-        nodes.forEach(n -> n.sidecar(NodeGenerationInfo.class).setParent(this));
         nodes.forEach(n -> {
             Collection<String> header = new ArrayList<>();
             var info = n.sidecar(NodeGenerationInfo.class);
@@ -53,12 +57,13 @@ public class JavaGenerator implements DomainGenerationController {
                            + '\t' + p.getValue()
                            + '\t' + p.isConnected());
             }));
-            messages.add(n.getUid());
+            info.inputs.forEach(input -> header.add("input " + input));
+            info.outputs.forEach(output -> header.add("output " + output));
+            context.message(n.getUid());
             out.ln().comment(header);
             var code = n.getStringProp("code", null);
             var state = n.getStringProp("state", null);
             var callback = n.getStringProp("callback", null);
-            var sti = out.getIndent();
             if(state != null)
                 forAllBaseExpressionsIn(parse(state),
                         ist0 -> {
@@ -84,28 +89,61 @@ public class JavaGenerator implements DomainGenerationController {
                 forAllBaseExpressionsIn(parse(callback),
                         ist -> pendingInit.add(info.rewritePorts(ist)));
             flushPendingInit();
-            out.append("void ").append(n.getUid()).append("(");
-            var first = true;
-            for(var inarg:info.inputs) {
-                if(first) first = false;
-                else out.append(", ");
-                out.append(typeFrom(inarg.getType()))
-                        .append(' ').append(inarg.getName());
-            }
-            out.append(") {\n").indent();
-            for(var outarg:info.outputs) {
-                out.append(typeFrom(outarg.getType()))
-                        .append(' ').append(outarg.getName()).nl();
-            }
+            info.inputs.forEach(input -> {
+                var nm = NodeGenerationInfo.uniqueName(input);
+                var type = typeFrom(input.getType());
+                out.nl().append("private ").append(type).append(' ')
+                        .append(nm).append("; // TODO: initial value\n");
+                out.append("private void ").append(nm)
+                        .append('(').append(type).append(" v) ")
+                        .openBrace()
+                        .append("if(v != ").append(nm)
+                        .append(") ").openBrace()
+                        .append(nm).append(" = v;").nl()
+                        .append("compute_").append(n.getUid()).append("();\n")
+                        .closeBrace().closeBrace();
+            });
+            info.outputs.forEach(output -> {
+                var nm = NodeGenerationInfo.uniqueName(output);
+                var type = typeFrom(output.getType());
+                out.nl().append("private ").append(type).append(' ')
+                        .append(nm).append("; // TODO: initial value\n");
+                out.append("private void ").append(nm)
+                        .append('(').append(type).append(" v) ")
+                        .openBrace()
+                        .append("if(v != ").append(nm)
+                        .append(") ").openBrace()
+                        .append(nm).append(" = v;").nl();
+                output.forEachArc(arc -> {
+                    var receiver = arc.otherEnd(output);
+                    var rnm = NodeGenerationInfo.uniqueName(receiver);
+                    out.append(rnm).append("(v);\n");
+                });
+                out.closeBrace().closeBrace();
+            });
             if(!Utils.isEmpty(code)) {
+                out.append("void ").append("compute_" + n.getUid()).append("() ").openBrace();
                 var parsed = info.rewritePorts(parse(code));
-                out.comment("Parsed " + code + " as " + parsed)
-                        .append(parsed)
-                        .append(";\n");
+                out.append(clean(parsed))
+                        .append(";");
+                out.closeBrace();
             }
-            out.setIndent(sti).append("}\n");
+            var errors = info.getErrors();
+            if(errors!=null) {
+                out.comment(errors);
+                context.error(errors);
+            }
         });
+        out.nl().append("public static void main(String [] args)")
+                .openBrace()
+                .append("var v = new ").append(className).append("();")
+                .closeBrace();
         out.setIndent(0).append("}\n");
+        // generatePOM();
+        context.generateJavaPartBuild(out.getCodeRootDirectory(),
+                packageName+"."+className, dependencies);
+
+        nodes.forEach(n -> n.removeSidecar(NodeGenerationInfo.class));
         return error;
     }
     private Expression parse(String s) {
@@ -117,12 +155,12 @@ public class JavaGenerator implements DomainGenerationController {
             ex.printStackTrace(System.out);
             var msg = List.of("Error parsing", s, ex.toString());
             out.comment(msg);
-            if(messages != null) messages.addAll(msg);
+            context.message(msg);
             return clean(Expression.of(Token.string(s)));
         }
     }
     static Expression clean(Expression e) {
-        return e==null || e.getOperator()!=Vocabulary.BLOCK || e.length()!=1
+        return e == null || e.getOperator() != Vocabulary.BLOCK || e.length() != 1
                 ? e
                 : clean(e.arg(0));
     }
@@ -149,11 +187,11 @@ public class JavaGenerator implements DomainGenerationController {
         return "void";
     }
     private static String typeFrom(Type e) {
-        if(e==Type.number) return "double";
-        if(e==Type.string) return "String";
-        if(e==Type.bool) return "boolean";
-        if(e==Type.object) return "Object";
-        if(e==Type.tuple) return "Map";
+        if(e == Type.number) return "double";
+        if(e == Type.string) return "String";
+        if(e == Type.bool) return "boolean";
+        if(e == Type.object) return "Object";
+        if(e == Type.tuple) return "Map";
         return "void";
     }
     private static void forAllBaseExpressionsIn(Expression e, Consumer<Expression> func) {
@@ -186,9 +224,128 @@ public class JavaGenerator implements DomainGenerationController {
             isBoolean = p;
         }
     }
+    void generatePOM() {
+
+        try(var pom = Files.newBufferedWriter(out.getCodeRootDirectory().resolve("pom.xml"),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
+            pom.append(
+                    """
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ade.exp</groupId>
+    <artifactId>adeWhatever</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+                       """);
+            if(!dependencies.isEmpty()) {
+                pom.append("    <dependencies>\n");
+                dependencies.forEach(d -> {
+                    try {
+                        pom.append("\t<dependency>\n\t  " + d + "\n\t</dependency>\n");
+                    } catch(IOException ioe) {
+                    }
+                });
+                pom.append("    </dependencies>\n");
+            }
+            pom.append("</project>\n");
+        } catch(IOException ex) {
+            out.comment(ex.toString());
+        }
+    }
     private static boolean[] isBoolean;
     @Override
-    public CodeTarget makeOutput(Domain d) {
-        return new JavaTarget(d);
+    public CodeTarget makeOutput() {
+        assert context!=null;
+//        var src = context.getWholeGraph().getSrc();
+//        System.out.println("SRC " + src + "; " + src.getFileName());
+        return new JavaTarget(context, packageName);
     }
+    OuterBuildController context;
+    @Override
+    public void setOuterBuildController(OuterBuildController cg) {
+        System.out.println("setOuterBuildController "+cg);
+        assert cg!=null;
+        context = cg;
+    }
+
+    public static class NodeGenerationInfo {
+        private final Node node;
+        private final Map<String, Expression> portValues = new HashMap<>();
+        Collection<Port> inputs = new ArrayList<>();
+        Collection<Port> outputs = new ArrayList<>();
+
+        public NodeGenerationInfo(Node n) {
+            node = n;
+            node.forEachPort(new Consumer<Port>() {
+                @Override
+                public void accept(Port p) {
+                    var t = p.getType();
+                    var k = p.getName();
+                    if(p.isConnected()) {
+                        (p.isInputSide() ? inputs : outputs).add(p);
+                        portValues.put(k, Expression.of(Token.identifier(uniqueName(p))));
+                    } else {
+                        var nv = p.getValue();
+                        System.out.println("Constant port " + p.getFullName() + " = " + nv);
+                        var v = switch(nv) {
+                            case String str ->
+                                t == Type.string
+                                ? Expression.of(Token.string(str))
+                                : parse(str);
+                            case Expression ev ->
+                                ev;
+                            case Number num ->
+                                Expression.of(Token.number(num));
+                            case null ->
+                                Expression.of(t == Type.string ? emptyString : Vocabulary.NULL);
+                            default ->
+                                Expression.of(Token.string(String.valueOf(nv)));
+                        };
+                        System.out.println("rewrite " + k + " to " + v);
+                        portValues.put(k, v);
+                    }
+                }
+            });
+        }
+        Expression rewritePorts(Expression e) {
+            return e.rewrite(exNode -> {
+                var op = exNode.getOperator();
+                if(op.isIdentifier()) {
+                    System.out.println("Found Identifier " + exNode);
+                    var foundValue = portValues.get(op.getBody());
+                    if(foundValue != null) {
+                        System.out.println("  with value " + foundValue);
+                        return foundValue;
+                    }
+                }
+                return exNode;
+            });
+        }
+        private Expression parse(String s) {
+            try {
+                if(s.indexOf(';') >= 0)
+                    s = "{" + s + ";}";
+                return new Parser(new Tokenizer(s)).expression();
+            } catch(IOException ex) {
+                ex.printStackTrace(System.out);
+                if(errors==null) errors = new ArrayList<String>();
+                errors.add("Error parsing "+ s);
+                errors.add(ex.toString());
+                return JavaGenerator.clean(Expression.of(Token.string(s)));
+            }
+        }
+        private List<String> errors;
+        public Collection<String> getErrors() { return errors; }
+        static String uniqueName(Port p) {
+            return p == null ? "NULLPORT" : p.within.getUid() + "_" + p.getName();
+        }
+        private static final Token emptyString = Token.string("");
+    }
+
 }

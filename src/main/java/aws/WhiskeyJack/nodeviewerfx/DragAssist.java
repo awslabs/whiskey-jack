@@ -4,7 +4,7 @@
  */
 package aws.WhiskeyJack.nodeviewerfx;
 
-import aws.WhiskeyJack.nodegraph.MetaNode;
+import aws.WhiskeyJack.nodegraph.*;
 import java.io.*;
 import javafx.scene.input.*;
 

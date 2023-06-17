@@ -13,7 +13,8 @@ public class MetaPort extends Port {
     private String description;
     private boolean outputSide;
     private boolean unboundOK;
-    private int y;
+    private boolean code = false;
+    private int nodeSlot;
     private MetaPort(@Nonnull Node wi) {
         super(wi, null);
     }
@@ -28,7 +29,7 @@ public class MetaPort extends Port {
         p.type = t;
         p.setValue(df);
         p.setOutputSide(output);
-        p.setY(wi.count(output));
+        p.setNodeSlot(wi.count(output));
         return p;
     }
     public void markDirty() {
@@ -64,16 +65,16 @@ public class MetaPort extends Port {
     public void populateFrom(Map values) {
         super.populateFrom(values);
         setType(Type.of(getOpt(values, "type", getType().getName())));
-        var proposedName = getOpt(values, "name", getName());
-        setName(proposedName);
+        setName(getOpt(values, "name", getName()));
+        setCode(get(values, "code", isCode()));
         setDescription(getOpt(values, "description", getDescription()));
         setOutputSide((boolean) getOpt(values, "output", isOutputSide()));
         if(getName().equals("id")) {
             unboundOK = true;
+            setType(Type.string);
             setValue(null);
         }
         unboundOK = (boolean) getOpt(values, "unboundok", unboundOK);
-        setY((int) getOpt(values, "y", getY()));
     }
     @Override
     public void add(Arc a) {
@@ -86,7 +87,7 @@ public class MetaPort extends Port {
         putOpt(map, "name", name);
         putOpt(map, "description", description);
         putOpt(map, "output", isOutputSide());
-        putOpt(map, "y", getY());
+        putOpt(map, "y", getNodeSlot());
     }
     @Override
     public String toString() {
@@ -104,10 +105,17 @@ public class MetaPort extends Port {
     private void setOutputSide(boolean in) {
         this.outputSide = in;
     }
-    public int getY() {
-        return y;
+    @Override
+    public boolean isCode() {
+        return code;
     }
-    private void setY(int y) {
-        this.y = y;
+    public void setCode(boolean ic) {
+        code = ic;
+    }
+    public int getNodeSlot() {
+        return nodeSlot;
+    }
+    private void setNodeSlot(int y) {
+        this.nodeSlot = y;
     }
 }

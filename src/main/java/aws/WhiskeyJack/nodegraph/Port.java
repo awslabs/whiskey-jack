@@ -5,9 +5,8 @@
 package aws.WhiskeyJack.nodegraph;
 
 import aws.WhiskeyJack.nodegraph.Graph.PendingConnection;
-import aws.WhiskeyJack.util.Utils;
-import aws.WhiskeyJack.util.Collectable;
-import static aws.WhiskeyJack.nodegraph.GraphPart.*;
+import static aws.WhiskeyJack.util.Collectable.*;
+import aws.WhiskeyJack.util.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -129,6 +128,7 @@ public class Port extends Collectable {
     public Domain getDomain() {
         return domain == Domain.unknown ? within.getDomain() : domain;
     }
+    public boolean isCode() { return metadata.isCode(); }
     public Port setDomain(Domain d) {
         if(d==within.getDomain()) d = Domain.unknown;
         domain = d;

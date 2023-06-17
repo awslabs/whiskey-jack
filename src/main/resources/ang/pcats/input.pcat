@@ -7,8 +7,12 @@
         out:
           v: 0
       slider:
+        state: monor :== new MonogramReader()
+        callback: monor.addListener(id, (n,o,v)e->out(v))
+        in:
+            id: Slider1
         out:
-          v: 0
+            out: double
       sin:
         in:
           freq: 0.5

@@ -17,4 +17,8 @@ that in turn is based on the name of the benevolent
 of traditional storytelling.
 Somewhat like Crow, Coyote or even Loki from other cultures.
 
+They almost became the
+(national bird of Canada)[https://canadiangeographic.ca/articles/meet-our-national-bird-the-gray-jay/]
+but the federal government declined to recognize the choice of ornithologists and citizens.
+
 I chose the name because there is a fairly high density of tricky pieces of code in this project.

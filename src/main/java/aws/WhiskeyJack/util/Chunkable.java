@@ -5,7 +5,7 @@
 
 package aws.WhiskeyJack.util;
 
-import java.util.List;
+import java.util.*;
 
 public interface Chunkable<T> {
     void setVariablePayload(List<T> variablePayload);

@@ -3,38 +3,44 @@
 ---
 children:
   if:
-        props:
-            code: return expr
-        in:
-            a: double
-            b: double
-            expr: 
-              value: a>b
-              type: code
-        out:
-            out: boolean
+    code: out(expr)
+    in:
+        a: double
+        b: double
+        expr: 
+          value: a>b
+          type: boolean
+          code: true
+    out:
+        out: boolean
   sum:
+    code: out = a+b
     in:
       a: double
       b: double
-      code#: return a+b
     out:
       v: double
   diff:
+    code: out(a-b)
     in:
       a: 0
       b: 0
-      code#: return a-b
     out:
       v: 0
   eval:
     in:
-      a: 0
-      b: 0
-      c: 0
+      a:
+        type: double
+      b: 
+        type: double
+        value: 0
+      c: 
+        type: double
+        value: 0
       expr: 
-        value: a+b+c
-        type: code
-      code#: return expr
+            type: double
+            code: true
+            value: a+b+c
+    code: out(expr)
     out:
       v: 0

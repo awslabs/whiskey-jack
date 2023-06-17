@@ -4,7 +4,7 @@
  */
 package aws.WhiskeyJack.nodegraph;
 
-import aws.WhiskeyJack.util.Collectable;
+import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Utils.*;
 import java.util.*;
 import java.util.function.*;
@@ -76,7 +76,6 @@ public class Type extends Collectable {
     public static final Type table = new Type("table");
     public static final Type html = new Type("html");
     public static final Type mlmodel = new Type("mlmodel");
-    public static final Type code = new Type("code");
     public static final Type object = new Type("object"); // ?
 
     public static final Type err = new Type("err");

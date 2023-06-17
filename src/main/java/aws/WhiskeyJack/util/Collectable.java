@@ -4,8 +4,8 @@
  */
 package aws.WhiskeyJack.util;
 
-import aws.WhiskeyJack.nodeviewerfx.Dlg;
-import static aws.WhiskeyJack.nodegraph.GraphPart.*;
+import aws.WhiskeyJack.nodeviewerfx.*;
+import static aws.WhiskeyJack.util.Collectable.*;
 import static aws.WhiskeyJack.util.Utils.*;
 import java.lang.reflect.*;
 import java.util.*;
@@ -20,12 +20,12 @@ public abstract class Collectable {
     public Object collect() {
         var ret = new HashMap<String,Object>();
         collectMore(ret);
-        if(sidecars!=null && !sidecars.isEmpty()) {
+        if(properties!=null && !properties.isEmpty()) {
             Map<String,Object> side = new HashMap<>();
-            sidecars.forEach((k,v)->{
+            properties.forEach((k,v)->{
                 var vo = asObject(v);
                 if(!Utils.isEmpty(vo))
-                    side.put(k.getName(), vo);
+                    side.put(String.valueOf(k), vo);
             });
             if(!side.isEmpty())
                 putOpt(ret,"sidecars",side);
@@ -91,13 +91,11 @@ public abstract class Collectable {
     }
     public static double get(Map m, String k, double dflt) {
         var v = m.get(k);
-        try {
-            return v == null ? dflt : v instanceof Number nv ? nv.doubleValue()
-                    : Double.parseDouble(v.toString());
-        } catch(NumberFormatException ioe) {
-            System.out.println(ioe);
-            return dflt;
-        }
+        return v == null ? dflt : Coerce.toDouble(v);
+    }
+    public static boolean get(Map m, String k, boolean dflt) {
+        var v = m.get(k);
+        return v == null ? dflt : Coerce.toBoolean(v);
     }
     public static Collection<Object> getCollection(Map m, String k) {
         return m == null ? Collections.emptyList() : Coerce.toCollection(m.get(k));
@@ -162,17 +160,56 @@ public abstract class Collectable {
             }
         }
     }
-    private Map<Class,Object> sidecars;
+    private final Map<Object,Object> properties = new HashMap<>();
+    
+    public final Object getProp0(String s, Object dflt) {
+        return properties.getOrDefault(s, dflt);
+    }
+    public Object getProp(String s, Object dflt) {
+        return getProp0(s, dflt);
+    }
+    public String getStringProp(String s, String dflt) {
+        return Coerce.toString(getProp(s, dflt));
+    }
+    public String[] getStringListProp(String s) {
+        return Coerce.toStringArray(getProp(s, null));
+    }
+    public boolean getBooleanProp(String s, boolean dflt) {
+        return Coerce.toBoolean(getProp(s, dflt));
+    }
+    public int getIntProp(String s, int dflt) {
+        return Coerce.toInt(getProp(s, dflt));
+    }
+    public Map getMapProp(String s, String sakey) {
+        var m = getProp(s, null);
+        return m instanceof Map map        ? map
+                : m == null || sakey==null ? Collections.emptyMap()
+                :                            Map.of(sakey, m);
+    }
+    public void putProp(Object k, Object v) {
+        if(!isEmpty(v)) properties.put(k, v);
+    }
+    public void putProps(Map m) {
+        if(m!=null)
+            m.forEach((k,v)->putProp(k,v));
+    }
+    public void putMissingProps(Map m) {
+        if(m!=null)
+            properties.forEach((k,v)->{
+                if(!m.containsKey(k))
+                    m.put(k, v);
+            });
+    }
     public <T> T sidecar(Class<T> cl) {
-        if(sidecars==null) sidecars = new HashMap<>();
-        return (T)sidecars.computeIfAbsent(cl, kcl->{
+        return (T)properties.computeIfAbsent(cl, kcl->{
             try {
                 var tcl = this.getClass();
-                var allCons = kcl.getConstructors();
-                var best = (Constructor<T>) null;
+                var allCons = cl.getConstructors();
+                var best = (Constructor) null;
                 var bscore = 99;
                 for(var cons:allCons) {
                     var params = cons.getParameterTypes();
+                    System.out.println("sidecar "+cl+" "+cons);
                     var score = switch(params.length) {
                         default->200;
                         case 0-> 10;
@@ -191,12 +228,13 @@ public abstract class Collectable {
         });
     }
     public void removeSidecar(Class cl) {
-        if(sidecars!=null) {
-            sidecars.remove(cl);
-            if(sidecars.isEmpty()) removeAllSidecars();
-        }
+        properties.remove(cl);
     }
     public void removeAllSidecars() {
-        sidecars = null;
+        for(var i = properties.entrySet().iterator(); i.hasNext(); ) {
+            var ent = i.next();
+            if(ent.getKey() instanceof Class)
+                i.remove();
+        }
     }
 }

@@ -4,9 +4,8 @@
  */
 package aws.WhiskeyJack.nodegraph;
 
-import aws.WhiskeyJack.util.Collectable;
-import aws.WhiskeyJack.util.Utils;
 import static aws.WhiskeyJack.nodegraph.ErrorCode.*;
+import aws.WhiskeyJack.util.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -82,12 +81,15 @@ public abstract class GraphPart<T extends GraphPart> extends Collectable {
         putOpt(map, "message", message);
     }
     public void populateFrom(Map<String,Object> values) {
+        values.forEach((k,v)->{ if(!skipProps.contains(k)) putProp(k, v); });
         name = get(values,"name",name);
         message = get(values,"message",null);
         getMap(values,"sidecars").forEach((k,v)->{
             System.out.println("Populating sidecar "+k+Utils.deepToString(v));
         });
     }
+    private static final Set<String> skipProps = Set.of("name","uid", "ports", "in",
+            "out", "message", "sidecars", "props", "subnodes", "children");
     public StringBuilder appendNameTo(StringBuilder sb) {
         sb.append(getName());
         return sb;

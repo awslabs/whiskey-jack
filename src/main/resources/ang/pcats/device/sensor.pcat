@@ -1,67 +1,60 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 ---
+domain: device
+import: com.phidget22.*
+library: phidget22.jar
 children:
     temperature:
-        domain: device
-        props:
-#            code: return getTemperature(id)
-            state: ts :== new TemperatureSensor()
-            callback: ts.addTemperatureChangeListener(e->setout(e.getTemperature()))
+        state: ts :== new TemperatureSensor()
+        callback: ts.addTemperatureChangeListener(e->out(e.getTemperature()))
         in:
             id: string
         out:
             out: double
     brightness:
-        domain: device
         in:
             id: string
         out:
             out: double
     humidity:
-        domain: device
         in:
             id: string
         out:
             out: double
     touch:
-        domain: device
         in:
             id: string
         out:
             out: false
     switch:
-        domain: device
         in:
             id: string
         out:
             out: false
     distance:
-        domain: device
+        state: ds :== new DistanceSensor()
+        callback: ts.addDistanceChangeListener(e->out(e.getDistance()))
         in:
             id: string
         out:
             out: double
     angle:
-        domain: device
         in:
             id: string
         out:
             out: double
     pressure:
-        domain: device
         in:
             id: string
         out:
             out: double
     motion:
-        domain: device
         in:
             id: string
         out:
             out: 0
     camera:
-        domain: device
         in:
             id: string
         out:

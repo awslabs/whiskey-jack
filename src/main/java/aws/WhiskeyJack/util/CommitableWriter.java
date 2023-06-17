@@ -5,12 +5,9 @@
 
 package aws.WhiskeyJack.util;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
+import java.io.*;
+import java.nio.charset.*;
+import java.nio.file.*;
 
 public final class CommitableWriter extends BufferedWriter implements Commitable {
     private final CommitableFile out;

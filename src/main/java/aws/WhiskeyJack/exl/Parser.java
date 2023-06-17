@@ -11,7 +11,6 @@ public class Parser {
     private final Tokenizer src;
     private Token tok; // the token we're currently looking at
     public Parser(Tokenizer t) throws IOException {
-        if(priority == null) initOpProperties();
         src = t;
         tok = t.get(); // position at the beginning
     }
@@ -76,11 +75,11 @@ public class Parser {
     private Expression expressionTail(Expression LHS, int endPriority) throws IOException {
         while(tok != Vocabulary.EOF) {
             var op = tok;
-            var pri = priority[op.getType()];
+            var pri = Vocabulary.getPriority(op);
             if(pri <= endPriority) break;
             tok = src.get();
             var RHS = expressionTail(term(), pri);
-            if(flatten[op.getType()] && (LHS.getOperator() == op || RHS.getOperator() == op)) {
+            if(Vocabulary.canFlatten(op) && (LHS.getOperator() == op || RHS.getOperator() == op)) {
                 var args = new ArrayList<Expression>(3);
                 extractFlattened(args, LHS, op);
                 extractFlattened(args, RHS, op);
@@ -115,64 +114,4 @@ public class Parser {
         return Expression.of(op, args);
 
     }
-    private static void initOpProperties() {
-        {
-            Vocabulary.triggerInit();
-            var p = new int[Token.typeTableSize()];
-            var v = 1;
-            Arrays.fill(p, -10);
-            v++;
-            p[Vocabulary.RARROW.getType()] = v;
-            v++;
-            p[Vocabulary.ASSIGN.getType()] = v;
-            p[Vocabulary.DECLAREASSIGN.getType()] = v;
-            p[Vocabulary.DECLAREASSIGNFINAL.getType()] = v;
-            v++;
-            p[Vocabulary.QUESTION.getType()] = v;
-            p[Vocabulary.COLON.getType()] = v;
-            v++;
-            p[Vocabulary.ANDAND.getType()] = v;
-            p[Vocabulary.AND.getType()] = v;
-            p[Vocabulary.OR.getType()] = v;
-            p[Vocabulary.OROR.getType()] = v;
-            v++;
-            p[Vocabulary.INSTANCEOF.getType()] = v;
-            p[Vocabulary.LT.getType()] = v;
-            p[Vocabulary.LE.getType()] = v;
-            p[Vocabulary.GT.getType()] = v;
-            p[Vocabulary.GE.getType()] = v;
-            p[Vocabulary.EQ.getType()] = v;
-            p[Vocabulary.NE.getType()] = v;
-            p[Vocabulary.ELEMENTOF.getType()] = v;
-            v++;
-            p[Vocabulary.PLUS.getType()] = v;
-            p[Vocabulary.MINUS.getType()] = v;
-            v++;
-            p[Vocabulary.DIVIDE.getType()] = v;
-            p[Vocabulary.MULTIPLY.getType()] = v;
-            priority = p;
-        }
-        {
-            var p = new boolean[Token.typeTableSize()];
-            p[Vocabulary.ASSIGN.getType()] = true;
-            p[Vocabulary.DECLAREASSIGN.getType()] = true;
-            p[Vocabulary.DECLAREASSIGNFINAL.getType()] = true;
-            rightAssoc = p;
-        }
-        {
-            var p = new boolean[Token.typeTableSize()];
-            p[Vocabulary.COMMA.getType()] = true;
-            p[Vocabulary.SEMI.getType()] = true;
-            p[Vocabulary.ANDAND.getType()] = true;
-            p[Vocabulary.AND.getType()] = true;
-            p[Vocabulary.OR.getType()] = true;
-            p[Vocabulary.OROR.getType()] = true;
-            p[Vocabulary.PLUS.getType()] = true;
-            p[Vocabulary.MULTIPLY.getType()] = true;
-            flatten = p;
-        }
-    }
-    private static int[] priority;
-    private static boolean[] rightAssoc;
-    private static boolean[] flatten;
 }

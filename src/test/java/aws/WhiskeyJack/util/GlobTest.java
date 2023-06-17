@@ -4,8 +4,9 @@
  */
 package aws.WhiskeyJack.util;
 
-import aws.WhiskeyJack.code.Glob;
-import org.junit.jupiter.api.Test;
+import aws.WhiskeyJack.code.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GlobTest {

@@ -4,13 +4,10 @@
  */
 package aws.WhiskeyJack.exl;
 
-import aws.WhiskeyJack.nodegraph.Domain;
-import aws.WhiskeyJack.code.toJava.JavaTarget;
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
 
 public class ParserTest {
 
@@ -63,13 +60,13 @@ public class ParserTest {
         assertEquals(x("// foo \n(n+4)+(j+2)"), x("n+4+j+2 //foo"));
         assertEquals(x("/* foo */(n+4)+(j+2)"), x("n+4/*eh*/+j+2 //foo"));
     }
-    @Test
-    public void t5() throws IOException {
-        var aj = new JavaTarget(Domain.unknown);
-        aj.append(x("a>b"));
-        aj.close();
-        System.out.println();
-    }
+//    @Test
+//    public void t5() throws IOException {
+//        var aj = new JavaTarget(Domain.unknown, null, "test");
+//        aj.append(x("a>b"));
+//        aj.close();
+//        System.out.println();
+//    }
     @Test
     public void t6() throws IOException {
         var a = x("a+b");
@@ -88,27 +85,21 @@ public class ParserTest {
         System.out.println(C);
         assertEquals(x("666+42"), C);
     }
-    private final Set<String> imports = new HashSet<>();
-    public void addImport(String pkg) {
-        imports.add(pkg);
-    }
-    public void dumpImports(Appendable out) {
-        imports.forEach(p -> {
-            try {
-                out.append("import ").append(p).append(";\n");
-            } catch(IOException ex) {
-                Logger.getLogger(ParserTest.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        });
-    }
+//    private final Set<String> imports = new HashSet<>();
+//    public void addImport(String pkg) {
+//        imports.add(pkg);
+//    }
+//    public void dumpImports(Appendable out) {
+//        imports.forEach(p -> {
+//            try {
+//                out.append("import ").append(p).append(";\n");
+//            } catch(IOException ex) {
+//                Logger.getLogger(ParserTest.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        });
+//    }
     private Expression x(String e) throws IOException {
-        System.out.println("Parsing "+e);
-        try {
         return new Parser(new Tokenizer(e)).expression();
-        } catch(Throwable t) {
-                t.printStackTrace();
-                throw t;
-                }
     }
     private void T(String e) throws IOException {
         var p = x(e);

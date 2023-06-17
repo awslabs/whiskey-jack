@@ -4,7 +4,7 @@
  */
 package aws.WhiskeyJack.infer;
 
-import aws.WhiskeyJack.nodegraph.Graph;
+import aws.WhiskeyJack.nodegraph.*;
 
 public interface Scanner  {
     public void Scan(Graph g);

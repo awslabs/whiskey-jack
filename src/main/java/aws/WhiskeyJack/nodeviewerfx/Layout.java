@@ -4,8 +4,7 @@
  */
 package aws.WhiskeyJack.nodeviewerfx;
 
-import aws.WhiskeyJack.nodegraph.Arc;
-import aws.WhiskeyJack.nodegraph.Port;
+import aws.WhiskeyJack.nodegraph.*;
 import java.util.*;
 import javafx.animation.*;
 import javafx.util.*;
@@ -170,7 +169,7 @@ public class Layout {
             for(var oneEnd: ((Collection<Port>) n.ports.values()))
                 if(oneEnd.isInputSide())
                     for(var arc: ((Port) oneEnd).allArcs()) {
-                        sum += arc.otherEnd((Port) oneEnd).metadata.getY();
+                        sum += arc.otherEnd((Port) oneEnd).metadata.getNodeSlot();
                         count += 1;
                     }
             return count == 0 ? 0 : sum / count;
@@ -194,12 +193,14 @@ public class Layout {
             h = view.getView().getHeight();
         }
         public void addUpstream(LNode u) {
-            if(upstream.contains(u)) {
-                Dlg.error("Duplicate upstream: " + view.getName() + "->" + u.view.getName(), null);
-                return;
+            if(u!=null) {
+                if(upstream.contains(u)) {
+                    Dlg.error("Duplicate upstream: " + view.getName() + "->" + u.view.getName(), null);
+                    return;
+                }
+                upstream.add(u);
+                u.directDownstream++;
             }
-            upstream.add(u);
-            u.directDownstream++;
         }
         @Override
         public String toString() {

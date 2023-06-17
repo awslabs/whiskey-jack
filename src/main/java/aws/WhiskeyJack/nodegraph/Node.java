@@ -4,7 +4,7 @@
  */
 package aws.WhiskeyJack.nodegraph;
 
-import aws.WhiskeyJack.util.Coerce;
+import aws.WhiskeyJack.util.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
@@ -156,17 +156,10 @@ public class Node<T extends Node> extends GraphPart<T> {
     public Port getPort(String s) {
         return ports.get(s);
     }
+    @Override
     public Object getProp(String s, Object dflt) {
-        return metadata.getProp(s, dflt);
-    }
-    public String getStringProp(String s, String dflt) {
-        return Coerce.toString(getProp(s, dflt));
-    }
-    public boolean getBooleanProp(String s, boolean dflt) {
-        return Coerce.toBoolean(getProp(s, dflt));
-    }
-    public int getIntProp(String s, int dflt) {
-        return Coerce.toInt(getProp(s, dflt));
+        var ret = super.getProp(s, dflt);
+        return ret==dflt ? metadata.getProp(s, dflt) : ret;
     }
     @Override
     public void populateFrom(Map map) {
@@ -197,7 +190,10 @@ public class Node<T extends Node> extends GraphPart<T> {
                 /* If it looks like a type, it is a type.  Otherwise it's a value. */
                 if(possibleT != null && possibleT != Type.any)
                     vmap.put("type", possibleT.getName());
-                else vmap.put("value", v);
+                else {
+                    vmap.put("type", Type.guess(v).toString());
+                    vmap.put("value", v);
+                }
             }
             if(!input)
                 vmap.put("output", true);

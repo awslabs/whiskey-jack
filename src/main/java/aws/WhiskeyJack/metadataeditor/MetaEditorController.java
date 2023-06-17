@@ -4,13 +4,9 @@
  */
 package aws.WhiskeyJack.metadataeditor;
 
-import aws.WhiskeyJack.nodeviewerfx.Dlg;
-import aws.WhiskeyJack.nodeviewerfx.GraphView;
-import aws.WhiskeyJack.nodegraph.MetaNode;
-import aws.WhiskeyJack.nodegraph.MetaPort;
-import aws.WhiskeyJack.nodegraph.Type;
-import aws.WhiskeyJack.nodegraph.Domain;
-import aws.WhiskeyJack.util.Coerce;
+import aws.WhiskeyJack.nodegraph.*;
+import aws.WhiskeyJack.nodeviewerfx.*;
+import aws.WhiskeyJack.util.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;

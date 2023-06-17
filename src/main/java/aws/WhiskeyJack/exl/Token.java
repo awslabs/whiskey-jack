@@ -4,7 +4,7 @@
  */
 package aws.WhiskeyJack.exl;
 
-import aws.WhiskeyJack.util.Utils;
+import aws.WhiskeyJack.util.*;
 import java.io.*;
 import java.util.*;
 
@@ -29,7 +29,9 @@ public class Token {
         if(sb == null) sb = new StringBuilder();
         if(body != null)
             if(type == stringType) try {
+                sb.append('"');
                 Utils.deepToStringQuoted(body, sb, 99999);
+                sb.append('"');
             } catch(IOException ex) {
             } else sb.append(body);
         else sb.append(num);

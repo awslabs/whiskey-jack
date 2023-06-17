@@ -4,13 +4,10 @@
  */
 package aws.WhiskeyJack.nodeviewerfx;
 
-import aws.WhiskeyJack.nodegraph.MetaNode;
-import aws.WhiskeyJack.nodegraph.Arc;
-import aws.WhiskeyJack.nodegraph.Port;
-import aws.WhiskeyJack.nodegraph.Domain;
-import aws.WhiskeyJack.metadata.NodeLibrary;
-import aws.WhiskeyJack.util.Utils;
+import aws.WhiskeyJack.metadata.*;
 import aws.WhiskeyJack.nodegraph.Node;
+import aws.WhiskeyJack.nodegraph.*;
+import aws.WhiskeyJack.util.*;
 import java.util.*;
 import java.util.function.*;
 import javafx.geometry.*;

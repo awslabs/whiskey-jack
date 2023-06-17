@@ -4,10 +4,10 @@
  */
 package aws.WhiskeyJack.nodeviewerfx;
 
-import aws.WhiskeyJack.nodegraph.ErrorCode;
 import aws.WhiskeyJack.nodegraph.Arc;
+import aws.WhiskeyJack.nodegraph.*;
 import static aws.WhiskeyJack.nodegraph.ErrorCode.*;
-import static aws.WhiskeyJack.nodeviewerfx.GraphView.HOVER_PSEUDO_CLASS;
+import static aws.WhiskeyJack.nodeviewerfx.GraphView.*;
 import java.util.*;
 import javafx.scene.control.*;
 import javafx.scene.input.*;

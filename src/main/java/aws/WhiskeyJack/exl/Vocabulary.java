@@ -5,6 +5,8 @@
 
 package aws.WhiskeyJack.exl;
 
+import java.util.*;
+
 
 public class Vocabulary {
     public static final Token AND = operator("&");
@@ -61,6 +63,78 @@ public class Vocabulary {
     public static final Token TRUE = Token.keyword("true");
     public static final Token UNKNOWN = operator(" \u00a1unknown!");
     public static final Token WHILE = Token.keyword("while");
+    private static boolean[] flatten;
+    private static int[] priority;
+    private static boolean[] rightAssoc;
+    
+    public static int getPriority(Token op) {
+        return priority[op.getType()];
+    }
+    public static boolean canFlatten(Token op) {
+        return flatten[op.getType()];
+    }
+    public static boolean isRightAssoc(Token op) {
+        return rightAssoc[op.getType()];
+    }
+    private static void initOpProperties() {
+        {
+            int[] p = new int[Token.typeTableSize()];
+            int v = 1;
+            Arrays.fill(p, 0, Token.numberType+1, 99);
+            v++;
+            p[RARROW.getType()] = v;
+            v++;
+            p[ASSIGN.getType()] = v;
+            p[DECLAREASSIGN.getType()] = v;
+            p[DECLAREASSIGNFINAL.getType()] = v;
+            v++;
+            p[QUESTION.getType()] = v;
+            p[COLON.getType()] = v;
+            v++;
+            p[ANDAND.getType()] = v;
+            p[AND.getType()] = v;
+            p[OR.getType()] = v;
+            p[OROR.getType()] = v;
+            v++;
+            p[INSTANCEOF.getType()] = v;
+            p[LT.getType()] = v;
+            p[LE.getType()] = v;
+            p[GT.getType()] = v;
+            p[GE.getType()] = v;
+            p[EQ.getType()] = v;
+            p[NE.getType()] = v;
+            p[ELEMENTOF.getType()] = v;
+            v++;
+            p[PLUS.getType()] = v;
+            p[MINUS.getType()] = v;
+            v++;
+            p[DIVIDE.getType()] = v;
+            p[MULTIPLY.getType()] = v;
+            v++;
+            p[INVOKE.getType()] = v;
+            p[BLOCK.getType()] = v;
+            priority = p;
+        }
+        {
+            boolean[] p = new boolean[Token.typeTableSize()];
+            p[ASSIGN.getType()] = true;
+            p[DECLAREASSIGN.getType()] = true;
+            p[DECLAREASSIGNFINAL.getType()] = true;
+            rightAssoc = p;
+        }
+        {
+            boolean[] p = new boolean[Token.typeTableSize()];
+            p[COMMA.getType()] = true;
+            p[SEMI.getType()] = true;
+            p[ANDAND.getType()] = true;
+            p[AND.getType()] = true;
+            p[OR.getType()] = true;
+            p[OROR.getType()] = true;
+            p[PLUS.getType()] = true;
+            p[MULTIPLY.getType()] = true;
+            flatten = p;
+        }
+    }
     
     
     private static Token operator(String... ops) {
@@ -70,6 +144,5 @@ public class Vocabulary {
                 Tokenizer.define(op).setToken(token);
         return token;
     }
-    public static void triggerInit() {}
-
+    static { initOpProperties(); }
 }

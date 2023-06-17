@@ -6,6 +6,7 @@ package aws.WhiskeyJack.nodegraph;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -75,6 +76,7 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
                 });
             });
         });
+        setSrc(other.getSrc());
     }
     public void forEachNode(Consumer<Node> f) {
         nByUid.values().forEach(f);
@@ -201,4 +203,8 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
         pendingConnections.add(con);
     }
     public record PendingConnection(Port from, String toUid, String toPort){}
+    
+    private Path src;
+    public void setSrc(Path u) { src = u; }
+    public Path getSrc() { return src; }
 }

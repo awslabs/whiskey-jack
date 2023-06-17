@@ -5,9 +5,7 @@
 
 package aws.WhiskeyJack.infer;
 
-import aws.WhiskeyJack.nodegraph.Port;
-import aws.WhiskeyJack.nodegraph.Type;
-import aws.WhiskeyJack.nodegraph.Domain;
+import aws.WhiskeyJack.nodegraph.*;
 import java.util.*;
 
 

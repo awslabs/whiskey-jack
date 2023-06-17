@@ -1,0 +1,20 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+    domain: device
+    children:
+        slider:
+            import: com.nighthacks.monogramreader.MonogramReader
+            state: monor :== new MonogramReader()
+            callback: monor.addSimpleListener(id, v->out(v))
+            dependencies:
+                com.nighthacks.monogramreader:MonogramReader:1.0-SNAPSHOT
+            in:
+                id: Slider1
+            out:
+                out: double
+        print:
+            code: System.out.println(label+" "+in)
+            in:
+                label: string
+                in: double

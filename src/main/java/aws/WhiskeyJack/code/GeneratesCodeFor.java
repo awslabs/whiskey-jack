@@ -8,6 +8,6 @@ import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface Matches {
+public @interface GeneratesCodeFor {
     String value();
 }

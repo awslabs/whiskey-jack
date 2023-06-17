@@ -5,8 +5,7 @@
 
 package aws.WhiskeyJack.util;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 
 public final class SerializerFactory {
 

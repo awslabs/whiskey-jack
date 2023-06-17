@@ -4,10 +4,7 @@
  */
 package aws.WhiskeyJack.infer;
 
-import aws.WhiskeyJack.nodegraph.ErrorCode;
-import aws.WhiskeyJack.nodegraph.Arc;
-import aws.WhiskeyJack.nodegraph.Port;
-import aws.WhiskeyJack.nodegraph.Graph;
+import aws.WhiskeyJack.nodegraph.*;
 import java.util.function.*;
 
 public class TypeCheck {

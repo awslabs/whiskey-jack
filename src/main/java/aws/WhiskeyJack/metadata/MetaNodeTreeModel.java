@@ -4,11 +4,9 @@
  */
 package aws.WhiskeyJack.metadata;
 
-import aws.WhiskeyJack.nodeviewerfx.GraphView;
-import aws.WhiskeyJack.nodeviewerfx.NodeView;
-import aws.WhiskeyJack.nodeviewerfx.DragAssist;
-import aws.WhiskeyJack.metadataeditor.MetaEditorController;
-import aws.WhiskeyJack.nodegraph.MetaNode;
+import aws.WhiskeyJack.metadataeditor.*;
+import aws.WhiskeyJack.nodegraph.*;
+import aws.WhiskeyJack.nodeviewerfx.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;

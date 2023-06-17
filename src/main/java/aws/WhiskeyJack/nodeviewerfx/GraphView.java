@@ -4,17 +4,11 @@
  */
 package aws.WhiskeyJack.nodeviewerfx;
 
-import aws.WhiskeyJack.infer.InferIntermediates;
-import aws.WhiskeyJack.infer.TypeCheck;
-import aws.WhiskeyJack.code.CodeGenerator;
-import aws.WhiskeyJack.util.Exec;
-import aws.WhiskeyJack.util.Utils;
-import aws.WhiskeyJack.util.CommitableWriter;
-import aws.WhiskeyJack.metadata.MetaNodeTreeModel;
-import aws.WhiskeyJack.metadata.NodeLibrary;
-import aws.WhiskeyJack.nodegraph.Arc;
-import aws.WhiskeyJack.nodegraph.MetaNode;
-import aws.WhiskeyJack.nodegraph.Graph;
+import aws.WhiskeyJack.code.*;
+import aws.WhiskeyJack.infer.*;
+import aws.WhiskeyJack.metadata.*;
+import aws.WhiskeyJack.nodegraph.*;
+import aws.WhiskeyJack.util.*;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.yaml.*;
@@ -86,7 +80,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             }
         });
         var run = new MenuItem("Run");
-        run.setOnAction(ae -> new CodeGenerator().Scan(this));
+        run.setOnAction(ae -> new OverallCodeGenerationDriver().Scan(this));
         run.setAccelerator(KeyCombination.valueOf("Shortcut+R"));
         contextMenu.getItems().add(run);
         var infer = new MenuItem("Fix");
@@ -205,7 +199,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             return;
         if(loadFile(dfltFile.toString()))
             return;
-        loadFile(this.getClass().getResource("/ang/unknown.ang"));
+        loadFile(this.getClass().getResource("/ang/untitled.ade"));
     }
     void saveAction(ActionEvent evt) {
         if(currentFile == null || currentFile.startsWith("untitled"))
@@ -266,6 +260,9 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             });
             adjustArcs();
             System.out.println("Loaded " + p);
+            setSrc("file".equals(p.getProtocol())
+                    ? Path.of(p.getPath())
+                    : Exec.deTilde("~/untitled.ade"));
             return true;
         } catch(IOException ioe) {
             error(ioe);

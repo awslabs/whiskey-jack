@@ -1,0 +1,46 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+- op: temperature
+  uid: temperature2
+  expanded: true
+  meta: temperature0
+  name: temperature
+  metapath: device/sensor/temperature
+  x: 189.0
+  "y": 291.0
+  ports:
+    id: {}
+    out:
+      arcs:
+      - toUid: if2
+        toPort: a
+- op: alarm
+  uid: alarm2
+  expanded: true
+  meta: alarm0
+  name: alarm
+  metapath: device/actuators/alarm
+  x: 499.5
+  "y": 284.0
+  ports:
+    in: {}
+    id: {}
+- op: if
+  uid: if2
+  expanded: true
+  meta: if0
+  name: if
+  metapath: math/if
+  x: 332.0
+  "y": 277.0
+  ports:
+    a: {}
+    b:
+      value: 42
+    expr:
+      value: a>b
+    out:
+      arcs:
+      - toUid: alarm2
+        toPort: in

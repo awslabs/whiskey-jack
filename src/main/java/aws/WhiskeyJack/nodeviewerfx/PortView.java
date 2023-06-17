@@ -5,11 +5,8 @@
 
 package aws.WhiskeyJack.nodeviewerfx;
 
-import aws.WhiskeyJack.util.Utils;
-import aws.WhiskeyJack.nodegraph.ErrorCode;
-import aws.WhiskeyJack.nodegraph.Port;
-import aws.WhiskeyJack.nodegraph.MetaPort;
-import aws.WhiskeyJack.nodegraph.Node;
+import aws.WhiskeyJack.nodegraph.*;
+import aws.WhiskeyJack.util.*;
 import java.util.*;
 import javafx.geometry.*;
 import javafx.scene.control.*;

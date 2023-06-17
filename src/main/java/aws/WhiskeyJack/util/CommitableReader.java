@@ -8,6 +8,7 @@ package aws.WhiskeyJack.util;
 import static aws.WhiskeyJack.util.CommitableFile.*;
 import java.io.*;
 import static java.lang.System.*;
+import static java.nio.file.Files.*;
 import java.nio.file.*;
 import static java.nio.file.Files.*;
 

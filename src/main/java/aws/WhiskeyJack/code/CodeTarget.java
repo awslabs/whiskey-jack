@@ -4,36 +4,47 @@
  */
 package aws.WhiskeyJack.code;
 
-import aws.WhiskeyJack.util.Exec;
-import aws.WhiskeyJack.util.Utils;
-import aws.WhiskeyJack.nodegraph.Domain;
-import aws.WhiskeyJack.exl.Expression;
+import aws.WhiskeyJack.exl.*;
+import aws.WhiskeyJack.nodegraph.*;
+import aws.WhiskeyJack.util.*;
 import java.io.*;
+import java.nio.charset.*;
 import java.nio.file.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class CodeTarget implements Closeable {
-    public static final Path genDir = Path.of("/tmp/wjg");
-    private final Writer out;
+public abstract class CodeTarget implements Closeable {
+    protected final OuterBuildController context;
+    private Writer out;
     private int indent = 0;
     private boolean bol = true; // beginning of line
     private Path destination;
-    public CodeTarget(Domain d) {
-        out = output(d);
+    private Path codeRootDirectory;
+    public CodeTarget(OuterBuildController c) {
+        assert c!=null;
+        context = c;
     }
-    private Writer output(Domain d) {
+    public void start(Domain d) {
         try {
-            destination = genDir.resolve(d.getName() + "." + extension());
-            return Files.newBufferedWriter(destination,
+            codeRootDirectory = context.getCodePartDirectory(d, "code");
+            var codeDirectory = codeRootDirectory.resolve(getCodeDirectoryName());
+            try {
+                Files.createDirectories(codeDirectory);
+            } catch(IOException xyzzy) { /* ignore */ }
+            destination = codeDirectory.resolve(d.getName() + "." + extension());
+            System.out.println("codePart "+codeRootDirectory+"\n\tgen "+destination);
+            out = Files.newBufferedWriter(destination,
                     StandardCharsets.UTF_8, StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
         } catch(IOException ex) {
-            return new PrintWriter(System.out);
+            context.error(ex);
+            out = new PrintWriter(System.out);
         }
     }
     public Path getPath() {
         return destination;
+    }
+    public Path getCodeRootDirectory() {
+        return codeRootDirectory;
     }
     public String extension() {
         return "txt";
@@ -137,6 +148,14 @@ public class CodeTarget implements Closeable {
         if(indent > 0) indent--;
         return this;
     }
+    public CodeTarget openBrace() {
+        append('{').nl().indent();
+        return this;
+    }
+    public CodeTarget closeBrace() {
+        outdent().nl().append('}').nl();
+        return this;
+    }
     public int getIndent() {
         return indent;
     }
@@ -166,13 +185,8 @@ public class CodeTarget implements Closeable {
         }
         return this;
     }
+    public abstract String getCodeDirectoryName();
     protected String preComment = "/*";
     protected String onComment = " * ";
     protected String postComment = " */";
-    static {
-        try {
-            Files.createDirectories(genDir);
-        } catch(IOException ex) {
-        }
-    }
 }

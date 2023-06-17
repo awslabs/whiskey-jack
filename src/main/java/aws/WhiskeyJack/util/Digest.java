@@ -5,10 +5,9 @@
 
 package aws.WhiskeyJack.util;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
+import java.nio.charset.*;
+import java.security.*;
+import java.util.*;
 
 /**
  * Set of methods for digest operations but with Strings.

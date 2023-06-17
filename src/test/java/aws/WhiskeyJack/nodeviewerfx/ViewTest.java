@@ -5,13 +5,11 @@
 package aws.WhiskeyJack.nodeviewerfx;
 
 import aws.WhiskeyJack.nodegraph.Node;
-import aws.WhiskeyJack.nodegraph.Graph;
-import aws.WhiskeyJack.nodegraph.Arc;
-import aws.WhiskeyJack.nodegraph.Port;
+import aws.WhiskeyJack.nodegraph.*;
 import javafx.application.*;
 import static javafx.application.Application.*;
 import javafx.fxml.*;
-import javafx.scene.Scene;
+import javafx.scene.*;
 import javafx.stage.*;
 import org.junit.jupiter.api.*;
 

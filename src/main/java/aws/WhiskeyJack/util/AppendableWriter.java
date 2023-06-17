@@ -5,9 +5,8 @@
 
 package aws.WhiskeyJack.util;
 
-import java.io.IOException;
-import java.io.Writer;
-import javax.annotation.Nonnull;
+import java.io.*;
+import javax.annotation.*;
 
 /**
  * For writing to an Appendable.

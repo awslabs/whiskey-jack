@@ -3,24 +3,34 @@
 ---
 
     children:
-      webchart:
-        domain: browser
-        in:
-          v: table
-        out:
-            out: html
-      webpage:
-        domain: browser
-        in:
-          v: html
-          layout:
-            type: html
-            unboundok: true
-      localchart:
-        domain: device
-        in:
-          v: double
-      log:
-        in:
-          v: double 
-          filename: node.log
+        webchart:
+          domain: browser
+          in:
+            v: table
+          out:
+              out: html
+        webpage:
+          domain: browser
+          in:
+            v: html
+            layout:
+              type: html
+              unboundok: true
+        localchart:
+            in:
+                v: double
+                label: string
+            import:
+                - java.io.*
+                - java.nio.files.*
+            domain: device
+            state: |
+                ofile := Files.newBufferedWriter(Paths.resolve(...),
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            code: ofile.write(label+"@"+System.currentTimeMillis()+"="+v)
+        print:
+            domain: device
+            code: System.out.println(label+" "+in)
+            in:
+                label: string
+                in: double

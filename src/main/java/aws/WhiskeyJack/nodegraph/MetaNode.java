@@ -4,6 +4,7 @@
  */
 package aws.WhiskeyJack.nodegraph;
 
+import aws.WhiskeyJack.util.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -14,7 +15,6 @@ public class MetaNode extends Node<MetaNode> {
     private String pathName;
     private MetaPort dfltIn, dfltOut;
     private float weight = 1; // how "expensive" is this computation
-    private Map<String,Object> props = Map.of();
     private MetaNode(MetaNode p) {
         super(metaGraph, metaMeta);
         if(p == null && (p = metaMeta) == null)
@@ -64,11 +64,10 @@ public class MetaNode extends Node<MetaNode> {
     public void populateFrom(Map values) {
         super.populateFrom(values);
         setWeight((float)get(values, "weight", weight));
-        setDomain(Domain.of(get(values, "domain", getDomain().toString())));
+        setDomain(Domain.of(getStringProp("domain", getDomain().toString())));
         setDescription(get(values, "description", getDescription()));
         populateSubnodes(values, "subnodes");
         populateSubnodes(values, "children"); // compatibility for old name
-        props = getMap(values, "props");
     }
     private void populateSubnodes(Map values, String key) {
         getMap(values, key).forEach((k, v) -> {
@@ -98,8 +97,8 @@ public class MetaNode extends Node<MetaNode> {
         putOpt(map, "domain", getDomain());
         putOpt(map, "description", description);
         putOpt(map, "subnodes", subnodes);
-        putOpt(map, "props", props);
         if(weight != 1) putOpt(map, "weight", Float.toString(weight));
+        putMissingProps(map);
     }
     public static MetaNode lookup(String uid) {
         return null;
@@ -110,10 +109,21 @@ public class MetaNode extends Node<MetaNode> {
     }
     @Override
     public Object getProp(String s, Object dflt) {
-        return props.getOrDefault(s, dflt);
+        var verbose = "domain".equals(s) && getName().equals("temperature");
+        var mn = this;
+        while(mn!=null) {
+            var ret = mn.getProp0(s, dflt);
+            if(verbose) System.out.println("***** "+mn.getName()+": "+ret);
+            if(ret!=dflt) return ret;
+            var p = mn.parent;
+            if(p==mn) return dflt;
+            mn = p;
+        }
+        return dflt;
     }
     @Override
     public MetaNode setDomain(Domain d) {
+        System.out.println(getName()+": "+d);
         domain = d == null || d == Domain.unknown ? Domain.any : d;
         return this;
     }
