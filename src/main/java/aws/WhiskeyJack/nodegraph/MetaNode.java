@@ -123,7 +123,7 @@ public class MetaNode extends Node<MetaNode> {
     }
     @Override
     public MetaNode setDomain(Domain d) {
-        System.out.println(getName()+": "+d);
+//        System.out.println(getName()+": "+d);
         domain = d == null || d == Domain.unknown ? Domain.any : d;
         return this;
     }

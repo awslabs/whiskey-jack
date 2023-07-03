@@ -4,6 +4,7 @@
  */
 package aws.WhiskeyJack.code;
 
+import aws.WhiskeyJack.QandA.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Utils.*;
@@ -29,8 +30,11 @@ public class OverallCodeGenerationDriver {
             var obc = findPlugin(rootToken, OuterBuildController.class);
             seperateDomains();
             if(domains.isEmpty()) messages.add("Nothing to run");
-            else
+            else {
                 obc.handleDomains(domains.values());
+                if(errors.isEmpty() && Question.question("autorun").isTrue())
+                    obc.runBuiltCode();
+            }
         } else {
             g.typeMismatches.forEach((Consumer<Arc>) (a ->
                     errors.add(a.oneEnd().getName() + "->" + a.otherEnd().getName() + ": " + a.getMessage())));

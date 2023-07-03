@@ -8,6 +8,7 @@ import aws.WhiskeyJack.nodegraph.Arc;
 import aws.WhiskeyJack.nodegraph.*;
 import static aws.WhiskeyJack.nodegraph.ErrorCode.*;
 import static aws.WhiskeyJack.nodeviewerfx.GraphView.*;
+import static aws.WhiskeyJack.util.Utils.*;
 import java.util.*;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
@@ -16,6 +17,7 @@ import javafx.scene.transform.*;
 
 public class ArcView extends Arc implements Selectable {
     private CubicCurve view;
+    private Label tagView;
 
     @SuppressWarnings("unused")
     public ArcView(PortView a, PortView b) {
@@ -59,8 +61,9 @@ public class ArcView extends Arc implements Selectable {
                 if(view != null)
                     view.pseudoClassStateChanged(HOVER_PSEUDO_CLASS, false);
             });
-            Tooltip.install(r, new Tooltip(oneEnd().getName() + "->" + otherEnd().getName()));
+//            Tooltip.install(r, new Tooltip(getTag() != null ? getTag() : oneEnd().getName() + "->" + otherEnd().getName()));
             controller.getView().getChildren().add(r);
+//            setTag(toString());
         }
         return r;
         // TODO Platform.runLater(() -> setViewText());
@@ -71,17 +74,44 @@ public class ArcView extends Arc implements Selectable {
             super.setMessage(ec, m);
             Tooltip.install(getView(), m == null ? null : new Tooltip(m));
             var css = getView().getStyleClass();
-            if(ec!=allIsWell) css.add("error");
-            else        css.remove("error");
+            if(ec != allIsWell) css.add("error");
+            else css.remove("error");
         }
         return this;
     }
     @Override
     public void delete() {
         super.delete();
+        var c = getContext().getView().getChildren();
         if(view != null) {
-            getContext().getView().getChildren().remove(view);
+            c.remove(view);
             view = null;
+        }
+        if(tagView != null) {
+            c.remove(tagView);
+            tagView = null;
+        }
+    }
+    @Override
+    public void setTag(String t) {
+        if(!Objects.equals(t, getTag())) {
+            super.setTag(t);
+            if(isEmpty(t)) {
+                if(tagView != null) {
+                    getContext().getView().getChildren().remove(tagView);
+                    tagView = null;
+                }
+            } else
+                if(tagView == null) {
+                    tagView = new Label(t);
+                    tagView.getStyleClass().add("arctag");
+                    tagView.layoutBoundsProperty().addListener((ov, was, is) -> {
+                        tagView.setTranslateX(-is.getCenterX());
+                        tagView.setTranslateY(-is.getCenterY());
+                    });
+                    getContext().getView().getChildren().add(tagView);
+                } else tagView.setText(t);
+            getContext().adjustArcs();
         }
     }
     public void reposition(Transform area) {
@@ -104,12 +134,20 @@ public class ArcView extends Arc implements Selectable {
             var delta = ox <= ix ? Integer.min(100, ((int) (ix - ox)) / 3) : 100;
             curve.setStartX(ox);
             curve.setStartY(oy);
-            curve.setControlX1(ox + (a.metadata.isOutputSide() ? delta : -delta));
-            curve.setControlY1(oy);
-            curve.setControlX2(ix + (b.metadata.isOutputSide() ? delta : -delta));
-            curve.setControlY2(iy);
+            var X1 = ox + (a.metadata.isOutputSide() ? delta : -delta);
+            var Y1 = oy;
+            curve.setControlX1(X1);
+            curve.setControlY1(Y1);
+            var X2 = ix + (b.metadata.isOutputSide() ? delta : -delta);
+            var Y2 = iy;
+            curve.setControlX2(X2);
+            curve.setControlY2(Y2);
             curve.setEndX(ix);
             curve.setEndY(iy);
+            if(tagView != null) {
+                tagView.setLayoutX((X1 + X2) / 2);
+                tagView.setLayoutY((Y1 + Y2) / 2);
+            }
         }
     }
 }

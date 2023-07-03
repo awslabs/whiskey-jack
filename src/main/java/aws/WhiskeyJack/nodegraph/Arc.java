@@ -9,6 +9,7 @@ import java.util.*;
 public class Arc extends GraphPart<Arc> {
     private final Port a;
     private final Port b;
+    private String tag;
     @SuppressWarnings({"LeakingThisInConstructor","OverridableMethodCallInConstructor"})
     public Arc(Port A, Port B) {
         assert A != null && B != null;
@@ -57,6 +58,8 @@ public class Arc extends GraphPart<Arc> {
              : x == b ? a
                       : null;
     }
+    public String getTag() { return tag; }
+    public void setTag(String t) { tag = t; }
     @Override
     public Object collect() {
         return getRef();

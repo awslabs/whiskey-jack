@@ -4,11 +4,13 @@
  */
 package aws.WhiskeyJack.nodeviewerfx;
 
+import aws.WhiskeyJack.QandA.*;
 import aws.WhiskeyJack.code.*;
 import aws.WhiskeyJack.infer.*;
 import aws.WhiskeyJack.metadata.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
+import static aws.WhiskeyJack.util.Utils.*;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.yaml.*;
@@ -23,9 +25,11 @@ import java.util.function.*;
 import java.util.prefs.*;
 import static java.util.prefs.Preferences.*;
 import javafx.application.*;
+import javafx.collections.*;
 import javafx.css.*;
 import javafx.event.*;
 import javafx.fxml.*;
+import javafx.geometry.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
@@ -57,6 +61,10 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     private TreeView navTree;
     @FXML
     private javafx.scene.Node keyboardRoot;
+    @FXML
+    private GridPane propbox;
+    @FXML
+    private TabPane tabpane;
     private static GraphView rootWindow;
     static final Preferences pref = userNodeForPackage(GraphView.class);
     private Selectable hovered;
@@ -94,7 +102,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 mkaction("Save", this::saveAction, KeyCode.S),
                 mkaction("Save As..", this::saveAsAction, null),
                 mkaction("New", this::newAction, KeyCode.N),
-                mkaction("Layout", e -> layoutNodes(), KeyCode.L),
+                mkaction("Layout", e -> layoutNodes(true), KeyCode.L),
                 mkaction("Export All Meta", NodeLibrary.singleton::exportAction, KeyCode.X),
                 mkaction("Quit", this::quitAction, KeyCode.Q)
         );
@@ -126,6 +134,14 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         });
         if(createNotifier != null)
             createNotifier.accept(this);
+
+        tabpane.getSelectionModel().selectedIndexProperty().addListener((cl, was, is) ->
+        {
+            if(is.intValue() == 1) populatePropbox();
+        });
+    }
+    public void onSelectionChanged() {
+        System.out.println("on Selection Changed");
     }
     private void addMenu(MetaNode n, String[] names) {
         var items = contextMenu.getItems();
@@ -151,17 +167,30 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     void keyTyped(KeyEvent c) {
         System.out.println("Typed " + c);
-        switch(c.getCode()) {
-            default -> {
-                return;
+        try {
+            switch(c.getCode()) {
+                default -> {
+                    return;
+                }
+                case DELETE, BACK_SPACE -> {
+                    System.out.println("  DEL " + getHovered());
+                    forEachSelected(s -> s.delete());
+                    clearSelection();
+                }
+                case T -> {
+                    if(hovered == null)
+                        error("Hover the mouse over an object", "to tag it.");
+                    else {
+                        var v = Dlg.ask("Tag!", "Enter a tag for this object", "Tag");
+                        if(!isEmpty(v))
+                            forEachSelected(s -> s.setTag(v));
+                    }
+                }
+                case HOME -> {
+                }
             }
-            case DELETE, BACK_SPACE -> {
-                System.out.println("  DEL " + getHovered());
-                forEachSelected(s -> s.delete());
-                clearSelection();
-            }
-            case HOME -> {
-            }
+        } catch(Throwable t) {
+            error(t);
         }
         c.consume();
     }
@@ -285,7 +314,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 newArc((PortView) out0, (PortView) in);
             if(out != null && in0 != null)
                 newArc((PortView) out, (PortView) in0);
-            layoutNodes();
+            layoutNodes(false);
         }
         var lp = getView().screenToLocal(DragAssist.targetX, DragAssist.targetY);
         if(lp != null) {
@@ -350,14 +379,16 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     private final AtomicBoolean doLayoutNodes = new AtomicBoolean(false);
     @Override
-    public void layoutNodes() {
-        adjustNames();
-        if(!doLayoutNodes.getAndSet(true)) {
-            checkTypes();
-            Platform.runLater(() -> {
-                doLayoutNodes.set(false);
-                new Layout(nByUid.values()).trivialLayout().center().apply();
-            });
+    public void layoutNodes(boolean force) {
+        if(force || Question.question("autolayout").isTrue()) {
+            adjustNames();
+            if(!doLayoutNodes.getAndSet(true)) {
+                checkTypes();
+                Platform.runLater(() -> {
+                    doLayoutNodes.set(false);
+                    new Layout(nByUid.values()).trivialLayout().center().apply();
+                });
+            }
         }
     }
     @Override
@@ -491,5 +522,70 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
      */
     public void setHovered(Selectable hovered) {
         this.hovered = hovered;
+    }
+    private void populatePropbox() {
+        var props = new ArrayList<javafx.scene.Node>();
+        var row = 0;
+        for(var q: Question.extract(q -> true)) {
+            Region n;
+            var label = new Label(q.get("label", "No label"));
+            var type = q.get("type", (Object) null);
+            if(type == null) type = "string";
+            if(type instanceof Collection c) {
+                var ol = FXCollections.observableArrayList(c);
+                var b = new ChoiceBox(ol);
+                var vpos = ol.indexOf(q.value);
+                var sel = b.getSelectionModel();
+                sel.select(vpos >= 0 ? vpos : 0);
+                sel.selectedItemProperty().addListener((cl, was, is) -> {
+                    System.out.println("Changed choice " + is.toString() + " " + cl);
+                    q.fire(is.toString());
+                });
+                n = b;
+            } else switch(type.toString()) {
+                case "boolean" -> {
+                    var b = new CheckBox();
+                    b.setSelected(Coerce.toBoolean(q.value));
+                    b.selectedProperty().addListener((cl, was, is) -> {
+                        System.out.println("Changed bool " + is + " " + cl);
+                        q.fire(is);
+                    });
+                    n = b;
+                }
+                case "int" -> {
+                    var b = new Slider(0, 1, Coerce.toDouble(q.value));
+                    b.valueProperty().addListener((cl, was, is) -> {
+                        System.out.println("Changed int " + is + " " + cl);
+                        q.fire(is);
+                    });
+                    n = b;
+                }
+                default -> {
+                    var b = new TextField(Coerce.toString(q.value));
+                    b.textProperty().addListener((cl, was, is) -> {
+                        System.out.println("Changed string " + is + " " + cl);
+                        q.fire(is);
+                    });
+                    n = b;
+                }
+
+            }
+            label.setMaxWidth(Double.MAX_VALUE);
+            n.setMaxWidth(Double.MAX_VALUE);
+            GridPane.setConstraints(label, 0, row, 1, 1, HPos.LEFT, VPos.BASELINE, Priority.ALWAYS, Priority.NEVER);
+            GridPane.setConstraints(n, 1, row, 1, 1, HPos.CENTER, VPos.BASELINE, Priority.ALWAYS, Priority.NEVER);
+            row++;
+            props.add(label);
+            props.add(n);
+        }
+        propbox.getChildren().setAll(props);
+        propbox.setMaxWidth(Double.MAX_VALUE);
+        var c1 = new ColumnConstraints();
+        c1.setPercentWidth(60);
+        var c2 = new ColumnConstraints();
+        c2.setPercentWidth(40);
+        c2.setHgrow(Priority.ALWAYS);
+        propbox.getColumnConstraints().setAll(c1, c2);
+        propbox.getChildren().setAll(props);
     }
 }

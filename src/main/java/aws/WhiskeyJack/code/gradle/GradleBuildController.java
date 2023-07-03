@@ -6,6 +6,7 @@ package aws.WhiskeyJack.code.gradle;
 
 import aws.WhiskeyJack.code.*;
 import aws.WhiskeyJack.nodegraph.*;
+import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Exec.*;
 import static aws.WhiskeyJack.util.Utils.*;
 import java.io.*;
@@ -41,12 +42,14 @@ public class GradleBuildController implements OuterBuildController,
             error(ex);
         }
         try(var out = startPart("gradle.properties")) {
-            out.append(
-            """
-            netbeans.hint.jdkPlatform=JDK_17
-            action.custom-1=app run
-            action.custom-1.args=--configure-on-demand -w -x check :app:run
-            """);
+            out.append("netbeans.hint.jdkPlatform=JDK_17\n");
+            var slot = 0;
+            for(var p: partNames)
+                out.append("action.custom-" + ++slot
+                           + "=" + p + " run\n"
+                           + "action.custom-" + slot
+                           + ".args=--configure-on-demand -w -x check :"
+                           + p + ":run\n");
         } catch(IOException ex) {
             error(ex);
         }
@@ -128,9 +131,31 @@ public class GradleBuildController implements OuterBuildController,
                 build.append("application {\n  mainClass = '")
                         .append(mainclass)
                         .append("'\n}\n");
-            
+
         } catch(IOException ex) {
             error(ex);
+        }
+    }
+    Exec exec;
+    @Override
+    public void runBuiltCode() {
+        if(exec!=null) {
+            message("Previous execution terminated");
+            exec.close();
+        }
+        exec = new Exec();
+        try {
+            exec.cd(rootGenerationDirectory.toFile())
+                    .withExec("/bin/sh", "-c", "pkill -f ade.gen; pwd; printenv; /usr/local/bin/gradle run") // TODO: make this work on windows
+                    .withErr(System.out::append)
+                    .withOut(System.out::append);
+            System.out.println(exec + "; WHICH " + exec.which("gradle"));
+            exec.background(xc -> {
+                message("Run ended with code " + xc);
+            });
+            message("App is running in the background");
+        } catch(Throwable ex) {
+            error("Couldn't run app", ex);
         }
     }
 }

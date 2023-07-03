@@ -8,4 +8,5 @@ package aws.WhiskeyJack.nodeviewerfx;
 public interface Selectable {
     public javafx.scene.Node getView();
     public void delete();
+    public void setTag(String tag);
 }

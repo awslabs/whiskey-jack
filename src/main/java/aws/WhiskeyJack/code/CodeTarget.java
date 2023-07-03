@@ -20,7 +20,7 @@ public abstract class CodeTarget implements Closeable {
     private Path destination;
     private Path codeRootDirectory;
     public CodeTarget(OuterBuildController c) {
-        assert c!=null;
+        assert c != null;
         context = c;
     }
     public void start(Domain d) {
@@ -29,9 +29,10 @@ public abstract class CodeTarget implements Closeable {
             var codeDirectory = codeRootDirectory.resolve(getCodeDirectoryName());
             try {
                 Files.createDirectories(codeDirectory);
-            } catch(IOException xyzzy) { /* ignore */ }
+            } catch(IOException xyzzy) {
+                /* ignore */ }
             destination = codeDirectory.resolve(d.getName() + "." + extension());
-            System.out.println("codePart "+codeRootDirectory+"\n\tgen "+destination);
+            System.out.println("codePart " + codeRootDirectory + "\n\tgen " + destination);
             out = Files.newBufferedWriter(destination,
                     StandardCharsets.UTF_8, StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
@@ -169,7 +170,10 @@ public abstract class CodeTarget implements Closeable {
         Utils.close(out);
         try {
             new Exec().withExec("/usr/bin/open", destination.toString()).background(n ->
-                    System.out.println("Exec->" + n));
+            {
+                if(n != 0)
+                    System.out.println("Result open failed->" + n);
+            });
         } catch(Throwable ex) {
             ex.printStackTrace(System.out);
         }

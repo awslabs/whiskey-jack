@@ -16,4 +16,5 @@ public interface OuterBuildController {
     public void message(Object... m);
     public void error(Object... m);
     public void generateJavaPartBuild(Path dir, String mainclass, Collection<String> dependencies);
+    public void runBuiltCode();
 }

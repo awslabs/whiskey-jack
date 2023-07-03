@@ -103,7 +103,7 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     public void inferIntermediates() {
         // Try to fix the graph
     }
-    public void layoutNodes() {
+    public void layoutNodes(boolean force) {
         // if this graph is being made visible (via a view) tidy it up
     }
     public N newNode(MetaNode mn) {

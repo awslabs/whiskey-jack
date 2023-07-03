@@ -196,8 +196,8 @@ public class Exec implements Closeable {
      * @param command a command to execute.
      * @return this.
      */
-    public Exec withShell(String... command) {
-        return withExec(command);
+    public Exec withShell(String command) {
+        return withExec("/bin/sh", "-c", command);
     }
 
     /**
@@ -347,6 +347,11 @@ public class Exec implements Closeable {
         var p = process;
         if(!isClosed.getAndSet(true) && p!=null) {
             p.destroy();
+            try {
+                p.destroyForcibly().waitFor();
+            } catch(InterruptedException ex) {
+                ex.printStackTrace();
+            }
             process = null;
         }
     }

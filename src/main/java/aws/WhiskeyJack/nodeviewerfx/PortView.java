@@ -35,6 +35,10 @@ public class PortView extends Port implements Selectable {
     public GraphView getContext() {
         return (GraphView)super.getContext();
     }
+    @Override
+    public void setTag(String tag) {
+        // TODO
+    }
 
     @SuppressWarnings(value="LeakingThisInConstructor")
     private void init() { 
@@ -104,7 +108,7 @@ public class PortView extends Port implements Selectable {
                         if(n.hasPorts()) {
                             connectTo(n.defaultPort(!in));
                         }
-                        getContext().layoutNodes();
+                        getContext().layoutNodes(false);
                     }
                     evt.setDropCompleted(true);
                     evt.consume();

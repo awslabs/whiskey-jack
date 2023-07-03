@@ -85,7 +85,8 @@ public abstract class GraphPart<T extends GraphPart> extends Collectable {
         name = get(values,"name",name);
         message = get(values,"message",null);
         getMap(values,"sidecars").forEach((k,v)->{
-            System.out.println("Populating sidecar "+k+Utils.deepToString(v));
+            // TODO
+//            System.out.println("Populating sidecar "+k+Utils.deepToString(v));
         });
     }
     private static final Set<String> skipProps = Set.of("name","uid", "ports", "in",

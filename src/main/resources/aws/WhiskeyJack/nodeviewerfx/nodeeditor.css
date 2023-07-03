@@ -43,6 +43,9 @@
 .port.error {
     -fx-background-color: #fbb;
 }
+.arctag {
+    -fx-background-color: rgba(255,255,255,0.5);
+}
 .deviceDomain {
     -fx-effect: dropshadow( gaussian, #99FF44, 15, 0.3, 0, 0)
 }

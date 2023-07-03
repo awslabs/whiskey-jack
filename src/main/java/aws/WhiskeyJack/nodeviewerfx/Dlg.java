@@ -9,6 +9,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
+import static javafx.scene.control.ButtonType.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 
@@ -17,45 +18,50 @@ public class Dlg {
     private String title;
     private final VBox body = new VBox();
     private VBox expandable;
+    private ButtonType auxButton;
     public static void error(Object... o) {
-        new Dlg().show(true, o);
+        new Dlg().show(errorIcon, "error", o);
     }
     public static void note(Object... o) {
-        new Dlg().show(false, o);
+        new Dlg().show(noteIcon, "note", o);
+    }
+    public static String ask(String dflt, Object... o) {
+        var t = new TextField(dflt);
+        var r = new Dlg().show(questionIcon, "note", t, o);
+        System.out.println("Returns " + r);
+        return r == ButtonType.OK ? t.getText() : null;
     }
     private Dlg() {
     }
-    private void show(boolean isError, Object... o) {
+    private Object show(Image icon, String style, Object... message) {
         var d = new Dialog();
         d.initOwner(GraphView.rootWindow());
         body.getStyleClass().clear();
-        if(isError) {
-            d.setGraphic(img(errorIcon));
-            body.getStyleClass().add("errorDialog");
-        } else {
-            d.setGraphic(img(noteIcon));
-            body.getStyleClass().add("noteDialog");
-        }
+        d.setGraphic(img(icon));
+        body.getStyleClass().add(style + "Dialog");
         var dp = d.getDialogPane();
-        dp.getStyleClass().add(isError ? "error" : "note");
+        dp.getStyleClass().add(style);
         dp.setContent(body);
-        addStuff(o, "dlgTitle");
-        if(body.getChildren().isEmpty() && !isError) return;
+        addStuff(message, "dlgTitle");
         dp.setExpandableContent(expandable);
         d.setTitle(title == null ? "Error" : title);
-        dp.getButtonTypes().add(ButtonType.OK);
+        var buttons = dp.getButtonTypes();
+        if(!buttons.contains(ButtonType.OK)) buttons.add(ButtonType.OK);
+        if(auxButton != null && !buttons.contains(auxButton))
+            buttons.add(auxButton);
         dp.getStylesheets().add(Dlg.class.getResource("error.css").toExternalForm());
         dp.setMinWidth(Region.USE_COMPUTED_SIZE);
         dp.setPrefWidth(Region.USE_COMPUTED_SIZE);
         dp.setMaxWidth(1000);
         d.setResizable(true);
-        d.showAndWait();
+        var opt = d.showAndWait();
+        return opt.isPresent() ? opt.get() : null;
     }
     private ImageView img(Image i) {
         var img = new ImageView(i);
-            img.setPreserveRatio(true);
-            img.setFitHeight(64);
-            return img;
+        img.setPreserveRatio(true);
+        img.setFitHeight(64);
+        return img;
     }
     private String addStuff(Object o, String style) {
         if(o == null)
@@ -68,8 +74,10 @@ public class Dlg {
             switch(o) {
                 case null -> {
                 }
-                case Node n ->
+                case Node n -> {
                     body.getChildren().add(n);
+                    if(n instanceof Control) auxButton = CANCEL;
+                }
                 case Throwable t -> {
                     t.printStackTrace(System.out); // TODO eliminate
                     System.out.flush();
@@ -101,12 +109,13 @@ public class Dlg {
             else if(v.size() < 80) {
                 var l = new Label(s);
                 l.setWrapText(true);
-                l.setPrefWidth(maxStringWidth*10);
+                l.setPrefWidth(maxStringWidth * 10);
                 l.getStyleClass().add(style);
                 v.add(l);
             }
     }
     static final private Image errorIcon = new Image(NodeView.class.getResourceAsStream("Oops.png"));
     static final private Image noteIcon = new Image(NodeView.class.getResourceAsStream("OK.png"));
+    static final private Image questionIcon = new Image(NodeView.class.getResourceAsStream("QuestionBubble.png"));
 
 }

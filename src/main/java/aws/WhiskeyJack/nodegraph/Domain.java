@@ -13,12 +13,18 @@ import java.util.concurrent.*;
  * because it'll get more flexible and extensible in the future.
  */
 public class Domain extends Collectable {
+    private final Domain parent;
     private final String name;
     private final String styleName;
-    @SuppressWarnings("LeakingThisInConstructor")
-    private Domain(String n) {
+    private static int nextSlot = 0;
+    private final int slot;
+    private Domain(String n, Domain p) {
+        slot = p==null ? nextSlot++ : p.slot;
+        if(p!=null)
+            while(p.parent != null) p = p.parent;
         name = n;
         styleName = name+"Domain";
+        parent = p;
     }
     @Override
     public void appendRefTo(StringBuilder sb) {
@@ -26,7 +32,7 @@ public class Domain extends Collectable {
     }
     @Override
     public Object collect() {
-        return name;
+        return parent==null ? name : parent.name+"/"+name;
     }
     public boolean compatibleWith(Domain d) {
         return d == this || d == any || this == any
@@ -34,7 +40,15 @@ public class Domain extends Collectable {
     }
     private static final Map<String, Domain> domains = new ConcurrentHashMap<>();
     public static final Domain of(String name) {
-        return domains.computeIfAbsent(name, n->new Domain(n));
+        var slash = name.lastIndexOf('/');
+        return slash<0 ? of(name,null)
+                : of(name.substring(slash+1),of(name.substring(0,slash)));
+    }
+    public static final Domain of(String name, Domain p) {
+        return domains.computeIfAbsent(name, n->new Domain(n, p));
+    }
+    public boolean isA(Domain p) {
+        return this==p || parent==p;
     }
     public static Domain[] allInteresting() {
         if(interesting==null)

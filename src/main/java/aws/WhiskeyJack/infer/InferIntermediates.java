@@ -71,9 +71,9 @@ public class InferIntermediates {
                 System.out.println("Use " + workablePaths.first());
                 a.delete();
                 applyPath(origin, workablePaths.first(), target);
-                if(context instanceof GraphView gv) gv.layoutNodes();
+                if(context instanceof GraphView gv) gv.layoutNodes(false);
             }
-            if(fixes>0) g.layoutNodes();
+            if(fixes>0) g.layoutNodes(false);
         }
     }
 

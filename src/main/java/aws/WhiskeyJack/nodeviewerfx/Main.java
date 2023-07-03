@@ -4,6 +4,7 @@
  */
 package aws.WhiskeyJack.nodeviewerfx;
 
+import aws.WhiskeyJack.QandA.*;
 import java.io.*;
 import javafx.application.*;
 import javafx.fxml.*;
@@ -22,6 +23,8 @@ public class Main extends Application {
         }
     }
     public static void main(String[] args) {
+        QuestionsByTag.dump();
+        Question.extract(q->true).forEach(q->System.out.println(q.get("tag", "yuk")));
         launch(args);
     }
 }

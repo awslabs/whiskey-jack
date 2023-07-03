@@ -1,0 +1,23 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+implang:
+    label: Implementation Language
+    type: [ java, C ]
+    priority: 51
+buildsys:
+    label: Build system
+    type: [ gradle, make ]
+domain:
+    label: Domain
+    description: Where does this run?
+    type: [ cloud,device,browser ]
+autorun:
+    label: Exec after building
+    default: false
+    type: boolean
+autolayout:
+    label: Automatically layout nodes
+    default: true
+    type: boolean
+    

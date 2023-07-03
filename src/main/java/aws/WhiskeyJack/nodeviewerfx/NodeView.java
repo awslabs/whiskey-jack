@@ -43,6 +43,10 @@ public class NodeView extends Node implements Selectable {
         return node;
     }
     @Override
+    public void setTag(String tag) {
+        setName(tag);
+    }
+    @Override
     public void populateFrom(Map map) {
         super.populateFrom(map);
         pane.setLayoutX(get(map, "x", 0));

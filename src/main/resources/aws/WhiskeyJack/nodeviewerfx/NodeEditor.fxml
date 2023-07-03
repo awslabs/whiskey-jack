@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--
- ! Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- ! SPDX-License-Identifier: Apache-2.0
- !-->
-
 <?import java.net.URL?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.ContextMenu?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 
-<SplitPane fx:id="keyboardRoot" dividerPositions="0.75" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="aws.WhiskeyJack.nodeviewerfx.GraphView">
+<SplitPane fx:id="keyboardRoot" dividerPositions="0.6676136363636364" prefHeight="521.0" prefWidth="530.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="aws.WhiskeyJack.nodeviewerfx.GraphView">
    <items>
       <ScrollPane fx:id="scrollPane">    
           <stylesheets>
@@ -25,10 +27,39 @@
             <ContextMenu fx:id="contextMenu" />
          </contextMenu>
       </ScrollPane>
-      <ScrollPane fitToHeight="true" fitToWidth="true">
-         <content>
-            <TreeView fx:id="navTree" prefHeight="200.0" prefWidth="200.0" />
-         </content>
-      </ScrollPane>
+      <TabPane fx:id="tabpane">
+         <tabs>
+            <Tab closable="false" text="Catalog">
+               <content>
+                  <ScrollPane fitToHeight="true" fitToWidth="true">
+                     <content>
+                        <TreeView fx:id="navTree" prefHeight="200.0" prefWidth="200.0" />
+                     </content>
+                  </ScrollPane>
+               </content>
+            </Tab>
+            <Tab closable="false" text="Properties">
+              <content>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+                     <children>
+                        <ChoiceBox maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" />
+                        <ScrollPane fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="468.0" prefWidth="172.0" VBox.vgrow="ALWAYS">
+                           <content>
+                              <GridPane fx:id="propbox" hgap="4.0" maxWidth="1.7976931348623157E308">
+                                 <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                                 </columnConstraints>
+                                 <rowConstraints>
+                                    <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                                 </rowConstraints>
+                              </GridPane>
+                           </content>
+                        </ScrollPane>
+                     </children>
+                  </VBox>
+              </content>
+            </Tab>
+         </tabs>
+      </TabPane>
    </items>
 </SplitPane>
