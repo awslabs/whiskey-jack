@@ -23,7 +23,7 @@ nodeviewerfx | the UI to all of the above, written as a [JavaFX](https://openjfx
 
 This is all functional, to a limited extent, but far from truly useful.  Very much a work-in-progress.
 
-The IDE I use is [Netbeans](https:netbeans.apache.org), so you'll find a few config files from it in the source.  But any other IDE should work too, since it uses Maven to automate builds.
+The IDE I use is [Netbeans](https://netbeans.apache.org), so you'll find a few config files from it in the source.  But any other IDE should work too, since it uses Maven to automate builds.
 
 The structure of this project is rubbish.  It's all one repo.  It should be
 broken up into multiple repos. And it should someday be changed to use
