@@ -14,7 +14,8 @@ This common name is an English approximation to the First Nations name,
 that in turn is based on the name of the benevolent
 [trickster](https://en.wikipedia.org/wiki/Trickster)
 [Wisakedjak](https://en.wikipedia.org/wiki/Wisakedjak)
-of traditional storytelling.
+of traditional
+[storytelling](https://www.threetreesart.com/for-seven-generations.html).
 Somewhat like Crow, Coyote or even Loki from other cultures.
 
 They almost became the
