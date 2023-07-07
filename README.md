@@ -7,6 +7,8 @@ This is a start on a tool for editing architecture diagrams, then using those
 diagrams and some inferencing to generate and edit an implementation of that
 diagram.  Think of it as a top-down IDE.
 
+[![Java CI with Maven](https://github.com/awslabs/whiskey-jack/actions/workflows/maven.yml/badge.svg)](https://github.com/awslabs/whiskey-jack/actions/workflows/maven.yml)
+
 ![screenshot](NodeEditorScreenshot.png)
 
 While the diagram editor is what you see, the important part is what's behind the diagram:
