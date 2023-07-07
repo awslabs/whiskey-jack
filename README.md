@@ -19,12 +19,12 @@ code | Translates the diagram into executable code.  Supports multiple code gene
 exl | a *simple* expression language.  Small code snippits can be placed in the graph.  The language is intentionally simplistic so that it has a chance of being translated into multiple underlying languages.  If you want a real programming language, use one.  `Exl` is intended for interconnection glue and straightforward math.
 metadata | represents the "parts catalog" - all the different kinds of nodes that can be used to build the graph.  The parts catalog itself is in src/main/resources/ang/pcats/**.pcat.
 QandA | The "question and answer" framework.  Roughly a dynamic dialog box that's context-dependent.
-nodeviewerfx | the UI to all of the above, written as a [JavaFX](https://openjfx.io) desktop application.  The UI is in the spirit of the one found in [Blender](https://docs.blender.org/manual/en/2.79/render/blender_render/materials/nodes/introduction.html).
+nodeviewerfx | the UI to all of the above, written as a [JavaFX](https://openjfx.io) desktop application.  The UI is in the spirit of the one found in [Blender](https://docs.blender.org/manual/en/2.79/render/blender_render/materials/nodes/introduction.html).  Since the UI is isolated in this one package, it should be possible to re-implement the UI using other technologies.
 
-This is all functional, to a limited extent, but far from truly useful.  Very much a work-in-progress.
+This is all functional, to a limited extent, but far from truly useful.  Very much a work-in-progress.  For those of you working for Amazon there are a few progress-report videos [here](https://broadcast.amazon.com/channels/58393).
 
-The IDE I use is [Netbeans](https://netbeans.apache.org), so you'll find a few config files from it in the source.  But any other IDE should work too, since it uses Maven to automate builds.
+The IDE I use is [Netbeans](https://netbeans.apache.org), so you'll find a few config files from it in the source.  But any other IDE should work too, since this repo uses Maven to automate builds.
 
 The structure of this project is rubbish.  It's all one repo.  It should be
-broken up into multiple repos. And it should someday be changed to use
+broken up into multiple hierarchic repos. And it should someday be changed to use
 Gradle instead of Maven. Mañana
