@@ -1,9 +1,9 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 ---
+domain: cloud
 children:
     dynamo:
-        domain: cloud
         in:
             insertion: 0
             id: string
@@ -11,15 +11,31 @@ children:
             query: 0
 
     timestream:
-        domain: cloud
+        Type: AWS::Timestream::Database
+        Properties:
+            DatabaseName: $name
+            KmsKeyID: foo
         in:
-            v: tuple
-            id: string
+            name: string
+        out:
+            out: database
+    tstable:
+        Type: AWS::Timestream::Table
+        Properties:
+            TableName: $name
+            DatabaseName: $db.name
+            RetentionProperties: 
+                MemoryStoreRetentionPeriodInHours: "24"
+                MagneticStoreRetentionPeriodInDays: "7"
+        in:
+            data: tuple
+            db: database
+            name: string
         out:
             out: table
+        
 
     fleetwise:
-        domain: cloud
         in:
             insertion: 0
             id: string
@@ -27,7 +43,6 @@ children:
             query: 0
 
     aurora:
-        domain: cloud
         in:
             insertion: 0
             id: string

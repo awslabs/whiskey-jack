@@ -11,7 +11,7 @@ import java.util.*;
 
 public interface DomainGenerationController {
     default void prescan(){}
-    public String generate(List<Node> nodes, CodeTarget target);
+    public void generate(List<Node> nodes, CodeTarget target);
     default void close(){}
     CodeTarget makeOutput();
 }

@@ -4,6 +4,7 @@
  */
 package aws.WhiskeyJack.QandA;
 
+import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Exec.*;
 import static aws.WhiskeyJack.util.Utils.*;
 import com.fasterxml.jackson.core.*;
@@ -31,13 +32,10 @@ public class QuestionsByTag {
     }
     public static boolean loadFile(URL p) {
         if(p == null) return false;
-        try(var in = new InputStreamReader(p.openStream(), StandardCharsets.UTF_8)) {
-            add(fileio.readValue(in, Object.class), null);
-            return true;
-        } catch(IOException ioe) {
-            ioe.printStackTrace(System.out);
-            return false;
-        }
+        var v = YAMLio.read(p);
+        if(v==null) return false;
+        add(v,null);
+        return true;
     }
     public static void add(Object o, Object tag) {
 //        System.out.println("add "+tag+"  "+deepToString(o)+"\n\t"+o.getClass());
@@ -69,21 +67,8 @@ public class QuestionsByTag {
         System.out.println("Unexpected Q "+tag+"  "+deepToString(o));
     }
     public static void dump() {
-        try (var out = Files.newBufferedWriter(deTilde("~/questions.yaml"))) {
-            fileio.writeValue(out, byTag);
-        } catch(IOException ex) {
-            ex.printStackTrace(System.out);
-        }
+        YAMLio.write(byTag, deTilde("~/questions.yaml"));
     }
-    static final ObjectMapper fileio = new ObjectMapper(
-            new YAMLFactory()
-                    .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-                    .enable(YAMLGenerator.Feature.USE_PLATFORM_LINE_BREAKS)
-                    .enable(JsonParser.Feature.ALLOW_COMMENTS)
-                    .enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES)
-                    .enable(JsonParser.Feature.ALLOW_YAML_COMMENTS)
-                    .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
-    ).configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
     static {
         loadFile(QuestionsByTag.class.getResource("/questions-en.yml"));
     }

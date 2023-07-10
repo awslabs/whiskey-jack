@@ -74,6 +74,7 @@ public class Type extends Collectable {
     public static final Type string = new Type("string");
     public static final Type tuple = new Type("tuple");
     public static final Type table = new Type("table");
+    public static final Type database = new Type("database");
     public static final Type html = new Type("html");
     public static final Type mlmodel = new Type("mlmodel");
     public static final Type object = new Type("object"); // ?

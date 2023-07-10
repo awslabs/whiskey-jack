@@ -132,13 +132,8 @@ public abstract class CodeTarget implements Closeable {
     public CodeTarget ln() {
         return append("\n");
     }
-    public CodeTarget comment(CharSequence... s) {
-        if(s != null && s.length > 0) {
-            append("/*\n");
-            for(var c: s)
-                append(" * ").append(c).append('\n');
-            append(" */\n");
-        }
+    public CodeTarget comment(String... s) {
+        comment(List.of(s));
         return this;
     }
     public CodeTarget indent() {
@@ -164,6 +159,7 @@ public abstract class CodeTarget implements Closeable {
         indent = i;
         return this;
     }
+    public Writer getWriter() { return out; }
     @Override
     @SuppressWarnings({"PMD.AvoidCatchingThrowable", "UseSpecificCatch"})
     public void close() {
@@ -178,7 +174,7 @@ public abstract class CodeTarget implements Closeable {
             ex.printStackTrace(System.out);
         }
     }
-    public CodeTarget comment(Collection<?> s) {
+    public CodeTarget comment(Collection<String> s) {
         if(s != null && !s.isEmpty()) {
             if(preComment != null) append(preComment).append('\n');
             s.forEach(c -> {

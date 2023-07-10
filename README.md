@@ -18,6 +18,9 @@ Package | Description
 nodegraph | *(aws.WhiskeyJack.nodegraph)* The abstract node graph itself and is made up of nodes, ports and arcs.  There is a parallel set of structures that describe metadata for the node (which mostly comes from the product catalog).  In an oddly self-referential twist, the metadata is subclassed from the base object.
 infer | Type checking and inferencing.  Finds problems in the interconnection of the graph and highlights them in red.  Then you can either fix the problem manually, or try the "Fix" command to see if the (simple, for now) inferencing engine can find a fix.
 code | Translates the diagram into executable code.  Supports multiple code generators for different sub-parts of the graph so they can adapt both to where they are (device, cloud) and how they should be generated (Java, Rust, Cloudfront, Greengrass, ...).
+^.java | generates java code fragments
+^.gradle | generate gradle builds
+^.cloudformation | generates AWS CloudFormation templates.
 exl | a *simple* expression language.  Small code snippits can be placed in the graph.  The language is intentionally simplistic so that it has a chance of being translated into multiple underlying languages.  If you want a real programming language, use one.  `Exl` is intended for interconnection glue and straightforward math.
 metadata | represents the "parts catalog" - all the different kinds of nodes that can be used to build the graph.  The parts catalog itself is in src/main/resources/ang/pcats/**.pcat.
 QandA | The "question and answer" framework.  Roughly a dynamic dialog box that's context-dependent.

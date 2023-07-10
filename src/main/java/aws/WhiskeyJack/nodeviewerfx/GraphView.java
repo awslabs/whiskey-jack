@@ -11,13 +11,9 @@ import aws.WhiskeyJack.metadata.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Utils.*;
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.dataformat.yaml.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
@@ -247,20 +243,12 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         saveFile(fileChooser.showSaveDialog(rootWindow()).toString());
     }
     boolean saveFile(String file) {
-        if(file != null)
-            try(var w = CommitableWriter.abandonOnClose(Path.of(file))) {
-            System.out.println("Writing " + dfltFile);
-            fileio.writeValue(w, collect());
-            w.commit();
+        if(YAMLio.write(collect(), Path.of(file))) {
             currentFile = file;
             pref.put("lastFile", file);
             note("Saved", file);
             return true;
-        } catch(IOException ioe) {
-            error("Save failed", file, ioe);
-            Utils.getUltimateCause(ioe).printStackTrace(System.out);
-            return false;
-        } else return true;
+        } else return false;
     }
     void quitAction(ActionEvent evt) {
         ((Stage) scrollPane.getScene().getWindow()).close();
@@ -278,26 +266,19 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         return false;
     }
     public boolean loadFile(URL p) {
-        if(p == null) return false;
+        var received = YAMLio.read(p);
+        if(received == null) return false;
         clearConnections();
-        try(var in = new InputStreamReader(p.openStream(), StandardCharsets.UTF_8)) {
-            for(var n: fileio.readValue(in, Object[].class))
-                if(n instanceof Map m)
-                    add(NodeView.of(m, this));
-            forEachConnection(pc -> {
-                pc.from().connectTo(get(pc.toUid()).getPort(pc.toPort()));
-            });
-            adjustArcs();
-            System.out.println("Loaded " + p);
-            setSrc("file".equals(p.getProtocol())
-                    ? Path.of(p.getPath())
-                    : Exec.deTilde("~/untitled.ade"));
-            return true;
-        } catch(IOException ioe) {
-            error(ioe);
-            ioe.printStackTrace(System.out);
-            return false;
-        }
+        add(received);
+        forEachConnection(pc -> {
+            pc.from().connectTo(get(pc.toUid()).getPort(pc.toPort()));
+        });
+        adjustArcs();
+        System.out.println("Loaded " + p);
+        setSrc("file".equals(p.getProtocol())
+                ? Path.of(p.getPath())
+                : Exec.deTilde("~/untitled.ade"));
+        return true;
     }
     public NodeView make(MetaNode n) {
         var nodeView = new NodeView(this, n);
@@ -335,6 +316,16 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     public void add(NodeView model) {
         nByUid.put(model.getUid(), model);
         super.add(model);
+    }
+    private void add(Object o) {
+        switch(o) {
+            case Collection c -> c.forEach(v -> add(v));
+            case Map m -> add(NodeView.of(m, this));
+            case null -> {
+            }
+            default ->
+                System.out.println("Unexpected GV add: " + o.getClass() + " " + o);
+        }
     }
     private final AtomicBoolean adjustArcsQueued = new AtomicBoolean(false);
     public void adjustArcs() {
@@ -483,15 +474,6 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         }
         return l;
     }
-    static public final ObjectMapper fileio = new ObjectMapper(
-            new YAMLFactory()
-                    .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-                    .enable(YAMLGenerator.Feature.USE_PLATFORM_LINE_BREAKS)
-                    .enable(JsonParser.Feature.ALLOW_COMMENTS)
-                    .enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES)
-                    .enable(JsonParser.Feature.ALLOW_YAML_COMMENTS)
-                    .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
-    ).configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
     public AnchorPane getView() {
         return view;
     }

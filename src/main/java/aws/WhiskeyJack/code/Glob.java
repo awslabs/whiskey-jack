@@ -6,8 +6,7 @@ package aws.WhiskeyJack.code;
 
 /**
  * Simple <a href="https://en.wikipedia.org/wiki/Glob_(programming)">shell-style
- * glob patterns</a>, essentially simplified regular expressions. Only  a single
- * '*' is supported for now.
+ * glob patterns</a>, essentially simplified regular expressions.
  */
 public abstract class Glob {
     public static Glob compile(String s) {
@@ -55,10 +54,18 @@ public abstract class Glob {
                                && m.regionMatches(len - lt, tail, 0, lt);
                     }
                 };
+        else if(first == 0 && last == s.length()-1)
+            return new Glob() {  // *X*
+                String body = s.substring(1, last);
+                @Override
+                public boolean matches(String m) {
+                    return m.contains(body);
+                }
+            };
         return new Glob() {
             @Override
             public boolean matches(String m) {
-                throw new UnsupportedOperationException("Complex matches Not supported yet: "+s);
+                throw new UnsupportedOperationException("Complex matches Not supported yet: " + s);
             }
         };
     }

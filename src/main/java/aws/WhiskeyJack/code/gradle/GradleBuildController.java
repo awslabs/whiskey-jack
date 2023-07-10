@@ -154,7 +154,7 @@ public class GradleBuildController implements OuterBuildController,
                 message("Run ended with code " + xc);
             });
             message("App is running in the background");
-        } catch(Throwable ex) {
+        } catch(IOException | InterruptedException ex) {
             error("Couldn't run app", ex);
         }
     }

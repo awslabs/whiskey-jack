@@ -25,7 +25,7 @@ public class JavaGenerator implements DomainGenerationController,
     String className;
     String packageName = "ade.gen";
     @Override
-    public String generate(List<Node> nodes, CodeTarget out) {
+    public void generate(List<Node> nodes, CodeTarget out) {
         this.out = out;
         // TODO aws.WhiskeyJack.code.toJava.JavaGenerator.generate Not implemented
         System.out.println("  Whoo! " + this);
@@ -144,7 +144,7 @@ public class JavaGenerator implements DomainGenerationController,
                 packageName+"."+className, dependencies);
 
         nodes.forEach(n -> n.removeSidecar(NodeGenerationInfo.class));
-        return error;
+//        return error;
     }
     private Expression parse(String s) {
         try {

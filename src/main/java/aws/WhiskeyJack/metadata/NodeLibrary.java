@@ -38,12 +38,8 @@ public class NodeLibrary {
         saveAllDirty();
     }
     public void saveAllAs(Path p) {
-        try(var out = CommitableWriter.abandonOnClose(p)) {
-            GraphView.fileio.writeValue(out, Collectable.asObject(MetaNode.metaMeta));
-            out.commit();
-        } catch(IOException ioe) {
-            Dlg.error("Can't save file", ioe);
-        }
+        if(!YAMLio.write(Collectable.asObject(MetaNode.metaMeta), p))
+            Dlg.error("Can't save file", p);
     }
     public void saveAllDirty() {
         var l = new ArrayList<String>();
@@ -70,7 +66,7 @@ public class NodeLibrary {
         return loadedFrom.get(n);
     }
     private Void load(String tag, Path from, InputStream in) throws IOException {
-        var v = GraphView.fileio.readValue(in, Object.class);
+        var v = YAMLio.read(in);
         if(v instanceof Map m) {
             var rootName = Coerce.get(m, "name", "");
             var node = (!rootName.isEmpty() ? createIfAbsent(rootName)

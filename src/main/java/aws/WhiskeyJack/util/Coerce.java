@@ -18,7 +18,6 @@ import javax.annotation.*;
 public final class Coerce {
     private static final Pattern SEPARATORS = Pattern.compile(" *, *");
     private static final Pattern unwrap = Pattern.compile(" *\\[ *(.*) *\\] *");
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     public static boolean get(Map m, String key, boolean dflt) {
         var v = m.get(key);
         return v == null ? dflt : Coerce.toBoolean(v);
@@ -214,49 +213,6 @@ public final class Coerce {
             }
         }
         return dflt;
-    }
-
-    /**
-     * Convert object to JSON encoded string and write output to the appendable.
-     *
-     * @param o object to convert.
-     * @param out appendable to write to.
-     * @throws IOException if the append fails.
-     */
-    public static void appendParseableString(Object o, Appendable out) throws IOException {
-        if(o instanceof Topic topic)
-            o = topic.getOnce();
-        try {
-            out.append(MAPPER.writeValueAsString(o) + '\n');
-        } catch(JsonProcessingException e) {
-            throw new IOException(e);
-        }
-    }
-
-    /**
-     * Convert a string to the appropriate Java object.
-     *
-     * @param s string to convert
-     * @return resulting object or empty string if the input was null.
-     * @throws JsonProcessingException if it failed to read the JSON.
-     */
-    public static Object toObject(String s) throws JsonProcessingException {
-        return isEmpty(s) ? ""
-                : toObject(s, new TypeReference<Object>() {
-                });
-    }
-
-    /**
-     * Convert a string to the appropriate Java object.
-     *
-     * @param s string to convert
-     * @param t type to convert to
-     * @param <T> type
-     * @return resulting object or empty string if the input was null.
-     * @throws JsonProcessingException if it failed to read the JSON.
-     */
-    public static <T> T toObject(String s, TypeReference<T> t) throws JsonProcessingException {
-        return MAPPER.readValue(s, t);
     }
 
     public static Collection<Object> toCollection(Object o) {

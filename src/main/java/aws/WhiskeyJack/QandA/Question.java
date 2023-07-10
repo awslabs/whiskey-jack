@@ -27,12 +27,12 @@ public class Question implements Comparable<Question> {
         fields = m;
         value = get("default", "");
         priority = get("priority", 50);
-        nodeMatch = Glob.compile(get("node","*"));
+        nodeMatch = Glob.compile(get("node", "*"));
     }
     @Override
     public int compareTo(Question o) {
-        var delta = o.priority-priority;
-        return delta!=0 ? delta : get("label","zzz").compareTo(o.get("label", "zzz"));
+        var delta = o.priority - priority;
+        return delta != 0 ? delta : get("label", "zzz").compareTo(o.get("label", "zzz"));
     }
     public final Object get(String field, Object dflt) {
         return fields.getOrDefault(field, dflt);
@@ -53,7 +53,7 @@ public class Question implements Comparable<Question> {
         return QuestionsByTag.get(tag);
     }
     public synchronized void listen(Consumer<Question> listener) {
-        if(listeners==null) listeners = new CopyOnWriteArraySet<>();
+        if(listeners == null) listeners = new CopyOnWriteArraySet<>();
         listeners.add(listener);
     }
     public boolean isTrue() {
@@ -67,7 +67,7 @@ public class Question implements Comparable<Question> {
         listeners = null;
     }
     public synchronized void remove(Consumer<Question> listener) {
-        if(listeners!=null) {
+        if(listeners != null) {
             listeners.remove(listener);
             if(listeners.isEmpty())
                 listeners = null;
@@ -75,33 +75,22 @@ public class Question implements Comparable<Question> {
     }
     public void fire(Object nv) {
         value = nv;
-        if(listeners!=null)
-            for(var l:listeners) l.accept(this);
-    }
-    
-//<editor-fold defaultstate="collapsed" desc="serialization">
-    public static class ItemSerializer extends StdSerializer<Question> {
-        public ItemSerializer() {
-            this(null);
-        }
-        public ItemSerializer(Class<Question> t) {
-            super(t);
-        }
-        @Override
-        public void serialize(
-                Question value, JsonGenerator jgen, SerializerProvider provider)
-                throws IOException, JsonProcessingException {
-            jgen.writeStartObject();
-            for(var kv: value.fields.entrySet())
-                if(!"tag".equals(kv.getKey()))
-                    jgen.writeObjectField(kv.getKey(), kv.getValue());
-            jgen.writeEndObject();
-        }
+        if(listeners != null)
+            for(var l: listeners)
+                l.accept(this);
     }
     static {
-        var module = new SimpleModule();
-        module.addSerializer(Question.class, new ItemSerializer());
-        QuestionsByTag.fileio.registerModule(module);
+        YAMLio.addSerializer(Question.class, new StdSerializer<Question>(Question.class) {
+            @Override
+            public void serialize(
+                    Question value, JsonGenerator jgen, SerializerProvider provider)
+                    throws IOException, JsonProcessingException {
+                jgen.writeStartObject();
+                for(var kv: value.fields.entrySet())
+                    if(!"tag".equals(kv.getKey()))
+                        jgen.writeObjectField(kv.getKey(), kv.getValue());
+                jgen.writeEndObject();
+            }
+        });
     }
-//</editor-fold>
 }

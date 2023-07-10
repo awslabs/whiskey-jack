@@ -1,6 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 ---
+domain: cloud
 children:
     kinesis:
         in:
@@ -10,7 +11,6 @@ children:
             data: 0
 
     sqs:
-        domain: cloud
         in:
             data: 0
             target: string
@@ -39,7 +39,16 @@ children:
                 type: tuple
                 domain: cloud
     graphana:
-        domain: cloud
+        Type: AWS::Grafana::Workspace
+        Properties: 
+            AccountAccessType: CURRENT_ACCOUNT
+            AuthenticationProviders: 
+                - IAM
+            ClientToken: ?ldfvjeiowru567390
+            DataSources: $in.name
+            GrafanaVersion: 9.4
+            Name: Graph
+            PermissionType: SERVICE_MANAGED
         in:
             in:
                 type: table

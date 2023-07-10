@@ -7,7 +7,6 @@ package aws.WhiskeyJack.util;
 import aws.WhiskeyJack.code.*;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class GlobTest {
     @Test
@@ -31,5 +30,11 @@ public class GlobTest {
         assertFalse(p.matches("/a/foo.jpeg"));
 //        var t = new Glob();
     }
-    
+    @Test
+    public void t4() {
+        var p = Glob.compile("*/cl/*");
+        assertTrue(p.matches("/cloud/cl/lambda"));
+        assertFalse(p.matches("/cloud/clx/lambda"));
+        assertFalse(p.matches("/cloud/dcl/lambda"));
+    }
 }

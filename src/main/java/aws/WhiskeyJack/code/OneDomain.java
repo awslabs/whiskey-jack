@@ -21,7 +21,7 @@ public class OneDomain implements Closeable {
     OneDomain(OverallCodeGenerationDriver cg, Domain d, String rootToken) {
         // TODO This is a bucket of total hacks
         controller = cg;
-        java.lang.String framework = d == Domain.device ? "greengrass" : d == Domain.cloud ? "apprunner" : d == Domain.browser ? "jquery" : "nothing";
+        java.lang.String framework = d == Domain.device ? "greengrass" : d == Domain.cloud ? "cf" : d == Domain.browser ? "jquery" : "nothing";
         java.lang.String style = "app";
         java.lang.String language = "java";
         targetToken = rootToken + d + "/" + framework + "/" + style + "/" + language;
