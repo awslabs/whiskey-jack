@@ -38,7 +38,7 @@ public class NodeLibrary {
         saveAllDirty();
     }
     public void saveAllAs(Path p) {
-        if(!YAMLio.write(Collectable.asObject(MetaNode.metaMeta), p))
+        if(!DataIO.yaml.write(Collectable.asObject(MetaNode.metaMeta), p))
             Dlg.error("Can't save file", p);
     }
     public void saveAllDirty() {
@@ -66,7 +66,7 @@ public class NodeLibrary {
         return loadedFrom.get(n);
     }
     private Void load(String tag, Path from, InputStream in) throws IOException {
-        var v = YAMLio.read(in);
+        var v = DataIO.yaml.read(in);
         if(v instanceof Map m) {
             var rootName = Coerce.get(m, "name", "");
             var node = (!rootName.isEmpty() ? createIfAbsent(rootName)

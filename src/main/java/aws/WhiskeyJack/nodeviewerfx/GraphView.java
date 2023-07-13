@@ -243,7 +243,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         saveFile(fileChooser.showSaveDialog(rootWindow()).toString());
     }
     boolean saveFile(String file) {
-        if(YAMLio.write(collect(), Path.of(file))) {
+        if(DataIO.yaml.write(collect(), Path.of(file))) {
             currentFile = file;
             pref.put("lastFile", file);
             note("Saved", file);
@@ -266,7 +266,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         return false;
     }
     public boolean loadFile(URL p) {
-        var received = YAMLio.read(p);
+        var received = DataIO.yaml.read(p);
         if(received == null) return false;
         clearConnections();
         add(received);

@@ -80,7 +80,7 @@ public class Question implements Comparable<Question> {
                 l.accept(this);
     }
     static {
-        YAMLio.addSerializer(Question.class, new StdSerializer<Question>(Question.class) {
+        DataIO.yaml.addSerializer(Question.class, new StdSerializer<Question>(Question.class) {
             @Override
             public void serialize(
                     Question value, JsonGenerator jgen, SerializerProvider provider)

@@ -26,7 +26,7 @@ public class CFBuildController implements DomainGenerationController,
         root.put("Description", deepToString(out.comments));
         root.put("Resources", resources);
         try {
-            YAMLio.write(root, out.getWriter());
+            DataIO.yaml.write(root, out.getWriter());
         } catch(IOException ex) {
             ex.printStackTrace(System.out);
         }

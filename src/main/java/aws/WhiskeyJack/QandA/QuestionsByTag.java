@@ -32,7 +32,7 @@ public class QuestionsByTag {
     }
     public static boolean loadFile(URL p) {
         if(p == null) return false;
-        var v = YAMLio.read(p);
+        var v = DataIO.yaml.read(p);
         if(v==null) return false;
         add(v,null);
         return true;
@@ -67,7 +67,7 @@ public class QuestionsByTag {
         System.out.println("Unexpected Q "+tag+"  "+deepToString(o));
     }
     public static void dump() {
-        YAMLio.write(byTag, deTilde("~/questions.yaml"));
+        DataIO.yaml.write(byTag, deTilde("~/questions.yaml"));
     }
     static {
         loadFile(QuestionsByTag.class.getResource("/questions-en.yml"));
