@@ -24,9 +24,6 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     public N get(String uid) {
         return nByUid.get(uid);
     }
-    public void remove(String uid) {
-        nByUid.remove(uid);
-    }
     public GraphPart computeIfAbsent(String uid, Function<String, N> f) {
         return nByUid.computeIfAbsent(uid, f);
     }
@@ -161,11 +158,11 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
         System.out.print("ERROR: ");
         for(var l:o) System.out.println("\t"+l);
     }
-    public void add(N aThis) {
-        nByUid.put(aThis.getUid(), aThis);
+    public void add(N n) {
+        nByUid.put(n.getUid(), n);
     }
-    public void remove(N aThis) {
-        nByUid.remove(aThis.getUid());
+    public void remove(N n) {
+        nByUid.remove(n.getUid());
     }
     public void copyTo(Graph dest) {
         nByUid.values().forEach(v -> dest.newNode(v));

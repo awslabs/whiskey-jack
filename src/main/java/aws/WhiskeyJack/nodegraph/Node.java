@@ -73,6 +73,7 @@ public class Node<T extends Node> extends GraphPart<T> {
         return domain == Domain.unknown ? metadata.getDomain() : domain;
     }
     public T setDomain(Domain d) {
+        System.out.println("Set domain " + getName() + "->" + d);
         domain = d == null || d == Domain.any || d == metadata.getDomain() ? Domain.unknown : d;
         return (T) this;
     }
@@ -159,7 +160,7 @@ public class Node<T extends Node> extends GraphPart<T> {
     @Override
     public Object getProp(String s, Object dflt) {
         var ret = super.getProp(s, dflt);
-        return ret==dflt ? metadata.getProp(s, dflt) : ret;
+        return ret == dflt ? metadata.getProp(s, dflt) : ret;
     }
     @Override
     public void populateFrom(Map map) {
@@ -176,7 +177,7 @@ public class Node<T extends Node> extends GraphPart<T> {
             var p = ports.get(k);
             if(p == null) {
                 if(!(this instanceof MetaNode))
-                  return; // not found in the metadata
+                    return; // not found in the metadata
                 p = getContext().newPort(this, MetaPort.meta);
                 ports.put(k, p);
                 p.setName(k);
