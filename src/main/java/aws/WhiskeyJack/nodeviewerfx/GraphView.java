@@ -280,6 +280,18 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 : Exec.deTilde("~/untitled.ade"));
         return true;
     }
+    
+    public final Map<Domain,DomainView> domains = new HashMap<>();
+    DomainView getDomainView(Domain d) {
+        return domains.computeIfAbsent(d, D->new DomainView(this, D));
+    }
+    public void changeDomain(NodeView n, Domain to) {
+        if(n!=null /*&& n.getDomain()!=to*/) {
+            System.out.println("Change domain "+n.getName()+"  "+n.getDomain()+"->"+to);
+            if(n.getDomain()!=null) getDomainView(n.getDomain()).remove(n);
+            if(to!=null) getDomainView(to).add(n);
+        }
+    }
     public NodeView make(MetaNode n) {
         var nodeView = new NodeView(this, n);
         var pane = nodeView.getView();
@@ -313,6 +325,11 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         return nodeView;
     }
     @Override
+    public void remove(NodeView n) {
+        changeDomain(n, null);
+        super.remove(n);
+    }
+    @Override
     public void add(NodeView model) {
         nByUid.put(model.getUid(), model);
         super.add(model);
@@ -336,6 +353,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             var t = getView().getLocalToSceneTransform();
             nByUid.values().forEach(n ->
                     n.forEachPort(a -> ((PortView) a).reposition(t)));
+            domains.values().forEach(d->d.reposition());
         });
     }
     private final AtomicBoolean adjustNamesQueued = new AtomicBoolean(false);

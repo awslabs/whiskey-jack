@@ -149,7 +149,7 @@ public class NodeView extends Node implements Selectable {
                 arcs.add(a)));
         arcs.forEach(a -> a.delete());
         getContext().getView().getChildren().remove(getView());
-        getContext().remove(getUid());
+        getContext().remove(this);
     }
     public void setTitle(String s) {
         title.setText(s);
@@ -192,6 +192,7 @@ public class NodeView extends Node implements Selectable {
         return this;
     }
     private void establishDomain(Domain d0, Domain d1) {
+        getContext().changeDomain(this, d1);
         var s = pane.getStyleClass();
         if(d0 != null)
             s.remove(d0.getStyleName());
