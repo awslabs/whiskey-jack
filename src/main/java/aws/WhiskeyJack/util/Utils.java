@@ -161,6 +161,21 @@ public final class Utils {
         var msg = getUltimateCause(t).getMessage();
         return isEmpty(msg) ? t.toString() : msg;
     }
+    
+    /* Diagnostic list of callers */
+    public static CharSequence callers(int st, int n) {
+        int limit = st+n;
+        var ca = new Exception().fillInStackTrace().getStackTrace();
+        var sb = new StringBuilder();
+        for(var i = st; i<limit; i++) {
+            var line = ca[i];
+            if(!isEmpty(sb)) sb.append(", ");
+            sb.append(line.getMethodName()).append("(")
+                    .append(line.getFileName()).append(":")
+                    .append(line.getLineNumber()).append(")");
+        }
+        return sb;
+    }
 
     /**
      * Generate a secure random string of a given length.

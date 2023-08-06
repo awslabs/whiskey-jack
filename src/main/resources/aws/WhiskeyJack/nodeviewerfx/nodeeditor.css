@@ -22,9 +22,9 @@
     -fx-stroke: black;
     -fx-background-color: #eee
 }
-.fgpane.selected {
+/* .fgpane.selected {
     -fx-effect: dropshadow(gaussian,#FF9900,4,2,0,0);    
-}
+} */
 .fgtitle {
     -fx-background-color: #ddd;
     -fx-background-radius: 3;
@@ -63,8 +63,13 @@
     -fx-font-size: 13;
 }
 .selected {
+    -fx-background-image: url(Checkmark.png);
+    -fx-background-position: right top;
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: 0.3in;
     -fx-stroke: #99FF00;
     -fx-stroke-width: 5;
+    -fx-view-order: -2;
 }
 CubicCurve {
     -fx-fill: transparent;
@@ -80,5 +85,26 @@ CubicCurve:hover {
     -fx-stroke-width: 6;
 }
 .fgpane:hover {
-    -fx-background-color: #fff
+    -fx-background-color: #fff;
+    -fx-stroke: blue;
 }
+.fgpane.selected {
+    -fx-background-color: #fff;
+    -fx-stroke: blue;
+}
+.domainbox {
+    -fx-background-color: rgba(100%,100%,100%,0.2);
+    -fx-alignment: top-center;
+    -fx-border-color: orange;
+    -fx-border-style: dashed;
+    -fx-stroke-width: 2;
+    -fx-view-order: 2;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+}
+.domainbox.selected {
+    -fx-background-color: rgba(100%,100%,100%,0.4);
+    -fx-border-color: blue;
+    -fx-border-style: solid;
+}
+

@@ -103,7 +103,7 @@ public class PortView extends Port implements Selectable {
                         System.out.println("Create node");
                         DragAssist.targetX = evt.getScreenX();
                         DragAssist.targetY = evt.getScreenY();
-                        getContext().setHovered(this);
+                        getContext().getSelection().setHovered(this);
                         Node n = getContext().make(DragAssist.createNode);
                         if(n.hasPorts()) {
                             connectTo(n.defaultPort(!in));
@@ -117,36 +117,6 @@ public class PortView extends Port implements Selectable {
                     view.getStyleClass().remove("good");
                     evt.consume();
                 });
-                /*
-                view.setOnDragEntered(evt -> {
-                    System.out.println("Out Enter " + ae.meta.name + ": " + DragAssist.createArc);
-                    if(DragAssist.createNode != null && DragAssist.createNode.hasInputs()) {
-                        evt.acceptTransferModes(TransferMode.ANY);
-                        view.getStyleClass().add("good");
-                        evt.consume();
-                    }
-                });
-                view.setOnDragDropped(evt -> {
-                    view.getStyleClass().remove("good");
-                    if(DragAssist.createNode != null) {
-                        System.out.println("Create node");
-                        DragAssist.targetX = evt.getScreenX();
-                        DragAssist.targetY = evt.getScreenY();
-                        outa.container.controller.hovered = outa;
-                        com.aws.jag.fxnodeeditor.graph.FGNode n = outa.container.controller.make(DragAssist.createNode);
-                        n.defaultIn().setIncoming(outa);
-                        within.controller.layoutAction();
-                    }
-                    evt.setDropCompleted(true);
-                    evt.consume();
-                });
-                view.setOnDragOver(evt -> {
-                    if(DragAssist.createNode != null) {
-                        evt.acceptTransferModes(TransferMode.ANY);
-                        evt.consume();
-                    }
-                });
-                */
     }
     @Override
     public PortView setMessage(ErrorCode ec, String m) {

@@ -5,10 +5,10 @@
 package aws.WhiskeyJack.QandA;
 
 import aws.WhiskeyJack.code.*;
+import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.module.*;
 import com.fasterxml.jackson.databind.ser.std.*;
 import java.io.*;
 import java.util.*;
@@ -20,6 +20,7 @@ public class Question implements Comparable<Question> {
     public boolean requested;
     public Object value;
     public Glob nodeMatch;
+    public Domain domain;
     final Map<String, Object> fields;
     private Set<Consumer<Question>> listeners;
 
@@ -28,6 +29,13 @@ public class Question implements Comparable<Question> {
         value = get("default", "");
         priority = get("priority", 50);
         nodeMatch = Glob.compile(get("node", "*"));
+        domain = Domain.of(get("domain","any"), Domain.any);
+    }
+    public Question(String tag) {
+        fields = Map.of("label", "Placeholder for "+tag);
+        priority = 10;
+        nodeMatch = Glob.compile(get("node", "*"));
+        domain = Domain.any;
     }
     @Override
     public int compareTo(Question o) {

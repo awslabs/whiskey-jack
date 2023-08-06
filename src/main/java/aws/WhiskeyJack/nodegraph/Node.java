@@ -43,12 +43,14 @@ public class Node<T extends Node> extends GraphPart<T> {
         return metadata.getDescription();
     }
     public void setUid(String u) {
-        if(uid != null)
-            getContext().remove(this);
-        uid = u;
-        if(u != null) {
-            uids.add(u);
-            getContext().add(this);
+        if(!Objects.equals(u,uid)) {
+            if(uid != null)
+                getContext().remove(this);
+            uid = u;
+            if(u != null) {
+                uids.add(u);
+                getContext().add(this);
+            }
         }
     }
     public String getUid() {
@@ -63,17 +65,15 @@ public class Node<T extends Node> extends GraphPart<T> {
         while(true) {
             var candidate = pfx + uidMap.computeIfAbsent(pfx, nm ->
                     new AtomicInteger(-1)).incrementAndGet();
-            if(!uids.contains(candidate)) {
-                uids.add(candidate);
+            if(uids.add(candidate))
                 return candidate;
-            }
         }
     }
     public Domain getDomain() {
         return domain == Domain.unknown ? metadata.getDomain() : domain;
     }
     public T setDomain(Domain d) {
-        System.out.println("Set domain " + getName() + "->" + d);
+//        System.out.println("Set domain " + getName() + "->" + d);
         domain = d == null || d == Domain.any || d == metadata.getDomain() ? Domain.unknown : d;
         return (T) this;
     }

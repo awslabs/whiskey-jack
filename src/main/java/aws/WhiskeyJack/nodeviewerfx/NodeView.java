@@ -11,7 +11,6 @@ import aws.WhiskeyJack.util.*;
 import java.util.*;
 import java.util.function.*;
 import javafx.geometry.*;
-import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
@@ -31,7 +30,7 @@ public class NodeView extends Node implements Selectable {
         try {
             pane.setUserData(this);
             parent.getView().getChildren().add(pane);
-            makeDraggable(pane);
+            parent.makeDraggable(this);
         } catch(Throwable t) {
             Dlg.error("Error adding node", t);
         }
@@ -63,41 +62,6 @@ public class NodeView extends Node implements Selectable {
     private final GridPane contents = new GridPane();
     private final Text title = new Text("unknown");
     private final HBox titleRegion = new HBox(openClose, title);
-    private void makeDraggable(final javafx.scene.Node tp) {
-        final var dragDelta = new Object() {
-            double x;
-            double y;
-        };
-        tp.setOnMousePressed(mouseEvent -> {
-            // record a delta distance for the drag and drop operation.
-            dragDelta.x = tp.getLayoutX() - mouseEvent.getScreenX();
-            dragDelta.y = tp.getLayoutY() - mouseEvent.getScreenY();
-            tp.setCursor(Cursor.OPEN_HAND);
-            mouseEvent.consume();
-        });
-        tp.setOnMouseReleased(mouseEvent -> {
-            tp.setCursor(Cursor.HAND);
-            mouseEvent.consume();
-        });
-        tp.setOnMouseDragged(mouseEvent -> {
-            tp.setLayoutX(mouseEvent.getScreenX() + dragDelta.x);
-            tp.setLayoutY(mouseEvent.getScreenY() + dragDelta.y);
-            getContext().adjustArcs();
-            mouseEvent.consume();
-        });
-        tp.setOnMouseEntered(mouseEvent -> {
-            if(!mouseEvent.isPrimaryButtonDown())
-                tp.setCursor(Cursor.HAND);
-            getContext().setHovered(this);
-            mouseEvent.consume();
-        });
-        tp.setOnMouseExited(mouseEvent -> {
-            if(!mouseEvent.isPrimaryButtonDown())
-                tp.setCursor(Cursor.DEFAULT);
-            mouseEvent.consume();
-            getContext().setHovered(null);
-        });
-    }
     private void init() {
         openClose.setFitHeight(12);
         openClose.setPreserveRatio(true);
@@ -179,6 +143,10 @@ public class NodeView extends Node implements Selectable {
             getContext().adjustArcs();
         }
     }
+    @Override
+    public boolean canDrag() {
+        return true;
+    }
     public boolean isExpanded() {
         return expanded;
     }
@@ -192,7 +160,8 @@ public class NodeView extends Node implements Selectable {
         return this;
     }
     private void establishDomain(Domain d0, Domain d1) {
-        getContext().changeDomain(this, d1);
+        System.out.println("estDom " + this.getName() + " " + d0 + "->" + d1);
+        getContext().changeDomain(this, d0, d1);
         var s = pane.getStyleClass();
         if(d0 != null)
             s.remove(d0.getStyleName());

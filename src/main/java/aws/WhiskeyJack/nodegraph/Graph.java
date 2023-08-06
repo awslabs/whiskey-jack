@@ -167,6 +167,9 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     public void copyTo(Graph dest) {
         nByUid.values().forEach(v -> dest.newNode(v));
     }
+    public void clearAll() {
+        nByUid.clear();
+    }
     @Override
     public void populateFrom(Map values) {
     }

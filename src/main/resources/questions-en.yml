@@ -3,7 +3,7 @@
 ---
 implang:
     label: Implementation Language
-    type: [ java, C ]
+    type: [ java, C, Rust ]
     priority: 51
 buildsys:
     label: Build system
@@ -20,4 +20,8 @@ autolayout:
     label: Automatically layout nodes
     default: true
     type: boolean
-    
+devrun:
+    label: Device runtime framework
+    default: Greengrass
+    type: [Standalone,Greengrass,FreeRTOS]
+    domain: device

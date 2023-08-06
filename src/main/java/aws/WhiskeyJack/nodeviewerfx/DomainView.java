@@ -10,18 +10,21 @@ import javafx.scene.control.*;
 import static javafx.scene.layout.Region.*;
 
 public class DomainView implements Selectable {
-    private final GraphView context;
+//    private final GraphView context;
     private final Domain domain;
     private final Label view;
-    private final List<Node> nodes = new ArrayList<>();
+    private final Set<Node> nodes = new LinkedHashSet<>();
+    @SuppressWarnings("LeakingThisInConstructor")
     DomainView(GraphView c, Domain d) {
-        context = c;
+//        context = c;
         domain = d;
         view = new Label(domain.toString());
         view.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
         view.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
         view.getStyleClass().add("domainbox");
-        context.getView().getChildren().add(view);
+        view.setUserData(this);
+        c.getView().getChildren().add(view);
+        c.makeDraggable(this);
     }
     @Override
     public void delete() {
@@ -47,7 +50,7 @@ public class DomainView implements Selectable {
                 var v = ((NodeView) n).getView();
                 var l = v.boundsInParentProperty().get();
                 minx = Math.min(minx, l.getMinX());
-                miny = Math.min(miny, l.getMinY()-7);
+                miny = Math.min(miny, l.getMinY() - 7);
                 maxx = Math.max(maxx, l.getMaxX());
                 maxy = Math.max(maxy, l.getMaxY());
             }
@@ -57,9 +60,28 @@ public class DomainView implements Selectable {
         }
     }
     public void add(Node n) {
+        System.out.println(domain + " add " + n.getName());
         nodes.add(n);
     }
     public void remove(Node n) {
+        System.out.println(domain + " remove " + n.getName());
         nodes.remove(n);
+    }
+    @Override
+    public boolean canDrag() {
+        return nodes.stream().allMatch(n ->
+                !(n instanceof Selectable s) || s.canDrag());
+    }
+    @Override
+    public void endDrag() {
+        nodes.forEach(n -> {
+            if(n instanceof Selectable s) s.endDrag();
+        });
+    }
+    @Override
+    public void setDrag(double dx, double dy) {
+        nodes.forEach(n -> {
+            if(n instanceof Selectable s) s.setDrag(dx, dy);
+        });
     }
 }

@@ -35,7 +35,7 @@ public class ArcView extends Arc implements Selectable {
             var controller = getContext();
             r.hoverProperty().addListener(b -> {
                 if(view != null)
-                    controller.setHovered(view.isHover() ? this : null);
+                    controller.getSelection().setHovered(view.isHover() ? this : null);
             });
             r.setOnDragOver(evt -> {
                 if(DragAssist.createNode != null) {
@@ -47,7 +47,7 @@ public class ArcView extends Arc implements Selectable {
                 if(DragAssist.createNode != null) {
                     DragAssist.targetX = evt.getScreenX();
                     DragAssist.targetY = evt.getScreenY();
-                    controller.setHovered(this);
+                    controller.getSelection().setHovered(this);
                     controller.make(DragAssist.createNode);
                 }
                 evt.setDropCompleted(true);

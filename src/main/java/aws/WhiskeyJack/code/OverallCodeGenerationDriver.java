@@ -47,10 +47,10 @@ public class OverallCodeGenerationDriver {
         } else g.error("Can't run project", "Fix problems first:", errors);
     }
     public void message(Object... m) {
-        for(var M:m) messages.add(M);
+        messages.addAll(Arrays.asList(m));
     }
     public void error(Object... m) {
-        for(var M:m) errors.add(M);
+        errors.addAll(Arrays.asList(m));
     }
     public Graph getWholeGraph() { return graph; }
     private final Map<Domain, OneDomain> domains = new HashMap<>();

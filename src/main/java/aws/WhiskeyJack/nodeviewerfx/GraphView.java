@@ -63,7 +63,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     private TabPane tabpane;
     private static GraphView rootWindow;
     static final Preferences pref = userNodeForPackage(GraphView.class);
-    private Selectable hovered;
+    private final Selection selection = new Selection();
     public javafx.scene.Node dragNode;
     public final MetaNodeTreeModel mNodeTreeModel = new MetaNodeTreeModel();
     @Override
@@ -136,9 +136,6 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             if(is.intValue() == 1) populatePropbox();
         });
     }
-    public void onSelectionChanged() {
-        System.out.println("on Selection Changed");
-    }
     private void addMenu(MetaNode n, String[] names) {
         var items = contextMenu.getItems();
         final var limit = names.length - 1;
@@ -169,17 +166,17 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                     return;
                 }
                 case DELETE, BACK_SPACE -> {
-                    System.out.println("  DEL " + getHovered());
-                    forEachSelected(s -> s.delete());
-                    clearSelection();
+                    System.out.println("  DEL " + selection.getHovered());
+                    selection.forEach(s -> s.delete());
+                    selection.clear();
                 }
                 case T -> {
-                    if(hovered == null)
+                    if(selection.getHovered() == null)
                         error("Hover the mouse over an object", "to tag it.");
                     else {
                         var v = Dlg.ask("Tag!", "Enter a tag for this object", "Tag");
                         if(!isEmpty(v))
-                            forEachSelected(s -> s.setTag(v));
+                            selection.forEach(s -> s.setTag(v));
                     }
                 }
                 case HOME -> {
@@ -269,7 +266,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         var received = DataIO.yaml.read(p);
         if(received == null) return false;
         clearConnections();
-        add(received);
+        addRoot(received);
         forEachConnection(pc -> {
             pc.from().connectTo(get(pc.toUid()).getPort(pc.toPort()));
         });
@@ -280,16 +277,16 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 : Exec.deTilde("~/untitled.ade"));
         return true;
     }
-    
-    public final Map<Domain,DomainView> domains = new HashMap<>();
+
+    public final Map<Domain, DomainView> domains = new HashMap<>();
     DomainView getDomainView(Domain d) {
-        return domains.computeIfAbsent(d, D->new DomainView(this, D));
+        return domains.computeIfAbsent(d, D -> new DomainView(this, D));
     }
-    public void changeDomain(NodeView n, Domain to) {
-        if(n!=null /*&& n.getDomain()!=to*/) {
-            System.out.println("Change domain "+n.getName()+"  "+n.getDomain()+"->"+to);
-            if(n.getDomain()!=null) getDomainView(n.getDomain()).remove(n);
-            if(to!=null) getDomainView(to).add(n);
+    public void changeDomain(NodeView n, Domain from, Domain to) {
+        if(n != null /*&& n.getDomain()!=to*/) {
+            System.out.println("Change domain " + n.getName() + "  " + from + "->" + to);
+            if(from != null) getDomainView(from).remove(n);
+            if(to != null) getDomainView(to).add(n);
         }
     }
     public NodeView make(MetaNode n) {
@@ -297,7 +294,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         var pane = nodeView.getView();
         pane.setUserData(nodeView);
         ix++;
-        if(getHovered() instanceof Arc arc) {
+        if(selection.getHovered() instanceof Arc arc) {
             var in0 = arc.inOutPort(true);
             var in = nodeView.defaultPort(true);
             var out0 = arc.inOutPort(false);
@@ -326,13 +323,28 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     @Override
     public void remove(NodeView n) {
-        changeDomain(n, null);
+        System.out.println("REMOVE?? " + n.getName() + "  " + callers(0, 4));
+        changeDomain(n, n.getDomain(), null);
         super.remove(n);
     }
     @Override
-    public void add(NodeView model) {
-        nByUid.put(model.getUid(), model);
-        super.add(model);
+    public void add(NodeView n) {
+        nByUid.put(n.getUid(), n);
+        super.add(n);
+        changeDomain(n, null, n.getDomain());
+    }
+    private void addRoot(Object o) {
+        switch(o) {
+            case Collection c -> c.forEach(v -> add(v));
+            case Map m -> {
+                QuestionsByTag.populateFrom(getMap(m, "parameters"));
+                add(m.get("nodes"));
+            }
+            case null -> {
+            }
+            default ->
+                System.out.println("Unexpected GV add: " + o.getClass() + " " + o);
+        }
     }
     private void add(Object o) {
         switch(o) {
@@ -353,7 +365,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             var t = getView().getLocalToSceneTransform();
             nByUid.values().forEach(n ->
                     n.forEachPort(a -> ((PortView) a).reposition(t)));
-            domains.values().forEach(d->d.reposition());
+            domains.values().forEach(d -> d.reposition());
         });
     }
     private final AtomicBoolean adjustNamesQueued = new AtomicBoolean(false);
@@ -410,12 +422,15 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     @Override
     public Object collect() {
-        var ret = new ArrayList<>();
+        var ret = new HashMap<String, Object>();
+        ret.put("parameters", QuestionsByTag.collect());
+        var nodes = new ArrayList();
         getView().getChildren().forEach(n -> {
             var u = n.getUserData();
-            if(u instanceof NodeView f)
-                ret.add(f.collect());
+            if(u instanceof aws.WhiskeyJack.nodegraph.Node f)
+                nodes.add(f.collect());
         });
+        ret.put("nodes", nodes);
         return ret;
     }
     public javafx.scene.Node[] allNodeViews() {
@@ -423,8 +438,64 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 .filter(n -> n.getUserData() instanceof NodeView)
                 .toArray(n -> new javafx.scene.Node[n]);
     }
+    public void makeDraggable(Selectable s) {
+        final var dragInfo = new Object() {
+            double x0;
+            double y0;
+            boolean dragging;
+        };
+        final var tp = s.getView();
+        tp.setOnMousePressed(mouseEvent -> {
+            // record a delta distance for the drag and drop operation.
+            dragInfo.x0 = mouseEvent.getSceneX();
+            dragInfo.y0 = mouseEvent.getSceneY();
+            dragInfo.dragging = false;
+            tp.setCursor(Cursor.OPEN_HAND);
+            mouseEvent.consume();
+            if(!mouseEvent.isShiftDown()) selection.clear();
+            selection.add(s);
+        });
+        tp.setOnMouseReleased(mouseEvent -> {
+            tp.setCursor(Cursor.HAND);
+            mouseEvent.consume();
+            if(!dragInfo.dragging)
+                selection.add(s);
+            else
+                selection.forEach(sel -> sel.endDrag());
+            if(!mouseEvent.isShiftDown()) selection.clear();
+        });
+        tp.setOnMouseDragged(mouseEvent -> {
+            if(dragInfo.dragging || selection.canDrag()) {
+                dragInfo.dragging = true;
+                var dx = mouseEvent.getSceneX() - dragInfo.x0;
+                var dy = mouseEvent.getSceneY() - dragInfo.y0;
+                selection.forEach(sel -> sel.setDrag(dx, dy));
+                adjustArcs();
+            }
+            mouseEvent.consume();
+        });
+        tp.setOnMouseEntered(mouseEvent -> {
+            if(!mouseEvent.isPrimaryButtonDown())
+                tp.setCursor(Cursor.HAND);
+            selection.setHovered(s);
+            mouseEvent.consume();
+        });
+        tp.setOnMouseExited(mouseEvent -> {
+            if(!mouseEvent.isPrimaryButtonDown())
+                tp.setCursor(Cursor.DEFAULT);
+            mouseEvent.consume();
+            selection.setHovered(null);
+        });
+    }
+    public Selection getSelection() {
+        return selection;
+    }
+    @Override
     public void clearAll() {
-        getView().getChildren().removeAll(allNodeViews());
+        super.clearAll();
+        getView().getChildren().clear();
+        selection.clear();
+        domains.clear();
     }
 
     static private int ix = 0;
@@ -495,36 +566,8 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     public AnchorPane getView() {
         return view;
     }
-    public void clearSelection() {
-        selectionSet.forEach(s ->
-                s.getView().getStyleClass().remove("selected"));
-        selectionSet.clear();
-    }
-    public void addToSelection(Selectable s) {
-        s.getView().getStyleClass().add("selected");
-        selectionSet.add(s);
-    }
-    public void forEachSelected(Consumer<Selectable> func) {
-        if(selectionSet.isEmpty()) {
-            if(getHovered() != null)
-                func.accept(getHovered());
-        } else selectionSet.forEach(func);
-    }
-    private final Set<Selectable> selectionSet = new HashSet<>();
-    /**
-     * @return the hovered
-     */
-    public Selectable getHovered() {
-        return hovered;
-    }
-    /**
-     * @param hovered the hovered to set
-     */
-    public void setHovered(Selectable hovered) {
-        this.hovered = hovered;
-    }
     private void populatePropbox() {
-        var props = new ArrayList<javafx.scene.Node>();
+        Collection<javafx.scene.Node> props = new ArrayList<>();
         var row = 0;
         for(var q: Question.extract(q -> true)) {
             Region n;
@@ -538,7 +581,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 var sel = b.getSelectionModel();
                 sel.select(vpos >= 0 ? vpos : 0);
                 sel.selectedItemProperty().addListener((cl, was, is) -> {
-                    System.out.println("Changed choice " + is.toString() + " " + cl);
+//                    System.out.println("Changed choice " + is.toString() + " " + cl);
                     q.fire(is.toString());
                 });
                 n = b;
@@ -547,7 +590,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                     var b = new CheckBox();
                     b.setSelected(Coerce.toBoolean(q.value));
                     b.selectedProperty().addListener((cl, was, is) -> {
-                        System.out.println("Changed bool " + is + " " + cl);
+//                        System.out.println("Changed bool " + is + " " + cl);
                         q.fire(is);
                     });
                     n = b;
@@ -555,7 +598,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 case "int" -> {
                     var b = new Slider(0, 1, Coerce.toDouble(q.value));
                     b.valueProperty().addListener((cl, was, is) -> {
-                        System.out.println("Changed int " + is + " " + cl);
+//                        System.out.println("Changed int " + is + " " + cl);
                         q.fire(is);
                     });
                     n = b;
@@ -563,7 +606,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 default -> {
                     var b = new TextField(Coerce.toString(q.value));
                     b.textProperty().addListener((cl, was, is) -> {
-                        System.out.println("Changed string " + is + " " + cl);
+//                        System.out.println("Changed string " + is + " " + cl);
                         q.fire(is);
                     });
                     n = b;

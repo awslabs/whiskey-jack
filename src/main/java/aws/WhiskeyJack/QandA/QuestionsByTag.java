@@ -7,14 +7,8 @@ package aws.WhiskeyJack.QandA;
 import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Exec.*;
 import static aws.WhiskeyJack.util.Utils.*;
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.dataformat.yaml.*;
-import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.charset.*;
-import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -33,8 +27,8 @@ public class QuestionsByTag {
     public static boolean loadFile(URL p) {
         if(p == null) return false;
         var v = DataIO.yaml.read(p);
-        if(v==null) return false;
-        add(v,null);
+        if(v == null) return false;
+        add(v, null);
         return true;
     }
     public static void add(Object o, Object tag) {
@@ -42,11 +36,12 @@ public class QuestionsByTag {
         if(o.getClass().isArray()) {
             var len = Array.getLength(o);
             for(int i = 0; i < len; i++) {
-                System.out.println("Slot "+i);
+                System.out.println("Slot " + i);
                 add(Array.get(o, i), "");
             }
         } else if(o instanceof List l)
-            for(var v:l) add(v, "");
+            for(var v: l)
+                add(v, "");
         else if(o instanceof Map m)
             if(tag == null)
                 m.forEach((k, v) -> add(v, k.toString()));
@@ -63,13 +58,27 @@ public class QuestionsByTag {
                     log("Duplicate tag " + deepToString(m));
                 else byTag.put(st, new Question(m));
             }
-        else 
-        System.out.println("Unexpected Q "+tag+"  "+deepToString(o));
+        else
+            System.out.println("Unexpected Q " + tag + "  " + deepToString(o));
     }
     public static void dump() {
         DataIO.yaml.write(byTag, deTilde("~/questions.yaml"));
     }
     static {
         loadFile(QuestionsByTag.class.getResource("/questions-en.yml"));
+    }
+    public static Map<String, Object> collect() {
+        var ret = new HashMap<String, Object>();
+        byTag.forEach((k, q) -> {
+            var dflt = q.get("default", null);
+            var val = q.value;
+            if(val != null && !Objects.equals(val, dflt))
+                ret.put(k, val);
+        });
+        return ret;
+    }
+    public static void populateFrom(Map<String, Object> map) {
+        map.forEach((k, v) -> byTag.computeIfAbsent(k, kk -> new Question(kk))
+                .value = v);
     }
 }
