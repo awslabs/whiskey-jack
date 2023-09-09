@@ -7,6 +7,7 @@ implang:
     priority: 51
 buildsys:
     label: Build system
+    default: unknown
     type: [ gradle, make ]
 domain:
     label: Domain
@@ -25,3 +26,9 @@ devrun:
     default: Greengrass
     type: [Standalone,Greengrass,FreeRTOS]
     domain: device
+cloudrun:
+    label: Cloud runtime framework
+    default: CloudFormation
+    type: [CloudFormation]
+    domain: device
+

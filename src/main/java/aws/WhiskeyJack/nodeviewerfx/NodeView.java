@@ -160,7 +160,7 @@ public class NodeView extends Node implements Selectable {
         return this;
     }
     private void establishDomain(Domain d0, Domain d1) {
-        System.out.println("estDom " + this.getName() + " " + d0 + "->" + d1);
+//        System.out.println("estDom " + this.getName() + " " + d0 + "->" + d1);
         getContext().changeDomain(this, d0, d1);
         var s = pane.getStyleClass();
         if(d0 != null)

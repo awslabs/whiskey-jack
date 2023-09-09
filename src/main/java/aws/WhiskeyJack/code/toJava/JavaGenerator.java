@@ -5,6 +5,7 @@
 package aws.WhiskeyJack.code.toJava;
 
 import aws.WhiskeyJack.code.*;
+import aws.WhiskeyJack.code.OverallCodeGenerationDriver.StrategyPath;
 import aws.WhiskeyJack.exl.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
@@ -145,6 +146,12 @@ public class JavaGenerator implements DomainGenerationController,
 
         nodes.forEach(n -> n.removeSidecar(NodeGenerationInfo.class));
 //        return error;
+    }
+    private StrategyPath strategyPath;
+    @Override
+    public void setStrategyPath(StrategyPath p) {
+        System.out.println("  java generator followon path "+p);
+        strategyPath = p;
     }
     private Expression parse(String s) {
         try {

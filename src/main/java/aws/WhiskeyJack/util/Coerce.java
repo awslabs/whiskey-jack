@@ -94,6 +94,7 @@ public final class Coerce {
         if(o != null) try {
             return Double.parseDouble(o.toString().trim());
         } catch(NumberFormatException ignore) {
+            return Double.NaN;
         }
         return 0;
     }

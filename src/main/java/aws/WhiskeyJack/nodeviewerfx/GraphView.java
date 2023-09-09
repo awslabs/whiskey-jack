@@ -84,7 +84,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             }
         });
         var run = new MenuItem("Run");
-        run.setOnAction(ae -> new OverallCodeGenerationDriver().Scan(this));
+        run.setOnAction(ae -> new OverallCodeGenerationDriver().compileEverything(this));
         run.setAccelerator(KeyCombination.valueOf("Shortcut+R"));
         contextMenu.getItems().add(run);
         var infer = new MenuItem("Fix");
@@ -284,7 +284,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     public void changeDomain(NodeView n, Domain from, Domain to) {
         if(n != null /*&& n.getDomain()!=to*/) {
-            System.out.println("Change domain " + n.getName() + "  " + from + "->" + to);
+//            System.out.println("Change domain " + n.getName() + "  " + from + "->" + to);
             if(from != null) getDomainView(from).remove(n);
             if(to != null) getDomainView(to).add(n);
         }
@@ -323,7 +323,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     @Override
     public void remove(NodeView n) {
-        System.out.println("REMOVE?? " + n.getName() + "  " + callers(0, 4));
+//        System.out.println("REMOVE?? " + n.getName() + "  " + callers(0, 4));
         changeDomain(n, n.getDomain(), null);
         super.remove(n);
     }
@@ -577,37 +577,37 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             if(type instanceof Collection c) {
                 var ol = FXCollections.observableArrayList(c);
                 var b = new ChoiceBox(ol);
-                var vpos = ol.indexOf(q.value);
+                var vpos = ol.indexOf(q.getValue());
                 var sel = b.getSelectionModel();
                 sel.select(vpos >= 0 ? vpos : 0);
                 sel.selectedItemProperty().addListener((cl, was, is) -> {
 //                    System.out.println("Changed choice " + is.toString() + " " + cl);
-                    q.fire(is.toString());
+                    q.setValue(is.toString());
                 });
                 n = b;
             } else switch(type.toString()) {
                 case "boolean" -> {
                     var b = new CheckBox();
-                    b.setSelected(Coerce.toBoolean(q.value));
+                    b.setSelected(Coerce.toBoolean(q.getValue()));
                     b.selectedProperty().addListener((cl, was, is) -> {
 //                        System.out.println("Changed bool " + is + " " + cl);
-                        q.fire(is);
+                        q.setValue(is);
                     });
                     n = b;
                 }
                 case "int" -> {
-                    var b = new Slider(0, 1, Coerce.toDouble(q.value));
+                    var b = new Slider(0, 1, Coerce.toDouble(q.getValue()));
                     b.valueProperty().addListener((cl, was, is) -> {
 //                        System.out.println("Changed int " + is + " " + cl);
-                        q.fire(is);
+                        q.setValue(is);
                     });
                     n = b;
                 }
                 default -> {
-                    var b = new TextField(Coerce.toString(q.value));
+                    var b = new TextField(Coerce.toString(q.getValue()));
                     b.textProperty().addListener((cl, was, is) -> {
 //                        System.out.println("Changed string " + is + " " + cl);
-                        q.fire(is);
+                        q.setValue(is);
                     });
                     n = b;
                 }

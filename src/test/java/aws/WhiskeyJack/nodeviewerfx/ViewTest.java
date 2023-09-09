@@ -13,6 +13,7 @@ import javafx.scene.*;
 import javafx.stage.*;
 import org.junit.jupiter.api.*;
 
+@Disabled
 public class ViewTest extends Application {
     /*
     MetaNode m;

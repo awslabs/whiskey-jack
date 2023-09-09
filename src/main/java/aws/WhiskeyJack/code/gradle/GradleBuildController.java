@@ -23,6 +23,7 @@ public class GradleBuildController implements OuterBuildController,
     public void setCodeGenerator(OverallCodeGenerationDriver cg) {
         context = cg;
     }
+    @Override public String toString() { return "gradle("+rootGenerationDirectory+")"; }
     @Override
     public void handleDomains(Collection<OneDomain> domains) {
         if(domains.isEmpty()) return;

@@ -16,17 +16,18 @@ import java.util.concurrent.*;
 import java.util.function.*;
 
 public class Question implements Comparable<Question> {
-    public int priority;
-    public boolean requested;
-    public Object value;
-    public Glob nodeMatch;
-    public Domain domain;
-    final Map<String, Object> fields;
+    private final int priority;
+    private Type type;
+//    private public boolean requested;
+    private Object value = "<uninit>";
+    private Glob nodeMatch;
+    private Domain domain;
+    private final Map<String, Object> fields;
     private Set<Consumer<Question>> listeners;
 
     Question(Map m) {
         fields = m;
-        value = get("default", "");
+        setValue(get("default", "<missing>"));
         priority = get("priority", 50);
         nodeMatch = Glob.compile(get("node", "*"));
         domain = Domain.of(get("domain","any"), Domain.any);
@@ -36,11 +37,15 @@ public class Question implements Comparable<Question> {
         priority = 10;
         nodeMatch = Glob.compile(get("node", "*"));
         domain = Domain.any;
+        type = Type.bool;
     }
     @Override
     public int compareTo(Question o) {
         var delta = o.priority - priority;
         return delta != 0 ? delta : get("label", "zzz").compareTo(o.get("label", "zzz"));
+    }
+    @Override public String toString() {
+        return get("tag","<unknown>")+":"+getValue();
     }
     public final Object get(String field, Object dflt) {
         return fields.getOrDefault(field, dflt);
@@ -58,6 +63,7 @@ public class Question implements Comparable<Question> {
         return QuestionsByTag.byTag.values().stream().filter(pred).sorted().toList();
     }
     public static Question question(String tag) {
+        System.out.println("Question: "+tag+": "+QuestionsByTag.get(tag));
         return QuestionsByTag.get(tag);
     }
     public synchronized void listen(Consumer<Question> listener) {
@@ -65,8 +71,22 @@ public class Question implements Comparable<Question> {
         listeners.add(listener);
     }
     public boolean isTrue() {
-//        System.out.println(get("tag","?")+" "+get("label","unlabelled")+" = "+value);
-        return Coerce.toBoolean(value);
+        return Coerce.toBoolean(getValue());
+    }
+    public String asString() {
+        return Coerce.toString(getValue());
+    }
+    public int asInt() {
+        return Coerce.toInt(getValue());
+    }
+    public double asDouble() {
+        return Coerce.toDouble(getValue());
+    }
+    public Type getType() { 
+        var t = type;
+        if(t==null)            
+            type = t = Type.of(get("type", "boolean"), Type.err);
+        return t;
     }
     public static void listen(String tag, Consumer<Question> listener) {
         question(tag).listen(listener);
@@ -81,11 +101,20 @@ public class Question implements Comparable<Question> {
                 listeners = null;
         }
     }
-    public void fire(Object nv) {
-        value = nv;
+    public void fire() {
         if(listeners != null)
             for(var l: listeners)
                 l.accept(this);
+    }
+    public final Object getValue() {
+        return value;
+    }
+    public final void setValue(Object v) {
+        var nv = getType().coerce(v, value);
+        if(!Objects.equals(nv, value)) {
+            value = nv;
+            fire();
+        }
     }
     static {
         DataIO.yaml.addSerializer(Question.class, new StdSerializer<Question>(Question.class) {
@@ -100,5 +129,17 @@ public class Question implements Comparable<Question> {
                 jgen.writeEndObject();
             }
         });
+    }
+    public Glob getNodeMatch() {
+        return nodeMatch;
+    }
+    public void setNodeMatch(Glob nodeMatch) {
+        this.nodeMatch = nodeMatch;
+    }
+    public Domain getDomain() {
+        return domain;
+    }
+    public void setDomain(Domain domain) {
+        this.domain = domain;
     }
 }

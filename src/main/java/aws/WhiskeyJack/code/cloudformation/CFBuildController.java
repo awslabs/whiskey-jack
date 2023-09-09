@@ -12,7 +12,7 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 
-@GeneratesCodeFor("*/cf/*")
+@GeneratesCodeFor("*/cloudformation/*")
 public class CFBuildController implements DomainGenerationController,
         OverallCodeGenerationDriver.needsOuterBuildController {
     Map<String, Object> resources = new TreeMap<>();
@@ -89,6 +89,12 @@ public class CFBuildController implements DomainGenerationController,
         if(result==null) throw new IllegalArgumentException(context.getName()+"."+path[len]+" not defined");
         if(result.isConnected() || result.isCode() || result.getValue()==null) throw new IllegalArgumentException(context.getName()+"."+path[len]+" must be a literal constant");
         return result.getValue().toString();
+    }
+    private OverallCodeGenerationDriver.StrategyPath strategyPath;
+    @Override
+    public void setStrategyPath(OverallCodeGenerationDriver.StrategyPath p) {
+        System.out.println("  cloudfront generator followon path "+p);
+        strategyPath = p;
     }
     @Override
     public void setOuterBuildController(OuterBuildController cg) {

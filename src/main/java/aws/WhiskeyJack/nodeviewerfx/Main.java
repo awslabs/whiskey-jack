@@ -6,25 +6,39 @@ package aws.WhiskeyJack.nodeviewerfx;
 
 import aws.WhiskeyJack.QandA.*;
 import java.io.*;
+import java.util.prefs.Preferences;
+import java.util.function.*;
 import javafx.application.*;
+import javafx.beans.property.*;
 import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.stage.*;
 
 public class Main extends Application {
+    private static final Preferences prefs = Preferences.userNodeForPackage(Main.class);
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage win) {
         try {
-            primaryStage.setTitle("Node Editor Test");
-            primaryStage.setScene(new Scene(new FXMLLoader(GraphView.class.getResource("NodeEditor.fxml")).load(), 1000, 640));
-            primaryStage.show();
+            setPref(win, "w", win.widthProperty(), w -> win.setWidth(w));
+            setPref(win, "h", win.heightProperty(), w -> win.setHeight(w));
+            setPref(win, "x", win.xProperty(), w -> win.setX(w));
+            setPref(win, "y", win.yProperty(), w -> win.setY(w));
+            win.setTitle("Whiskey Jack");
+            win.setScene(new Scene(new FXMLLoader(GraphView.class.getResource("NodeEditor.fxml")).load(), 1000, 640));
+            win.show();
         } catch(IOException ex) {
             ex.printStackTrace(System.out);
         }
     }
+    private void setPref(Window w, String name, ReadOnlyDoubleProperty getter, DoubleConsumer setter) {
+        var v = prefs.getDouble(name, -42);
+        if(v >= 0) setter.accept(v);
+        getter.addListener((e, o, n) -> prefs.putDouble(name, n.doubleValue()));
+    }
     public static void main(String[] args) {
         QuestionsByTag.dump();
-        Question.extract(q->true).forEach(q->System.out.println(q.get("tag", "yuk")));
+        Question.extract(q -> true).forEach(q ->
+                System.out.println(q.get("tag", "yuk")));
         launch(args);
     }
 }

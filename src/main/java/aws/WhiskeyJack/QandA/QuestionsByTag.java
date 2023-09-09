@@ -25,6 +25,7 @@ public class QuestionsByTag {
         System.out.println(msg);
     }
     public static boolean loadFile(URL p) {
+        System.out.println("loadFile QT "+p);
         if(p == null) return false;
         var v = DataIO.yaml.read(p);
         if(v == null) return false;
@@ -71,14 +72,15 @@ public class QuestionsByTag {
         var ret = new HashMap<String, Object>();
         byTag.forEach((k, q) -> {
             var dflt = q.get("default", null);
-            var val = q.value;
+            var val = q.getValue();
             if(val != null && !Objects.equals(val, dflt))
                 ret.put(k, val);
         });
         return ret;
     }
     public static void populateFrom(Map<String, Object> map) {
+        map.forEach((k, v) -> System.out.println("   Populate "+k+": "+v));
         map.forEach((k, v) -> byTag.computeIfAbsent(k, kk -> new Question(kk))
-                .value = v);
+                .setValue(v));
     }
 }

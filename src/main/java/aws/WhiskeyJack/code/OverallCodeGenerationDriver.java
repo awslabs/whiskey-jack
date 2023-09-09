@@ -18,16 +18,22 @@ import java.util.function.*;
  * paths and parts of the graph that need different compilation strategies.
  */
 public class OverallCodeGenerationDriver {
-    private String rootToken = "/gradle/"; // TODO handle roots other than gradle
+    private String rootToken = "/"
+                               + Question.question("buildsys").asString().toLowerCase()
+                               + "/"; // TODO handle roots other than gradle
+    public StrategyPath rootPath = new StrategyPath(rootToken, this);
     private Graph graph;
     private static CodeGeneratorPlugin plugins[];
     private Collection<Object> messages = new ArrayList<>();
     private Collection<Object> errors = new ArrayList<>();
     private OuterBuildController outerBuildController;
-    public void Scan(Graph g) {
+    public void compileEverything(Graph g) {
         graph = g;
         if(g.allOK) {
-            var obc = findPlugin(rootToken, OuterBuildController.class);
+            System.out.println("\n__________________\nStarting build:");
+            var obc = rootPath.findPlugin(OuterBuildController.class);
+            outerBuildController = obc;
+            System.out.println("outerBuildController " + obc + " " + rootToken);
             seperateDomains();
             if(domains.isEmpty()) messages.add("Nothing to run");
             else {
@@ -43,7 +49,6 @@ public class OverallCodeGenerationDriver {
         if(errors.isEmpty()) {
             if(!messages.isEmpty())
                 g.note(messages);
-            // TODO: compile and run the generated code
         } else g.error("Can't run project", "Fix problems first:", errors);
     }
     public void message(Object... m) {
@@ -52,10 +57,12 @@ public class OverallCodeGenerationDriver {
     public void error(Object... m) {
         errors.addAll(Arrays.asList(m));
     }
-    public Graph getWholeGraph() { return graph; }
+    public Graph getWholeGraph() {
+        return graph;
+    }
     private final Map<Domain, OneDomain> domains = new HashMap<>();
-    private void initPlugins() {
-        var result = new ArrayList<CodeGeneratorPlugin>();
+    private static void initPlugins() {
+        var result = new ArrayList<>();
         /* This is somewhat carefully done to ensure that the plugin classes
          * are not initialized unless they are actually used */
         try(var scanResult = new ClassGraph()
@@ -66,46 +73,73 @@ public class OverallCodeGenerationDriver {
         }
         plugins = result.toArray(n -> new CodeGeneratorPlugin[n]);
     }
-    public <T> T findPlugin(String target, Class<T> clazz) {
-        if(plugins == null) initPlugins();
-        CodeGeneratorPlugin best = null;
-        var tname = clazz == null ? null : clazz.getName();
-        var bestScore = -1;
-        for(var p: plugins) {
-            System.out.println("FP "+target+": "+p.glob.toString()+" "+p.ci);
-            if(p.matches(target)) {
-                if(tname != null) {
-                    var found = false;
-                    for(var s: p.getInterfaces())
-                        if(s.equals(tname)) {
-                            found = true;
-                            break;
-                        }
-                    if(!found) continue;
-                }
-                var score = p.score();
-                if(score > bestScore) {
-                    bestScore = score;
-                    best = p;
-                }
-            }
-        }
-        return best == null ? null : (T) best.getGenerator();
-    }
     private void seperateDomains() {
         /* One would think that the cast in the following line is redundent,
          * but errors get flagged without it. */
         graph.forEachNode((Consumer<Node>) (n ->
                 domains.computeIfAbsent(n.getDomain(), d ->
-                        new OneDomain(this, d, rootToken)).nodes.add(n)));
+                        new OneDomain(this, d)).nodes.add(n)));
     }
 
-    private class CodeGeneratorPlugin {
+    public class StrategyPath {
+        private String path;
+        private final OverallCodeGenerationDriver ocg;
+        StrategyPath(String p, OverallCodeGenerationDriver d) {
+            System.out.println("new StrategyPath(\"" + p + "\");");
+            path = p;
+            ocg = d;
+        }
+        public StrategyPath append(String tail) {
+            var p = path == null ? tail : (path + tail).replaceAll("//+", "/");
+            if(!p.startsWith("/")) p = "/" + p;
+            return new StrategyPath(p, ocg);
+        }
+        public <T> T findPlugin(Class<T> clazz) {
+            if(plugins == null) initPlugins();
+            CodeGeneratorPlugin best = null;
+            var tname = clazz == null ? null : clazz.getName();
+            var bestScore = -1;
+            System.out.println("findPath " + path + " " + clazz);
+            String tail = "";
+            for(var p: plugins) {
+//                System.out.println("  FP " + target + ": " + p.glob.toString() + " " + p.ci);
+                String ltail;
+                if((ltail = p.matches(path)) != null) {
+                    if(tname != null) {
+                        var found = false;
+                        for(var s: p.getInterfaces())
+                            if(s.equals(tname)) {
+                                found = true;
+                                break;
+                            }
+                        if(!found) continue;
+                    }
+                    var score = p.score();
+                    if(score > bestScore) {
+                        bestScore = score;
+                        best = p;
+                        tail = ltail;
+                    }
+                }
+            }
+            path = tail;
+            if(best != null)
+                System.out.println("\t => Pattern " + best.glob.toString() + "  tail: " + tail);
+            return best == null ? null : (T) best.getGenerator(ocg);
+        }
+        @Override
+        public String toString() {
+            return path;
+        }
+    }
+
+    private static class CodeGeneratorPlugin {
         private final ClassInfo ci;
         private Object generator;
         private final Glob glob;
         private final int score;
         private final String[] interfaces;
+
         public CodeGeneratorPlugin(ClassInfo ci) {
             this.ci = ci;
             var globPattern = "No Pattern";
@@ -123,7 +157,7 @@ public class OverallCodeGenerationDriver {
             for(var i: ci.getInterfaces())
                 infs.add(i.getName());
             interfaces = infs.toArray(n -> new String[n]);
-            System.out.println("CGP "+globPattern+" "+deepToString(interfaces));
+            System.out.println("CGP " + globPattern + " " + deepToString(interfaces));
             System.out.println("   Interfaces: " + Utils.deepToString(interfaces));
             glob = Glob.compile(globPattern);
             score = globPattern.length();
@@ -135,22 +169,22 @@ public class OverallCodeGenerationDriver {
             generator = gc;
             interfaces = infs;
         }
-        public boolean matches(String s) {
+        public String matches(String s) {
             return glob.matches(s);
         }
         public int score() {
             return score;
         }
         @SuppressWarnings({"PMD.UnnecessaryLocalBeforeReturn", "PMD.AvoidCatchingThrowable", "UseSpecificCatch"})
-        public Object getGenerator() throws IllegalStateException {
+        public Object getGenerator(OverallCodeGenerationDriver ocg) throws IllegalStateException {
             if(generator == null) try {
                 generator = Class.forName(ci.getName()).getConstructor().newInstance();
                 if(generator instanceof OuterBuildController obc)
-                    outerBuildController = obc;
+                    ocg.outerBuildController = obc;
                 if(generator instanceof needsCodeGenerator scg)
-                    scg.setCodeGenerator(OverallCodeGenerationDriver.this);
+                    scg.setCodeGenerator(ocg);
                 if(generator instanceof needsOuterBuildController obc)
-                    obc.setOuterBuildController(outerBuildController);
+                    obc.setOuterBuildController(ocg.outerBuildController);
             } catch(Throwable t) {
                 getUltimateCause(t).printStackTrace(System.out);
                 throw new IllegalStateException(t.getMessage(), t);
@@ -165,6 +199,7 @@ public class OverallCodeGenerationDriver {
     public interface needsCodeGenerator {
         public void setCodeGenerator(OverallCodeGenerationDriver cg);
     }
+
     public interface needsOuterBuildController {
         public void setOuterBuildController(OuterBuildController cg);
     }

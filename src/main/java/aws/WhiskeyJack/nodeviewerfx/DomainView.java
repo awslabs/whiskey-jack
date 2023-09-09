@@ -60,11 +60,11 @@ public class DomainView implements Selectable {
         }
     }
     public void add(Node n) {
-        System.out.println(domain + " add " + n.getName());
+//        System.out.println(domain + " add " + n.getName());
         nodes.add(n);
     }
     public void remove(Node n) {
-        System.out.println(domain + " remove " + n.getName());
+//        System.out.println(domain + " remove " + n.getName());
         nodes.remove(n);
     }
     @Override

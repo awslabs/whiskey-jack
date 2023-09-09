@@ -1,5 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <!--
+    SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
+    SPDX-License-Identifier: Apache-2.0
+    -->
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.aws.jag</groupId>
     <artifactId>WhiskeyJack</artifactId>
@@ -8,6 +12,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <appMainClass>aws.WhiskeyJack.nodeviewerfx.Main</appMainClass>
+        <appModule>aws.WhiskeyJack</appModule>
     </properties>
     <dependencies>
         <dependency>
@@ -90,7 +96,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>aws.WhiskeyJack.nodeviewerfx.Main</mainClass>
+                    <mainClass>${appMainClass}</mainClass>
                 </configuration>
                 <executions>
                     <execution>
@@ -150,10 +156,6 @@
                 <version>2.22.2</version>
                 <configuration>
                     <argLine>--enable-preview</argLine>
-                    <!--forkMode>always</forkMode>
-                    <environmentVariables>
-                        <_JAVA_OPTIONS>- -enable-preview</_JAVA_OPTIONS>
-                    </environmentVariables-->
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -179,7 +181,7 @@
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                             <addClasspath>true</addClasspath>
-                            <mainClass>aws.WhiskeyJack.nodeviewerfx.Main</mainClass>
+                            <mainClass>${appMainClass}</mainClass>
                             
                         </manifest>
                     </archive>
@@ -195,6 +197,43 @@
                         <argument>--enable-preview</argument>
                     </arguments>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.panteleyev</groupId>
+                <artifactId>jpackage-maven-plugin</artifactId>
+                <version>1.6.0</version>
+
+                <configuration>
+                    <name>WhiskeyJack</name>
+                    <appVersion>${project.version}</appVersion>
+                    <vendor>aws.com</vendor>
+                    <!-- <module>${appModule}/${appMainClass}</module> -->
+                    <mainJar>WhiskeyJack-${project.version}.jar</mainJar>
+                    <modulePaths>
+                        <modulePath>target/mods</modulePath>
+                    </modulePaths>
+                    <destination>target/dist</destination>
+                    <javaOptions>
+                        <option>--enable-preview</option>
+                        <option>-Dfile.encoding=UTF-8</option>
+                    </javaOptions>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <id>mac</id>
+                        <configuration>
+                            <icon>src/artwork/WhiskeyJackIcon.icns</icon>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>win</id>
+                        <configuration>
+                            <icon>src/artwork/WhiskeyJackIcon.ico</icon>
+                            <winMenu>true</winMenu>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -16,7 +16,7 @@ that in turn is based on the name of the benevolent
 [Wisakedjak](https://en.wikipedia.org/wiki/Wisakedjak)
 of traditional
 [storytelling](https://www.threetreesart.com/for-seven-generations.html).
-Somewhat like Crow, Coyote or even Loki from other cultures.
+Somewhat like Raven, Coyote or even Loki from other cultures.
 
 They almost became the
 [national bird of Canada](https://canadiangeographic.ca/articles/meet-our-national-bird-the-gray-jay/)
