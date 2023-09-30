@@ -29,6 +29,8 @@ children:
             data: tuple
             target: string
     streamManager:
+        Properties:
+            cname: aws.greengrass.StreamManager
         domain: device
         in:
             in:
@@ -38,6 +40,10 @@ children:
             out:
                 type: tuple
                 domain: cloud
+            gg:
+                type: ggnucleus
+            tes: 
+                type: tokenexchange
     graphana:
         Type: AWS::Grafana::Workspace
         Properties: 

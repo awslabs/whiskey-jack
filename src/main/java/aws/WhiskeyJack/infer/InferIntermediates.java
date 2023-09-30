@@ -75,6 +75,9 @@ public class InferIntermediates {
             }
             if(fixes>0) g.layoutNodes(false);
         }
+        for(var p:(Collection<Port>)g.disconnectedPorts) {
+            // TODO: do easy fixes on disconnected ports
+        }
     }
 
     private void applyPath(Port origin, CandidateSolution s, Port target) {

@@ -66,6 +66,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     private final Selection selection = new Selection();
     public javafx.scene.Node dragNode;
     public final MetaNodeTreeModel mNodeTreeModel = new MetaNodeTreeModel();
+    private boolean propboxVisible = false;
     @Override
     public void appendRefTo(StringBuilder sb) {
         sb.append("GraphView?");
@@ -84,7 +85,8 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             }
         });
         var run = new MenuItem("Run");
-        run.setOnAction(ae -> new OverallCodeGenerationDriver().compileEverything(this));
+        run.setOnAction(ae ->
+                new OverallCodeGenerationDriver().compileEverything(this));
         run.setAccelerator(KeyCombination.valueOf("Shortcut+R"));
         contextMenu.getItems().add(run);
         var infer = new MenuItem("Fix");
@@ -128,12 +130,19 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             evt.setDropCompleted(true);
             evt.consume();
         });
+        getView().setOnMousePressed(e -> {
+            e.consume();
+            selection.clear();
+        });
         if(createNotifier != null)
             createNotifier.accept(this);
 
         tabpane.getSelectionModel().selectedIndexProperty().addListener((cl, was, is) ->
         {
-            if(is.intValue() == 1) populatePropbox();
+            if(propboxVisible = (is.intValue() == 1)) populatePropbox();
+        });
+        selection.addDomainListener(l -> {
+            if(propboxVisible) populatePropbox();
         });
     }
     private void addMenu(MetaNode n, String[] names) {
@@ -462,7 +471,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 selection.add(s);
             else
                 selection.forEach(sel -> sel.endDrag());
-            if(!mouseEvent.isShiftDown()) selection.clear();
+//            if(!mouseEvent.isShiftDown()) selection.clear();
         });
         tp.setOnMouseDragged(mouseEvent -> {
             if(dragInfo.dragging || selection.canDrag()) {
@@ -568,8 +577,11 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     private void populatePropbox() {
         Collection<javafx.scene.Node> props = new ArrayList<>();
+        var s = getSelection().getFirstSelected();
+        var domain = s == null ? Domain.any : s.getDomain();
+        System.out.println("Populate propbox domain " + domain);
         var row = 0;
-        for(var q: Question.extract(q -> true)) {
+        for(var q: Question.extract(q -> q.getDomain() == domain)) {
             Region n;
             var label = new Label(q.get("label", "No label"));
             var type = q.get("type", (Object) null);

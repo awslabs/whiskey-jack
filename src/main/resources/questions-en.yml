@@ -1,34 +1,60 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 ---
-implang:
+-   tag: implang
     label: Implementation Language
-    type: [ java, C, Rust ]
+    type: [ Java, Rust, Python ]
     priority: 51
-buildsys:
+    domain: device
+-   tag: version
+    label: App Version
+    type: string
+    default: 0.1
+    priority: 99
+-   tag: description
+    label: Overall description
+    type: string
+    priority: 51
+-   tag: name
+    label: App Name
+    type: string
+    default: unnamed
+    priority: 100
+-   tag: author
+    label: Author Name
+    type: string
+    default: anonymous
+    priority: 51
+-   tag: implang
+    label: Implementation Language
+    type: [ Java, Python ]
+    priority: 51
+    domain: cloud
+-   tag: buildsys
     label: Build system
     default: unknown
-    type: [ gradle, make ]
-domain:
+    type: [ Gradle, Make ]
+-   tag: domain
     label: Domain
+    domain: unknown
     description: Where does this run?
-    type: [ cloud,device,browser ]
-autorun:
+    type: [ Cloud, Device, Browser ]
+-   tag: autorun
     label: Exec after building
     default: false
     type: boolean
-autolayout:
+-   tag: autolayout
     label: Automatically layout nodes
     default: true
     type: boolean
-devrun:
+-   tag: runtime
     label: Device runtime framework
     default: Greengrass
     type: [Standalone,Greengrass,FreeRTOS]
     domain: device
-cloudrun:
+-   tag: runtime
     label: Cloud runtime framework
     default: CloudFormation
     type: [CloudFormation]
-    domain: device
+    domain: cloud
 

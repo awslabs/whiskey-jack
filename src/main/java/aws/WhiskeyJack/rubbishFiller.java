@@ -9,5 +9,7 @@ package aws.WhiskeyJack;
  * made in module-info.java
  */
 public class rubbishFiller {
-
+    public static void main(String[] args) {
+        aws.WhiskeyJack.nodeviewerfx.Main.main(args);
+    }
 }

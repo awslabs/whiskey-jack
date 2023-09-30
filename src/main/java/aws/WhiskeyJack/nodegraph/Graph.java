@@ -189,7 +189,7 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
         dump(System.out);
     }
     public final Collection<Arc> typeMismatches = new ArrayList<>();
-    public final Collection<String> otherErrors = new ArrayList<>();
+    public final Collection<Port> disconnectedPorts = new ArrayList<>();
     public boolean allOK = false;
     
     private final List<PendingConnection> pendingConnections = new ArrayList<>();

@@ -36,7 +36,7 @@ public class TypeCheck {
                 a.setMessage(ec, sb.toString());
         });
         g.allOK = errors.isEmpty();
-        g.otherErrors.clear();
+        g.disconnectedPorts.clear();
         Consumer<Port> vp = p -> {
             if(p.getName().equals("b"))
                 System.out.println(p.getFullName()+" "+p.isUnboundOK()+" "+p.getValue()+" "+p.isConnected());
@@ -44,7 +44,7 @@ public class TypeCheck {
                     && !p.isUnboundOK()) {
                 p.setMessage(ErrorCode.valueExpected, "This port must be given a value");
                 g.allOK = false;
-                g.otherErrors.add("Port "+p.getName()+" must be given a value");
+                g.disconnectedPorts.add(p);
             }
             else p.setMessage(null);
         };

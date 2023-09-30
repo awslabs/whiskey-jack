@@ -28,6 +28,10 @@ public class ArcView extends Arc implements Selectable {
         return (GraphView) super.getContext();
     }
     @Override
+    public Domain getDomain() {
+        return null;
+    }
+    @Override
     public CubicCurve getView() {
         var r = view;
         if(r == null) {

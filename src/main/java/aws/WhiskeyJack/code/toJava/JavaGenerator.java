@@ -246,8 +246,8 @@ public class JavaGenerator implements DomainGenerationController,
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
                        """);
             if(!dependencies.isEmpty()) {

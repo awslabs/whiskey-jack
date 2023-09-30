@@ -11,7 +11,7 @@ public class GlobTest {
     @Test
     public void t1() {
         var p = Glob.compile("*.jpg");
-        assertEquals("foo", p.matches("foo.jpg"));
+        assertEquals("", p.matches("foo.jpg"));
         assertEquals("", p.matches(".jpg"));
         assertEquals(null, p.matches("foo.jpeg"));
     }

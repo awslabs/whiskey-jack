@@ -16,7 +16,7 @@ public class JavaTarget extends CodeTarget {
         packageName = pn;
     }
     @Override
-    public String extension() {
+    public String getDestinationExtension() {
         return "java";
     }
     @Override

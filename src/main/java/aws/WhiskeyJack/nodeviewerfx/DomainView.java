@@ -30,6 +30,10 @@ public class DomainView implements Selectable {
     public void delete() {
     }
     @Override
+    public Domain getDomain() {
+        return domain;
+    }
+    @Override
     public void setTag(String t) {
         view.setText(t);
     }

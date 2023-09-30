@@ -44,7 +44,8 @@ public class OverallCodeGenerationDriver {
         } else {
             g.typeMismatches.forEach((Consumer<Arc>) (a ->
                     errors.add(a.oneEnd().getName() + "->" + a.otherEnd().getName() + ": " + a.getMessage())));
-            errors.addAll(g.otherErrors);
+            ((Collection<Port>)g.disconnectedPorts).forEach(
+                    p->errors.add("Port "+p.getName()+" must be given a value"));
         }
         if(errors.isEmpty()) {
             if(!messages.isEmpty())
@@ -114,7 +115,7 @@ public class OverallCodeGenerationDriver {
                             }
                         if(!found) continue;
                     }
-                    var score = p.score();
+                    var score = ltail.length(); // p.score();
                     if(score > bestScore) {
                         bestScore = score;
                         best = p;

@@ -4,6 +4,7 @@
  */
 package aws.WhiskeyJack.QandA;
 
+import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Exec.*;
 import static aws.WhiskeyJack.util.Utils.*;
@@ -21,11 +22,18 @@ public class QuestionsByTag {
                     "label", "Missing " + t));
         });
     }
+    public static Question getNullOK(String tag) {
+        return byTag.get(tag);
+    }
+    public static Question get(String tag, Domain d) {
+        var dq = getNullOK(tag + d);
+        return dq != null ? dq : get(tag);
+    }
     private static void log(String msg) {
         System.out.println(msg);
     }
     public static boolean loadFile(URL p) {
-        System.out.println("loadFile QT "+p);
+        System.out.println("loadFile QT " + p);
         if(p == null) return false;
         var v = DataIO.yaml.read(p);
         if(v == null) return false;
@@ -55,9 +63,16 @@ public class QuestionsByTag {
                     log("Entry missing tag " + deepToString(m));
                 else if(!(l instanceof String))
                     log("Entry missing label " + deepToString(m));
-                else if(byTag.containsKey(st))
-                    log("Duplicate tag " + deepToString(m));
-                else byTag.put(st, new Question(m));
+                else {
+                    var q = new Question(m);
+                    var d = q.getDomain();
+                        log("Q " +st+"@"+d+ deepToString(m));
+                    if(d != Domain.any)
+                        byTag.put(st + q.getDomain(), q);
+                    else if(byTag.containsKey(st))
+                        log("Duplicate tag " + deepToString(m));
+                    else byTag.put(st, q);
+                }
             }
         else
             System.out.println("Unexpected Q " + tag + "  " + deepToString(o));
@@ -79,8 +94,10 @@ public class QuestionsByTag {
         return ret;
     }
     public static void populateFrom(Map<String, Object> map) {
-        map.forEach((k, v) -> System.out.println("   Populate "+k+": "+v));
-        map.forEach((k, v) -> byTag.computeIfAbsent(k, kk -> new Question(kk))
+        map.forEach((k, v) ->
+                System.out.println("   Populate " + k + ": " + v));
+        map.forEach((k, v) -> byTag.computeIfAbsent(k, kk ->
+                new Question(kk))
                 .setValue(v));
     }
 }

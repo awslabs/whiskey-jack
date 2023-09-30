@@ -25,7 +25,7 @@ public class CFTarget extends CodeTarget {
     }
     final Collection<String> comments = new ArrayList<>();
     @Override
-    public String extension() {
+    public String getDestinationExtension() {
         return "yaml";
     }
 }

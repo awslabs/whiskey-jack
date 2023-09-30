@@ -13,6 +13,7 @@ import java.util.regex.*;
 public class Type extends Collectable {
     private final String name;
     private final Object dflt;
+    boolean error = false;
     @SuppressWarnings("")
     private Type(String n, Object d) {
         name = n;
@@ -24,17 +25,23 @@ public class Type extends Collectable {
     }
     public Object coerce(Object v, Object alternate) {
         return valueCompatibleWith(v) ? v
-                : alternate!=null && valueCompatibleWith(alternate) ? alternate
+                : alternate != null && valueCompatibleWith(alternate) ? alternate
                 : defaultDefault();
     }
     public static Type guess(Object value) {
         return switch(value) {
-            case Number n  -> number;
-            case Boolean b -> bool;
-            case String s  -> string;
-            case Map m     -> tuple;
-            case null      -> any;
-            default        -> object;
+            case Number n ->
+                number;
+            case Boolean b ->
+                bool;
+            case String s ->
+                string;
+            case Map m ->
+                tuple;
+            case null ->
+                any;
+            default ->
+                object;
         };
     }
     @Override
@@ -52,13 +59,15 @@ public class Type extends Collectable {
     public String toString() {
         return getName();
     }
-    public Object defaultDefault() { return dflt; }
+    public Object defaultDefault() {
+        return dflt;
+    }
     public static Type of(String name, Type dflt) {
         var ret = of(name);
-        return ret!=null ? ret : dflt;
+        return ret != null ? ret : dflt;
     }
     public static Type of(String name) {
-        if(name==null) return null;
+        if(name == null) return null;
         name = name.trim();
         if(name.startsWith("{") && name.endsWith("}")
            || name.startsWith("[") && name.endsWith("]")) {
@@ -85,10 +94,25 @@ public class Type extends Collectable {
                 }
                 @Override
                 public String toString() {
-                    return "enum"+deepToString(names);
+                    return "enum" + deepToString(names);
                 }
             };
-        } else return isEmpty(name) ? null : all.get(name);
+        } else if(isEmpty(name)) return null;
+        boolean sic; // https://en.wikipedia.org/wiki/Sic
+        if(name.endsWith("(sic)")) {
+            sic = true;
+            name = name.substring(0, name.length() - 5).trim();
+        } else if(name.endsWith("!")) {
+            sic = true;
+            name = name.substring(0, name.length() - 1).trim();
+        } else sic = false;
+        var ret = all.get(name);
+        if(ret == null) {
+            ret = new Type(name, null);
+            ret.error = true;
+        }
+        if(sic) ret.error = false;
+        return ret;
     }
     public static void forEachType(Consumer<Type> f) {
         all.values().forEach(f);
@@ -125,7 +149,7 @@ public class Type extends Collectable {
             if(v instanceof Number n) return n;
             var n = Coerce.toDouble(v);
             return !Double.isNaN(n) ? n
-                 : alternate instanceof Number a ? a : 0;
+                    : alternate instanceof Number a ? a : 0;
         }
     };
     public static final Type event = new Type("event", null);
@@ -133,7 +157,7 @@ public class Type extends Collectable {
     public static final Type string = new Type("string", "") {
         @Override
         public String coerce(Object v, Object alternate) {
-            return v==null ? null : v.toString();
+            return v == null ? null : v.toString();
         }
     };
     public static final Type tuple = new Type("tuple", null);

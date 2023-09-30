@@ -5,11 +5,14 @@
 
 package aws.WhiskeyJack.nodeviewerfx;
 
+import aws.WhiskeyJack.nodegraph.*;
+
 public interface Selectable {
     public javafx.scene.Node getView();
     public void delete();
     public void setTag(String tag);
     default public boolean canDrag() { return false; }
+    public Domain getDomain();
     default public void endDrag() {
         var v = getView();
         v.setLayoutX(v.getLayoutX() + v.getTranslateX());

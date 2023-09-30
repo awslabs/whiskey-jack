@@ -37,7 +37,7 @@ public abstract class Glob {
                             var len = m.length();
                             return lt <= len
                                    && m.regionMatches(len - lt, tail, 0, lt)
-                                    ? substring(m, 0, len - lt) : null;
+                                    ? "" : null;
                         }
                     };
                 else if(tail.length() == 0)

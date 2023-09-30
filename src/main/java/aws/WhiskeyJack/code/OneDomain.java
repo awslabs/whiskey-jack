@@ -26,10 +26,8 @@ public class OneDomain implements Closeable {
         var g = generator;
         if(g == null) {
         // TODO This still feels like a bucket of total hacks
-            java.lang.String framework = domain == Domain.device
-                    ? Question.question("devrun").asString().toLowerCase()
-                    : domain == Domain.cloud ? Question.question("cloudrun").asString().toLowerCase()
-                            : domain == Domain.browser ? "jquery" : "nothing";
+            java.lang.String framework = 
+                    Question.question("runtime", domain).asString().toLowerCase();
             java.lang.String style = "app";
             java.lang.String language = "java";
             var path = controller.rootPath.append(domain + "/" + framework + "/" + style + "/" + language);

@@ -1,0 +1,20 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+domain: device
+children:
+    nucleus:
+        Properties:
+            cname: aws.greengrass.Nucleus
+        in: 
+            gg:
+                type: ggnucleus (sic)
+    TokenExchange:
+        Properties:
+            cname: aws.greengrass.TokenExchangeService
+        in: 
+            tes: 
+                type: tokenexchange (sic)
+        out:
+            gg: 
+                type: ggnucleus

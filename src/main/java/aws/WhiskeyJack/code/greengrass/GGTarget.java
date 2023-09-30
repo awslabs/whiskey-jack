@@ -12,6 +12,9 @@ import java.util.*;
 public class GGTarget extends CodeTarget {
     public GGTarget(OuterBuildController c) {
         super(c);
+        preComment = null;
+        postComment = null;
+        onComment = "# ";
     }
     @Override
     public String getCodeDirectoryName() {
@@ -24,8 +27,16 @@ public class GGTarget extends CodeTarget {
         return this;
     }
     final Collection<String> comments = new ArrayList<>();
+    public void dumpComments() {
+        super.comment(comments);
+        comments.clear();
+    }
     @Override
-    public String extension() {
+    public String getDestinationName() {
+        return "recipe";
+    }
+    @Override
+    public String getDestinationExtension() {
         return "yaml";
     }
 }

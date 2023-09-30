@@ -19,11 +19,13 @@ public abstract class CodeTarget implements Closeable {
     private boolean bol = true; // beginning of line
     private Path destination;
     private Path codeRootDirectory;
+    protected Domain domain;
     public CodeTarget(OuterBuildController c) {
         assert c != null;
         context = c;
     }
     public void start(Domain d) {
+        domain = d;
         try {
             codeRootDirectory = context.getCodePartDirectory(d, "code");
             var codeDirectory = codeRootDirectory.resolve(getCodeDirectoryName());
@@ -31,7 +33,7 @@ public abstract class CodeTarget implements Closeable {
                 Files.createDirectories(codeDirectory);
             } catch(IOException xyzzy) {
                 /* ignore */ }
-            destination = codeDirectory.resolve(d.getName() + "." + extension());
+            destination = codeDirectory.resolve(getDestinationName() + "." + getDestinationExtension());
             System.out.println("codePart " + codeRootDirectory + "\n\tgen " + destination);
             out = Files.newBufferedWriter(destination,
                     StandardCharsets.UTF_8, StandardOpenOption.CREATE,
@@ -47,7 +49,10 @@ public abstract class CodeTarget implements Closeable {
     public Path getCodeRootDirectory() {
         return codeRootDirectory;
     }
-    public String extension() {
+    public String getDestinationName() {
+        return domain.getName();
+    }
+    public String getDestinationExtension() {
         return "txt";
     }
     public CodeTarget append(CharSequence s) {
