@@ -118,4 +118,5 @@ public class MetaPort extends Port {
     private void setNodeSlot(int y) {
         this.nodeSlot = y;
     }
+    public static final MetaPort markerMetaPort = new MetaPort(MetaNode.metaMeta);
 }

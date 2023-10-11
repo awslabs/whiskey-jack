@@ -128,14 +128,14 @@ public class NodeLibrary {
         var dtim = dtInMap;
         if(dtim == null) {
             dtInMap = dtim = new HashMap<>();
-            System.out.println("Init DT map");
+//            System.out.println("Init DT map");
             forAll(mn -> {
                 var din = mn.defaultPort(true);
                 var dout = mn.defaultPort(false);
                 if(din != null && dout != null) {
                     if(dout.compatibleWith(din)) {
-                        System.out.println("NOP " + mn.getName() + " " + din.getDomain() + "," + din.getType().getName()
-                                           + " -> " + dout.getDomain() + "," + dout.getType().getName());
+//                        System.out.println("NOP " + mn.getName() + " " + din.getDomain() + "," + din.getType().getName()
+//                                           + " -> " + dout.getDomain() + "," + dout.getType().getName());
                         return;
                     }
                     var nd = din.getDomain();
@@ -152,5 +152,19 @@ public class NodeLibrary {
         if(dm == null) return Collections.EMPTY_LIST;
         var ret = dm.get(t);
         return ret == null ? Collections.EMPTY_LIST : ret;
+    }
+    private HashMap<Type,MetaPort> serviceProviders;
+    public MetaPort getServiceProvider(Type t) {
+        if(serviceProviders==null) {
+            serviceProviders = new HashMap<>();
+            forAll(mn->{
+                mn.forEachPort(p->{
+                    if(p.isInputSide())
+                        serviceProviders.merge(p.getType(), (MetaPort)p, (a,b)->MetaPort.markerMetaPort);
+                });
+            });
+        }
+        var ret = serviceProviders.get(t);
+        return ret==MetaPort.markerMetaPort ? null : ret;
     }
 }

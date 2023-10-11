@@ -67,6 +67,9 @@ public class Type extends Collectable {
         return ret != null ? ret : dflt;
     }
     public static Type of(String name) {
+        return of(name, true);
+    }
+    public static Type of(String name, boolean create) {
         if(name == null) return null;
         name = name.trim();
         if(name.startsWith("{") && name.endsWith("}")
@@ -107,11 +110,11 @@ public class Type extends Collectable {
             name = name.substring(0, name.length() - 1).trim();
         } else sic = false;
         var ret = all.get(name);
-        if(ret == null) {
+        if(ret == null && create) {
             ret = new Type(name, null);
             ret.error = true;
         }
-        if(sic) ret.error = false;
+        if(sic && ret!=null) ret.error = false;
         return ret;
     }
     public static void forEachType(Consumer<Type> f) {
@@ -119,6 +122,9 @@ public class Type extends Collectable {
     }
     public boolean isEnum() {
         return false;
+    }
+    public boolean isPrimitive() {
+        return dflt!=null;
     }
     public boolean valueCompatibleWith(Object v) {
         return true;

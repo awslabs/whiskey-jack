@@ -90,7 +90,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         run.setAccelerator(KeyCombination.valueOf("Shortcut+R"));
         contextMenu.getItems().add(run);
         var infer = new MenuItem("Fix");
-        infer.setOnAction(ae -> new InferIntermediates().Scan(this));
+        infer.setOnAction(ae -> inferIntermediates());
         infer.setAccelerator(KeyCombination.valueOf("Shortcut+F"));
         contextMenu.getItems().add(infer);
         var fileActions = new Menu("File");
@@ -400,10 +400,10 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     @Override
     public void inferIntermediates() {
         if(!doInferIntermediates.getAndSet(true)) {
-            checkTypes();
             Platform.runLater(() -> {
                 doInferIntermediates.set(false);
                 new InferIntermediates().Scan(this);
+                adjustNames();
             });
         }
     }

@@ -10,7 +10,8 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 
-public class Graph<N extends Node, P extends Port, A extends Arc, G extends Graph> extends GraphPart<Graph<N, P, A, G>>/*sic*//*sic*//*sic*//*sic*/ {
+public class Graph<N extends Node, P extends Port, A extends Arc, G extends Graph>
+        extends GraphPart<Graph<N, P, A, G>>/*sic*//*sic*//*sic*//*sic*/ {
     public static final String graphFileExtension = "ade"; // Architecture Diagram Editor
     protected final Map<String, N> nByUid = new HashMap<>();
     private final Class<N> nodeClass;
@@ -77,6 +78,9 @@ public class Graph<N extends Node, P extends Port, A extends Arc, G extends Grap
     }
     public void forEachNode(Consumer<Node> f) {
         nByUid.values().forEach(f);
+    }
+    public Iterable<? extends Node> forEachNode() {
+        return nByUid.values();
     }
     public void forEachPort(Consumer<Port> f) {
         forEachNode((var n) -> n.forEachPort(f));

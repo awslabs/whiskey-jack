@@ -16,68 +16,91 @@ public class InferIntermediates {
     public void Scan(Graph g) {
         System.out.println("Inferring intermediates");
         context = g;
-        if(g.typeMismatches.isEmpty()) {
-            System.out.println("No type mismatches to fix!");
-            return;
-        }
-        var candidates = new ArrayList<CandidateSolution>();
-        var seen = new DTMap<Boolean>();
-        var fixes = 0;
-        for(var a: (List<Arc>) g.typeMismatches) {
-            /* search for a path through all possible metanodes that minimizes
+        var totalFixes = 0;
+        var laps = 10;
+        while(--laps > 0) {
+            new TypeCheck().Scan(g);
+            var candidates = new ArrayList<CandidateSolution>();
+            var seen = new DTMap<Boolean>();
+            var fixes = 0;
+            for(var a: (List<Arc>) g.typeMismatches) {
+                /* search for a path through all possible metanodes that minimizes
              * the weighted length of the path */
-            System.out.println("Attempting to solve " + a.getMessage());
-            var origin = a.oneEnd();
-            var target = a.otherEnd();
-            candidates.clear();
-            candidates.add(new CandidateSolution(null, null, null, origin));
-            seen.clear();
-            seen.putExact(origin, Boolean.TRUE);
-            while(workablePaths.isEmpty()) {
-                var toScan = candidates.toArray(n -> new CandidateSolution[n]);
-                if(toScan.length == 0) break;
+                System.out.println("Attempting to solve " + a.getMessage());
+                var origin = a.oneEnd();
+                var target = a.otherEnd();
                 candidates.clear();
-                for(var candidate: toScan) {
-                    var src = candidate.out;
-                    var ctr = new AtomicInteger(0);
-                    System.out.println(candidate.indent()+"  Extending "+candidate.name+": "+src.dtString());
-                    NodeLibrary.singleton.forEachNodeThatTakes(src.getDomain(), src.getType(),
-                            mn -> {
-                        ctr.incrementAndGet();
-                        if(candidate.contains(mn)) {
-                            System.out.println("\t\tSkipping loop " + mn.getName());
-                            return;
-                        }
-                        var pin = mn.defaultPort(true);
-                        var pout = mn.defaultPort(false);
-                        var cs = new CandidateSolution(candidate, mn, pin, pout);
-                        System.out.println(cs.indent() + cs);
-                        if(cs.out.compatibleWith(target)) {
-                            /* This gets us to the target */
-                            System.out.println(cs.out.compatibleWith(target) + " " + cs.out + "->" + target);
-                            workablePaths.add(cs);
-                        } else if(seen.getExact(cs.out) == null) {
-                            candidates.add(cs);
-                            seen.putExact(cs.out, Boolean.TRUE);
-                        } else
-                            System.out.println(cs.indent() + " Skipping " + cs.out.getFullName());
-                    });
-                    if(ctr.intValue()==0) System.out.println(candidate.indent()+" (no candidates)");
+                candidates.add(new CandidateSolution(null, null, null, origin));
+                seen.clear();
+                seen.putExact(origin, Boolean.TRUE);
+                while(workablePaths.isEmpty()) {
+                    var toScan = candidates.toArray(n -> new CandidateSolution[n]);
+                    if(toScan.length == 0) break;
+                    candidates.clear();
+                    for(var candidate: toScan) {
+                        var src = candidate.out;
+                        var ctr = new AtomicInteger(0);
+                        System.out.println(candidate.indent() + "  Extending " + candidate.name + ": " + src.dtString());
+                        NodeLibrary.singleton.forEachNodeThatTakes((Domain) src.getDomain(), src.getType(),
+                                mn -> {
+                            ctr.incrementAndGet();
+                            if(candidate.contains(mn)) {
+                                System.out.println("\t\tSkipping loop " + mn.getName());
+                                return;
+                            }
+                            var pin = mn.defaultPort(true);
+                            var pout = mn.defaultPort(false);
+                            var cs = new CandidateSolution(candidate, mn, pin, pout);
+                            System.out.println(cs.indent() + cs);
+                            if(cs.out.compatibleWith(target)) {
+                                /* This gets us to the target */
+                                System.out.println(cs.out.compatibleWith(target) + " " + cs.out + "->" + target);
+                                workablePaths.add(cs);
+                            } else if(seen.getExact(cs.out) == null) {
+                                candidates.add(cs);
+                                seen.putExact(cs.out, Boolean.TRUE);
+                            } else
+                                System.out.println(cs.indent() + " Skipping " + cs.out.getFullName());
+                        });
+                        if(ctr.intValue() == 0)
+                            System.out.println(candidate.indent() + " (no candidates)");
+                    }
+                }
+                if(workablePaths.isEmpty()) System.out.println("No candidates");
+                else {
+                    fixes++;
+                    System.out.println("Use " + workablePaths.first());
+                    a.delete();
+                    applyPath(origin, workablePaths.first(), target);
+                    if(context instanceof GraphView gv) gv.layoutNodes(false);
                 }
             }
-            if(workablePaths.isEmpty()) System.out.println("No candidates");
-            else {
-                fixes++;
-                System.out.println("Use " + workablePaths.first());
-                a.delete();
-                applyPath(origin, workablePaths.first(), target);
-                if(context instanceof GraphView gv) gv.layoutNodes(false);
+            for(var p: (Collection<Port>) g.disconnectedPorts) {
+                // TODO: do easy fixes on disconnected ports
+                System.out.println("Disconnected port " + p.getFullName() + " " + p.getDomain() + " " + p.getType() + " " + p.isOutputSide());
+//            if(p.isOutputSide()) continue;
+                var servicePort = NodeLibrary.singleton.getServiceProvider(p.getType());
+                if(servicePort != null) {
+                    System.out.println("  server: " + servicePort);
+                    var serviceNode = (MetaNode) servicePort.within;
+                    var n = (Node) null;
+                    for(Node search: (Iterable<Node>) g.forEachNode())
+                        if(search.metadata == serviceNode) {
+                            n = search;
+                            break;
+                        }
+                    if(n == null) n = context.newNode(serviceNode);
+                    p.connectTo(n.getPort(servicePort.getName()));
+                    fixes++;
+                }
+                if(fixes == 0) break;
+                totalFixes += fixes;
             }
-            if(fixes>0) g.layoutNodes(false);
         }
-        for(var p:(Collection<Port>)g.disconnectedPorts) {
-            // TODO: do easy fixes on disconnected ports
-        }
+        if(laps <= 0) context.error("Lap count exceeded");
+        if(totalFixes > 0) g.layoutNodes(false);
+        else
+            context.note("No errors were fixed");
     }
 
     private void applyPath(Port origin, CandidateSolution s, Port target) {
