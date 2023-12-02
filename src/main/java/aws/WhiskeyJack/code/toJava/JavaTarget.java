@@ -21,7 +21,7 @@ public class JavaTarget extends CodeTarget {
     }
     @Override
     public JavaTarget append(Expression e) {
-        append1[e.getOperator().getType()].append(e);
+        append1[e.getOperator().getKind()].append(e);
         return this;
     }
     public JavaTarget append(Expression e, Expression context) {
@@ -42,12 +42,12 @@ public class JavaTarget extends CodeTarget {
                 append(a, e);
             }
         });
-        append1[Token.identifierType] = e -> append(e.getOperator().getBody());
-        append1[Token.numberType] = e -> append(e.getOperator().getNum());
-        append1[Token.stringType] = e -> {
+        append1[Token.identifierKind] = e -> append(e.getOperator().getBody());
+        append1[Token.numberKind] = e -> append(e.getOperator().getNum());
+        append1[Token.stringKind] = e -> {
             appendDoubleQuoted(e.getOperator().getBody());
         };
-        append1[Vocabulary.INVOKE.getType()] = e->{
+        append1[Vocabulary.INVOKE.getKind()] = e->{
             append(e.arg(0));
             append('(');
             for(var i = 1; i<e.length(); i++) {
@@ -56,40 +56,40 @@ public class JavaTarget extends CodeTarget {
             }
             append(')');
         };
-        append1[Vocabulary.DOT.getType()] = e->{
+        append1[Vocabulary.DOT.getKind()] = e->{
             append(e.arg(0), e);
             for(var i = 1; i<e.length(); i++) {
                 append(".");
                 append(e.arg(i));
             }
         };
-        append1[Vocabulary.BLOCK.getType()] = e->{
+        append1[Vocabulary.BLOCK.getKind()] = e->{
             nl().append("{\n").indent();
             for(var i = 0; i<e.length(); i++)
                 append(e.arg(i)).append(";\n");
             outdent().append("}\n");
         };
-        append1[Vocabulary.RETURN.getType()] = e->{
+        append1[Vocabulary.RETURN.getKind()] = e->{
             append("return");
             if(e.length()>0) {
                 append(' ');
                 append(e.arg(0));
             }
         };
-        append1[Vocabulary.NEW.getType()] = e->{
+        append1[Vocabulary.NEW.getKind()] = e->{
             append("new");
             if(e.length()>0) {
                 append(' ');
                 append(e.arg(0));
             }
         };
-        append1[Vocabulary.NULL.getType()] = e->{
+        append1[Vocabulary.NULL.getKind()] = e->{
             append("null");
         };
-        append1[Vocabulary.TRUE.getType()] = e->{
+        append1[Vocabulary.TRUE.getKind()] = e->{
             append("true");
         };
-        append1[Vocabulary.FALSE.getType()] = e->{
+        append1[Vocabulary.FALSE.getKind()] = e->{
             append("false");
         };
     }

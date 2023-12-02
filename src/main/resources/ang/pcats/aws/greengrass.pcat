@@ -4,14 +4,12 @@
 domain: device
 children:
     nucleus:
-        Properties:
-            cname: aws.greengrass.Nucleus
+        cname: aws.greengrass.Nucleus-V2
         in: 
             gg:
                 type: ggnucleus (sic)
     TokenExchange:
-        Properties:
-            cname: aws.greengrass.TokenExchangeService
+        cname: aws.greengrass.TokenExchangeService
         in: 
             tes: 
                 type: tokenexchange (sic)

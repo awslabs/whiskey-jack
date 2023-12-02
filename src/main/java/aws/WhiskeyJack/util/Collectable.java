@@ -171,8 +171,8 @@ public abstract class Collectable {
     public String getStringProp(String s, String dflt) {
         return Coerce.toString(getProp(s, dflt));
     }
-    public String[] getStringListProp(String s) {
-        return Coerce.toStringArray(getProp(s, null));
+    public List<String> getStringListProp(String s) {
+        return Coerce.toStringList(getProp(s, null));
     }
     public boolean getBooleanProp(String s, boolean dflt) {
         return Coerce.toBoolean(getProp(s, dflt));

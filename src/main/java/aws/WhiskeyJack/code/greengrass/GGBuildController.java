@@ -12,11 +12,12 @@ import static aws.WhiskeyJack.util.Utils.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.regex.*;
 
 @GeneratesCodeFor("*/greengrass/*")
 public class GGBuildController implements DomainGenerationController,
         OverallCodeGenerationDriver.needsOuterBuildController {
-    private final List manifests = new ArrayList();
+    private final Map<String,Map<String,String>> dependencies = new HashMap();
 //    String description = "xyzzy";
     OuterBuildController context;
     DomainGenerationController subController;
@@ -32,7 +33,7 @@ public class GGBuildController implements DomainGenerationController,
         "ComponentVersion", Question.question("version").asString(),
         "ComponentDescription", Question.question("description").asString(),
         "ComponentPublisher", Question.question("author").asString(),
-        "Manifests", manifests);
+        "ComponentDependencies", dependencies);
 //        root.put("ComponentConfiguration", "");
 //  DefaultConfiguration:
 //    Message: "World"
@@ -50,13 +51,28 @@ public class GGBuildController implements DomainGenerationController,
     }
     @Override
     public void generate(List<Node> nodes, CodeTarget target) {
-        subController.generate(nodes, subController.makeOutput());
+        var sco = subController.makeOutput();
+        sco.start(target.getDomain());
+        System.out.println("GG BC "+sco.getDomain());
+        subController.generate(nodes, sco);
         nodes.forEach(n -> {
             var cname = n.getStringProp("cname", null);
             System.out.println("GG generate " + n.getName() + " cn " + cname);
-            if(!isEmpty(cname)) manifests.add(cname);
+            if(!isEmpty(cname)) {
+                var m = new HashMap<String,String>();
+                var match = vnamepat.matcher(cname);
+                var version = "*";
+                if(match.matches()) {
+                    cname = match.group(1);
+                    version = match.group(2);
+                }
+                m.put("VersionRequirement", version);
+                dependencies.put(cname,m);
+            }
         });
+        sco.close();
     }
+    private static final Pattern vnamepat = Pattern.compile("([^- ]+) *-[ vV]*(.+)");
     private Object dup(Node context, Object o) {
         return switch(o) {
             case null ->

@@ -5,44 +5,47 @@
 
 package aws.WhiskeyJack.exl;
 
+import aws.WhiskeyJack.nodegraph.*;
 import java.util.*;
 
 
 public class Vocabulary {
     public static final Token AND = operator("&");
-    public static final Token ANDAND = operator("&&", "\u2227");
+    public static final Token ANDAND = operator("&&", "\u2227"); // ∧
     public static final Token ARRAYLITERAL = operator("arraylit:");
-    public static final Token ASSIGN = operator("=", "\u2190");
+    public static final Token ASSIGN = operator("=", "\u2190"); // ←
     public static final Token BLOCK = operator("block:");
-    public static final Token CASE = Token.keyword("case");
+    public static final Token CASE = Token.keyword("cast:");
+    public static final Token CAST = Token.keyword("case");
     public static final Token COLON = operator(":");
     public static final Token COMMA = operator(",");
+    public static final Token DECLARE = operator("var");
     public static final Token DECLAREASSIGN = operator(":=");
     public static final Token DECLAREASSIGNFINAL = operator(":==");
     public static final Token DEFAULT = Token.keyword("default");
     public static final Token DIVIDE = operator("/", "\u00f7");
     public static final Token DO = Token.keyword("do");
     public static final Token DOT = operator(".");
-    public static final Token ELEMENTOF = operator("\u2208"); // element of \u2208
     public static final Token ELSE = Token.keyword("else");
     public static final Token EOF = Token.keyword("-EOF-");
-    public static final Token EQ = operator("==", "\u2261");
+    public static final Token EQ = operator("==", "\u2261"); // ≡
     public static final Token FALSE = Token.keyword("false");
-    public static final Token FOR = operator("for", "\u2200"); // for all \u2200
-    public static final Token GE = operator(">=", "\u2265");
+    public static final Token FOR = operator("for", "\u2200"); // for all ∀ \u2200
+    public static final Token FUNCTION = operator("defun:");
+    public static final Token GE = operator(">=", "\u2265"); // ≥
     public static final Token GT = operator(">");
     public static final Token IF = Token.keyword("if");
-    public static final Token INSTANCEOF = Token.keyword("instanceof");
+    public static final Token INSTANCEOF = operator("instanceof","\u220A", "\u2208"); // ∊, ∈
     public static final Token INVOKE = operator("invoke:");
     public static final Token LBRACE = operator("{");
-    public static final Token LE = operator("<=", "\u2264");
+    public static final Token LE = operator("<=", "\u2264"); // ≤
     public static final Token LPAREN = operator("(");
     public static final Token LSQUARE = operator("[");
     public static final Token LT = operator("<");
     public static final Token MAPLIT = operator("map:");
     public static final Token MINUS = operator("-", "\u2212"); // minus sign \u2212
-    public static final Token MULTIPLY = operator("*", "\u00d7");
-    public static final Token NE = operator("!=", "\u2260");
+    public static final Token MULTIPLY = operator("*", "\u00d7"); // ×
+    public static final Token NE = operator("!=", "\u2260"); // ≠
     public static final Token NEW = Token.keyword("new");
     public static final Token NOT = operator("!", "\u00ac");
     public static final Token NULL = operator("null", "\u2205"); // empty set \u2205
@@ -61,78 +64,110 @@ public class Vocabulary {
     public static final Token SlashSlashCOMMENT = operator("//");
     public static final Token SlashStarCOMMENT = operator("/*");
     public static final Token TRUE = Token.keyword("true");
+    public static final Token TYPE = Token.keyword("type:");
     public static final Token UNKNOWN = operator(" \u00a1unknown!");
     public static final Token WHILE = Token.keyword("while");
-    private static boolean[] flatten;
-    private static int[] priority;
-    private static boolean[] rightAssoc;
+    private static final boolean[] flatten;
+    private static final int[] priority;
+    private static final boolean[] rightAssoc;
+    private static final Type[] likelyType;
     
     public static int getPriority(Token op) {
-        return priority[op.getType()];
+        return priority[op.getKind()];
     }
+    public static int[] getStandardPriorityTable() { return priority; }
     public static boolean canFlatten(Token op) {
-        return flatten[op.getType()];
+        return flatten[op.getKind()];
     }
     public static boolean isRightAssoc(Token op) {
-        return rightAssoc[op.getType()];
+        return rightAssoc[op.getKind()];
     }
-    private static void initOpProperties() {
-        {
-            int[] p = new int[Token.typeTableSize()];
+    public static Type likelyType(Token op) {
+        return likelyType[op.getKind()];
+    }
+    private static void initOpProperties() {}
+    static {{
+            int[] p = new int[Token.kindTableSize()];
             int v = 1;
-            Arrays.fill(p, 0, Token.numberType+1, 99);
+            Arrays.fill(p, 0, Token.numberKind+1, 99);
             v++;
-            p[RARROW.getType()] = v;
+            p[RARROW.getKind()] = v;
             v++;
-            p[ASSIGN.getType()] = v;
-            p[DECLAREASSIGN.getType()] = v;
-            p[DECLAREASSIGNFINAL.getType()] = v;
+            p[ASSIGN.getKind()] = v;
+            p[DECLAREASSIGN.getKind()] = v;
+            p[DECLAREASSIGNFINAL.getKind()] = v;
             v++;
-            p[QUESTION.getType()] = v;
-            p[COLON.getType()] = v;
+            p[QUESTION.getKind()] = v;
+            p[COLON.getKind()] = v;
             v++;
-            p[ANDAND.getType()] = v;
-            p[AND.getType()] = v;
-            p[OR.getType()] = v;
-            p[OROR.getType()] = v;
+            p[ANDAND.getKind()] = v;
+            p[AND.getKind()] = v;
+            p[OR.getKind()] = v;
+            p[OROR.getKind()] = v;
             v++;
-            p[INSTANCEOF.getType()] = v;
-            p[LT.getType()] = v;
-            p[LE.getType()] = v;
-            p[GT.getType()] = v;
-            p[GE.getType()] = v;
-            p[EQ.getType()] = v;
-            p[NE.getType()] = v;
-            p[ELEMENTOF.getType()] = v;
+            p[INSTANCEOF.getKind()] = v;
+            p[LT.getKind()] = v;
+            p[LE.getKind()] = v;
+            p[GT.getKind()] = v;
+            p[GE.getKind()] = v;
+            p[EQ.getKind()] = v;
+            p[NE.getKind()] = v;
             v++;
-            p[PLUS.getType()] = v;
-            p[MINUS.getType()] = v;
+            p[PLUS.getKind()] = v;
+            p[MINUS.getKind()] = v;
             v++;
-            p[DIVIDE.getType()] = v;
-            p[MULTIPLY.getType()] = v;
+            p[DIVIDE.getKind()] = v;
+            p[MULTIPLY.getKind()] = v;
             v++;
-            p[INVOKE.getType()] = v;
-            p[BLOCK.getType()] = v;
+            p[INVOKE.getKind()] = v;
+            p[BLOCK.getKind()] = v;
+            p[DOT.getKind()] = v;
             priority = p;
         }
         {
-            boolean[] p = new boolean[Token.typeTableSize()];
-            p[ASSIGN.getType()] = true;
-            p[DECLAREASSIGN.getType()] = true;
-            p[DECLAREASSIGNFINAL.getType()] = true;
+            boolean[] p = new boolean[Token.kindTableSize()];
+            p[ASSIGN.getKind()] = true;
+            p[DECLAREASSIGN.getKind()] = true;
+            p[DECLAREASSIGNFINAL.getKind()] = true;
             rightAssoc = p;
         }
         {
-            boolean[] p = new boolean[Token.typeTableSize()];
-            p[COMMA.getType()] = true;
-            p[SEMI.getType()] = true;
-            p[ANDAND.getType()] = true;
-            p[AND.getType()] = true;
-            p[OR.getType()] = true;
-            p[OROR.getType()] = true;
-            p[PLUS.getType()] = true;
-            p[MULTIPLY.getType()] = true;
+            boolean[] p = new boolean[Token.kindTableSize()];
+            p[COMMA.getKind()] = true;
+            p[SEMI.getKind()] = true;
+            p[ANDAND.getKind()] = true;
+            p[AND.getKind()] = true;
+            p[OR.getKind()] = true;
+            p[OROR.getKind()] = true;
+            p[PLUS.getKind()] = true;
+            p[MULTIPLY.getKind()] = true;
             flatten = p;
+        }
+        {
+            var p = new Type[Token.kindTableSize()];
+            Arrays.fill(p, Type.unknown);
+            p[Vocabulary.NOT.getKind()] = Type.bool;
+            p[Vocabulary.OR.getKind()] = Type.bool;
+            p[Vocabulary.OROR.getKind()] = Type.bool;
+            p[Vocabulary.INSTANCEOF.getKind()] = Type.bool;
+            p[Vocabulary.LT.getKind()] = Type.bool;
+            p[Vocabulary.LE.getKind()] = Type.bool;
+            p[Vocabulary.GT.getKind()] = Type.bool;
+            p[Vocabulary.GE.getKind()] = Type.bool;
+            p[Vocabulary.EQ.getKind()] = Type.bool;
+            p[Vocabulary.NE.getKind()] = Type.bool;
+            p[Vocabulary.ANDAND.getKind()] = Type.bool;
+            p[Vocabulary.AND.getKind()] = Type.bool;
+            p[Vocabulary.OR.getKind()] = Type.bool;
+            p[Vocabulary.OROR.getKind()] = Type.bool;
+            p[Vocabulary.TRUE.getKind()] = Type.bool;
+            p[Vocabulary.FALSE.getKind()] = Type.bool;
+            p[PLUS.getKind()] = Type.number;
+            p[MINUS.getKind()] = Type.number;
+            p[DIVIDE.getKind()] = Type.number;
+            p[MULTIPLY.getKind()] = Type.number;
+            p[NEW.getKind()] = Type.tuple;
+            likelyType = p;
         }
     }
     
@@ -144,5 +179,7 @@ public class Vocabulary {
                 Tokenizer.define(op).setToken(token);
         return token;
     }
+    public static final Expression finalMarker = Expression.of(NULL);
+    public static final Expression varMarker = Expression.of(NULL);
     static { initOpProperties(); }
 }

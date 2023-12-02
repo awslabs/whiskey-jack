@@ -12,6 +12,7 @@ import javafx.application.*;
 import javafx.beans.property.*;
 import javafx.fxml.*;
 import javafx.scene.*;
+import javafx.scene.image.*;
 import javafx.stage.*;
 
 public class Main extends Application {
@@ -19,18 +20,24 @@ public class Main extends Application {
     @Override
     public void start(Stage win) {
         try {
-            setPref(win, "w", win.widthProperty(), w -> win.setWidth(w));
-            setPref(win, "h", win.heightProperty(), w -> win.setHeight(w));
-            setPref(win, "x", win.xProperty(), w -> win.setX(w));
-            setPref(win, "y", win.yProperty(), w -> win.setY(w));
+            setPref("w", win.widthProperty(), w -> win.setWidth(w));
+            setPref("h", win.heightProperty(), w -> win.setHeight(w));
+            setPref("x", win.xProperty(), w -> win.setX(w));
+            setPref("y", win.yProperty(), w -> win.setY(w));
             win.setTitle("Whiskey Jack");
             win.setScene(new Scene(new FXMLLoader(GraphView.class.getResource("NodeEditor.fxml")).load(), 1000, 640));
             win.show();
+            Platform.runLater(() -> {
+                var gv = GraphView.rootWindow();
+                if(gv != null) gv.requestFocus();
+                win.getIcons().add(new Image(NodeView.class
+                        .getResourceAsStream("WhiskeyJackIcon.png")));
+            });
         } catch(IOException ex) {
             ex.printStackTrace(System.out);
         }
     }
-    private void setPref(Window w, String name, ReadOnlyDoubleProperty getter, DoubleConsumer setter) {
+    private void setPref(String name, ReadOnlyDoubleProperty getter, DoubleConsumer setter) {
         var v = prefs.getDouble(name, -42);
         if(v >= 0) setter.accept(v);
         getter.addListener((e, o, n) -> prefs.putDouble(name, n.doubleValue()));

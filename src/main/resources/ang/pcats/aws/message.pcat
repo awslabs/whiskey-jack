@@ -29,8 +29,7 @@ children:
             data: tuple
             target: string
     streamManager:
-        Properties:
-            cname: aws.greengrass.StreamManager
+        cname: aws.greengrass.StreamManager
         domain: device
         in:
             in:

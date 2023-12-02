@@ -18,4 +18,5 @@ module aws.WhiskeyJack {
     opens aws.WhiskeyJack.metadataeditor to javafx.fxml;
     opens aws.WhiskeyJack.nodeviewerfx to javafx.graphics, javafx.fxml;
     exports aws.WhiskeyJack;
+    requires javafx.graphicsEmpty;
 }

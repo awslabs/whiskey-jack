@@ -5,6 +5,7 @@
 package aws.WhiskeyJack.code.gradle;
 
 import aws.WhiskeyJack.code.*;
+import aws.WhiskeyJack.exl.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Exec.*;
@@ -54,6 +55,11 @@ public class GradleBuildController implements OuterBuildController,
         } catch(IOException ex) {
             error(ex);
         }
+        // TODO: this is just debug code
+        domains.forEach(d->{
+            var dc = new DomainCode(d.getNodes());
+            dc.optimize();
+        });
     }
     @Override
     public Graph getWholeGraph() {

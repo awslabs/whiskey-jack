@@ -62,7 +62,7 @@ public class Tokenizer {
         }
         return lab[labPosition + n];
     }
-    public Token actuallyGetToken() throws IOException {
+    private Token actuallyGetToken() throws IOException {
         char c;
         while((c = getc()) <= ' ')
             if(c == EOTchar) return Vocabulary.EOF;

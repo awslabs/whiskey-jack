@@ -48,6 +48,7 @@ public class OneDomain implements Closeable {
         out.comment("Code for domain " + domain);
         generator().generate(nodes, out);
     }
+    public Collection<Node> getNodes() { return nodes; }
     @Override
     public void close() {
         generator().close();

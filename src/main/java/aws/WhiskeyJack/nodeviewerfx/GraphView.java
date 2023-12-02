@@ -144,6 +144,29 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         selection.addDomainListener(l -> {
             if(propboxVisible) populatePropbox();
         });
+        
+        // I hate this, but it works:
+        new Thread() {
+            { setPriority(MIN_PRIORITY); setName("Metadata error messages"); }
+            @Override @SuppressWarnings("SleepWhileInLoop")
+            public void run() {
+                while(true) {
+                    try {
+                        sleep(1000);
+                    } catch(InterruptedException ex) { }
+                    var w = rootWindow();
+                    if(w==null || !w.isShowing()) continue;
+                    List<aws.WhiskeyJack.nodegraph.Type> typeErrors = new ArrayList<>();
+                    aws.WhiskeyJack.nodegraph.Type.forEachErroredType(t->typeErrors.add(t));
+                    System.out.println(typeErrors.isEmpty() ? "No errors in metadata type names"
+                            : "Errors found in metadata type names");
+                    if(!typeErrors.isEmpty())
+                        error("The following types were found in the metadata",
+                                "whose name was probably misspelt", typeErrors);
+                    break;
+                } 
+            } 
+        }.start();
     }
     private void addMenu(MetaNode n, String[] names) {
         var items = contextMenu.getItems();

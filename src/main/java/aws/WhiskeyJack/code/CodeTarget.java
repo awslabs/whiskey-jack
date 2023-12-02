@@ -52,6 +52,7 @@ public abstract class CodeTarget implements Closeable {
     public String getDestinationName() {
         return domain.getName();
     }
+    public Domain getDomain() { return domain; } 
     public String getDestinationExtension() {
         return "txt";
     }

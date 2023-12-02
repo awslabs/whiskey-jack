@@ -4,7 +4,6 @@
  */
 package aws.WhiskeyJack.nodegraph;
 
-import static aws.WhiskeyJack.nodegraph.ErrorCode.*;
 import aws.WhiskeyJack.util.*;
 import java.util.*;
 import java.util.function.*;
@@ -27,12 +26,12 @@ public abstract class GraphPart<T extends GraphPart> extends Collectable {
         return (T) this;
     }
     public T setMessage(ErrorCode ec, String m) {
-        errorCode = ec==null ? allIsWell : ec;
+        errorCode = ec==null ? ErrorCode.allIsWell : ec;
         message = m;
         return (T) this;
     }
     public final T setMessage(String m) {
-        return setMessage(allIsWell, m);
+        return setMessage(ErrorCode.allIsWell, m);
     }
     public abstract Graph getContext();
     @Override

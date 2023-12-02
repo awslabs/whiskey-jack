@@ -10,7 +10,7 @@ import aws.WhiskeyJack.exl.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
 import java.io.*;
-import java.nio.file.*;
+//import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.regex.*;
@@ -18,7 +18,6 @@ import java.util.regex.*;
 @GeneratesCodeFor("*/java")
 public class JavaGenerator implements DomainGenerationController,
         OverallCodeGenerationDriver.needsOuterBuildController {
-    String error = null;
     CodeTarget out;
     Set<String> imports = new HashSet<>();
     Set<String> libraries = new HashSet<>();
@@ -32,31 +31,32 @@ public class JavaGenerator implements DomainGenerationController,
         System.out.println("  Whoo! " + this);
         var m = Pattern.compile("^([^.]*)\\..*").matcher(out.getPath().getFileName().toString());
         className = m.group(m.matches() ? 1 : 0);
-        nodes.forEach(n -> n.sidecar(NodeGenerationInfo.class));
-        nodes.forEach(n -> {
-            for(var im: n.getStringListProp("import"))
-                imports.add(im);
-            for(var lib: n.getStringListProp("library"))
-                libraries.add(lib);
-            for(var dep: n.getStringListProp("dependencies"))
-                dependencies.add(dep);
+        nodes.forEach((Node n) -> {
+            n.sidecar(NodeGenerationInfo.class);
+        });
+        nodes.forEach((Node n) -> {
+            imports.addAll(n.getStringListProp("import"));
+            libraries.addAll(n.getStringListProp("library"));
+            dependencies.addAll(n.getStringListProp("dependencies"));
         });
         out.append("package ").append(packageName).append(";\n");
-        imports.forEach(im -> out.append("import ").append(im).append(";\n"));
+        imports.forEach((String im) -> {
+            out.append("import ").append(im).append(";\n");
+        });
         out.comment(libraries);
         out.append("public class ")
                 .append(className)
                 .append(" {\n")
                 .indent();
-        nodes.forEach(n -> {
+        nodes.forEach((Node n) -> {
             Collection<String> header = new ArrayList<>();
             var info = n.sidecar(NodeGenerationInfo.class);
             header.add("Node " + n.getName() + " (" + n.getUid() + ")");
             n.forEachPort((Consumer<Port>) (p -> {
                 header.add((p.isInputSide() ? "in  " : "out ") + p.getType()
-                           + '\t' + p.getName()
-                           + '\t' + p.getValue()
-                           + '\t' + p.isConnected());
+                               + '\t' + p.getName()
+                               + '\t' + p.getValue()
+                               + '\t' + p.isConnected());
             }));
             info.inputs.forEach(input -> header.add("input " + input));
             info.outputs.forEach(output -> header.add("output " + output));
@@ -68,24 +68,24 @@ public class JavaGenerator implements DomainGenerationController,
             if(state != null)
                 forAllBaseExpressionsIn(parse(state),
                         ist0 -> {
-                    var ist = info.rewritePorts(ist0);
-                    var t = ist.getOperator();
-                    if(t == Vocabulary.DECLAREASSIGN || t == Vocabulary.DECLAREASSIGNFINAL) {
-                        flushPendingInit();
-                        var name = ist.arg(0);
-                        var exp = ist.arg(1);
-                        out.append("private ");
-                        if(t == Vocabulary.DECLAREASSIGNFINAL)
-                            out.append("final ");
-                        out.append(typeFrom(exp))
-                                .append(' ')
-                                .append(name)
-                                .append(" = ")
-                                .append(exp)
-                                .append(';')
-                                .nl();
-                    } else pendingInit.add(ist);
-                });
+                            var ist = info.rewritePorts(ist0);
+                            var t = ist.getOperator();
+                            if(t == Vocabulary.DECLAREASSIGN || t == Vocabulary.DECLAREASSIGNFINAL) {
+                                flushPendingInit();
+                                var name = ist.arg(0);
+                                var exp = ist.arg(1);
+                                out.append("private ");
+                                if(t == Vocabulary.DECLAREASSIGNFINAL)
+                                    out.append("final ");
+                                out.append(typeFrom(exp))
+                                        .append(' ')
+                                        .append(name)
+                                        .append(" = ")
+                                        .append(exp)
+                                        .append(';')
+                                        .nl();
+                            } else pendingInit.add(ist);
+                        });
             if(callback != null)
                 forAllBaseExpressionsIn(parse(callback),
                         ist -> pendingInit.add(info.rewritePorts(ist)));
@@ -147,11 +147,11 @@ public class JavaGenerator implements DomainGenerationController,
         nodes.forEach(n -> n.removeSidecar(NodeGenerationInfo.class));
 //        return error;
     }
-    private StrategyPath strategyPath;
+//    private StrategyPath strategyPath;
     @Override
     public void setStrategyPath(StrategyPath p) {
-        System.out.println("  java generator followon path "+p);
-        strategyPath = p;
+//        System.out.println("  java generator followon path "+p);
+//        strategyPath = p;
     }
     private Expression parse(String s) {
         try {
@@ -178,21 +178,6 @@ public class JavaGenerator implements DomainGenerationController,
             pendingInit.clear();
         }
     }
-    private static String typeFrom(Expression e) {
-        if(e == null) return "void";
-        var op = e.getOperator();
-        if(op.isNumber()) return "double";
-        if(op.isString()) return "string";
-        if(isBoolean == null) initOpProperties();
-        if(isBoolean[op.getType()]) return "boolean";
-        if(op == Vocabulary.NEW) {
-            // (new (invoke T args))
-            var ne = e.arg(0);
-            if(ne.getOperator() == Vocabulary.INVOKE)
-                return ne.arg(0).toString(); // TODO: pretty hacky
-        }
-        return "void";
-    }
     private static String typeFrom(Type e) {
         if(e == Type.number) return "double";
         if(e == Type.string) return "String";
@@ -201,6 +186,17 @@ public class JavaGenerator implements DomainGenerationController,
         if(e == Type.tuple) return "Map";
         return "void";
     }
+    private static String typeFrom(Expression e) {
+        if(e==null) return "unknown";
+        var t = e.getType();
+        if(t==Type.tuple) {
+            // (new (invoke T args))
+            Expression ne = e.arg(0);
+            if(ne.getOperator() == Vocabulary.INVOKE)
+                return ne.arg(0).toString(); // TODO: pretty hacky
+        }
+        return typeFrom(t);
+    }
     private static void forAllBaseExpressionsIn(Expression e, Consumer<Expression> func) {
         if(e != null)
             if(e.getOperator() == Vocabulary.BLOCK)
@@ -208,64 +204,40 @@ public class JavaGenerator implements DomainGenerationController,
                     forAllBaseExpressionsIn(e2, func);
             else func.accept(e);
     }
-    private static void initOpProperties() {
-        {
-            var p = new boolean[Token.typeTableSize()];
-            Arrays.fill(p, false);
-            p[Vocabulary.NOT.getType()] = true;
-            p[Vocabulary.OR.getType()] = true;
-            p[Vocabulary.OROR.getType()] = true;
-            p[Vocabulary.INSTANCEOF.getType()] = true;
-            p[Vocabulary.LT.getType()] = true;
-            p[Vocabulary.LE.getType()] = true;
-            p[Vocabulary.GT.getType()] = true;
-            p[Vocabulary.GE.getType()] = true;
-            p[Vocabulary.EQ.getType()] = true;
-            p[Vocabulary.NE.getType()] = true;
-            p[Vocabulary.ANDAND.getType()] = true;
-            p[Vocabulary.AND.getType()] = true;
-            p[Vocabulary.OR.getType()] = true;
-            p[Vocabulary.OROR.getType()] = true;
-            p[Vocabulary.TRUE.getType()] = true;
-            p[Vocabulary.FALSE.getType()] = true;
-            isBoolean = p;
-        }
-    }
-    void generatePOM() {
-
-        try(var pom = Files.newBufferedWriter(out.getCodeRootDirectory().resolve("pom.xml"),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING)) {
-            pom.append(
-                    """
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>ade.exp</groupId>
-    <artifactId>adeWhatever</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-    </properties>
-                       """);
-            if(!dependencies.isEmpty()) {
-                pom.append("    <dependencies>\n");
-                dependencies.forEach(d -> {
-                    try {
-                        pom.append("\t<dependency>\n\t  " + d + "\n\t</dependency>\n");
-                    } catch(IOException ioe) {
-                    }
-                });
-                pom.append("    </dependencies>\n");
-            }
-            pom.append("</project>\n");
-        } catch(IOException ex) {
-            out.comment(ex.toString());
-        }
-    }
-    private static boolean[] isBoolean;
+//    void generatePOM() {
+//
+//        try(var pom = Files.newBufferedWriter(out.getCodeRootDirectory().resolve("pom.xml"),
+//                StandardOpenOption.CREATE,
+//                StandardOpenOption.TRUNCATE_EXISTING)) {
+//            pom.append(
+//                    """
+//<?xml version="1.0" encoding="UTF-8"?>
+//<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+//    <modelVersion>4.0.0</modelVersion>
+//    <groupId>ade.exp</groupId>
+//    <artifactId>adeWhatever</artifactId>
+//    <version>1.0-SNAPSHOT</version>
+//    <packaging>jar</packaging>
+//    <properties>
+//        <maven.compiler.source>21</maven.compiler.source>
+//        <maven.compiler.target>21</maven.compiler.target>
+//    </properties>
+//                       """);
+//            if(!dependencies.isEmpty()) {
+//                pom.append("    <dependencies>\n");
+//                dependencies.forEach(d -> {
+//                    try {
+//                        pom.append("\t<dependency>\n\t  " + d + "\n\t</dependency>\n");
+//                    } catch(IOException ioe) {
+//                    }
+//                });
+//                pom.append("    </dependencies>\n");
+//            }
+//            pom.append("</project>\n");
+//        } catch(IOException ex) {
+//            out.comment(ex.toString());
+//        }
+//    }
     @Override
     public CodeTarget makeOutput() {
         assert context!=null;
@@ -282,46 +254,41 @@ public class JavaGenerator implements DomainGenerationController,
     }
 
     public static class NodeGenerationInfo {
-        private final Node node;
         private final Map<String, Expression> portValues = new HashMap<>();
         Collection<Port> inputs = new ArrayList<>();
         Collection<Port> outputs = new ArrayList<>();
 
         public NodeGenerationInfo(Node n) {
-            node = n;
-            node.forEachPort(new Consumer<Port>() {
-                @Override
-                public void accept(Port p) {
-                    var t = p.getType();
-                    var k = p.getName();
-                    if(p.isConnected()) {
-                        (p.isInputSide() ? inputs : outputs).add(p);
-                        portValues.put(k, Expression.of(Token.identifier(uniqueName(p))));
-                    } else {
-                        var nv = p.getValue();
-                        System.out.println("Constant port " + p.getFullName() + " = " + nv);
-                        var v = switch(nv) {
-                            case String str ->
-                                t == Type.string
-                                ? Expression.of(Token.string(str))
-                                : parse(str);
-                            case Expression ev ->
-                                ev;
-                            case Number num ->
-                                Expression.of(Token.number(num));
-                            case null ->
-                                Expression.of(t == Type.string ? emptyString : Vocabulary.NULL);
-                            default ->
-                                Expression.of(Token.string(String.valueOf(nv)));
-                        };
-                        System.out.println("rewrite " + k + " to " + v);
-                        portValues.put(k, v);
-                    }
+            n.forEachPort((Consumer<Port>) p -> {
+                var t = p.getType();
+                var k = p.getName();
+                if(p.isConnected()) {
+                    (p.isInputSide() ? inputs : outputs).add(p);
+                    portValues.put(k, Expression.of(Token.identifier(uniqueName(p))));
+                } else {
+                    var nv = p.getValue();
+                    System.out.println("Constant port " + p.getFullName() + " = " + nv);
+                    var v = switch(nv) {
+                        case String str ->
+                            t == Type.string
+                            ? Expression.of(Token.string(str))
+                            : parse(str);
+                        case Expression ev ->
+                            ev;
+                        case Number num ->
+                            Expression.of(Token.number(num));
+                        case null ->
+                            Expression.of(t == Type.string ? emptyString : Vocabulary.NULL);
+                        default ->
+                            Expression.of(Token.string(String.valueOf(nv)));
+                    };
+                    System.out.println("rewrite " + k + " to " + v);
+                    portValues.put(k, v);
                 }
             });
         }
         Expression rewritePorts(Expression e) {
-            return e.rewrite(exNode -> {
+            return e.rewrite((Expression exNode) -> {
                 var op = exNode.getOperator();
                 if(op.isIdentifier()) {
                     System.out.println("Found Identifier " + exNode);
@@ -341,7 +308,7 @@ public class JavaGenerator implements DomainGenerationController,
                 return new Parser(new Tokenizer(s)).expression();
             } catch(IOException ex) {
                 ex.printStackTrace(System.out);
-                if(errors==null) errors = new ArrayList<String>();
+                if(errors==null) errors = new ArrayList<>();
                 errors.add("Error parsing "+ s);
                 errors.add(ex.toString());
                 return JavaGenerator.clean(Expression.of(Token.string(s)));

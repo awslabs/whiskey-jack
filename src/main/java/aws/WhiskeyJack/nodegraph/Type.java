@@ -13,7 +13,7 @@ import java.util.regex.*;
 public class Type extends Collectable {
     private final String name;
     private final Object dflt;
-    boolean error = false;
+    private boolean error = false;
     @SuppressWarnings("")
     private Type(String n, Object d) {
         name = n;
@@ -30,13 +30,13 @@ public class Type extends Collectable {
     }
     public static Type guess(Object value) {
         return switch(value) {
-            case Number n ->
+            case Number _ ->
                 number;
-            case Boolean b ->
+            case Boolean _ ->
                 bool;
-            case String s ->
+            case String _ ->
                 string;
-            case Map m ->
+            case Map _ ->
                 tuple;
             case null ->
                 any;
@@ -120,6 +120,9 @@ public class Type extends Collectable {
     public static void forEachType(Consumer<Type> f) {
         all.values().forEach(f);
     }
+    public static void forEachErroredType(Consumer<Type> f) {
+        all.values().stream().filter(t->t.error).forEach(f);
+    }
     public boolean isEnum() {
         return false;
     }
@@ -174,6 +177,8 @@ public class Type extends Collectable {
     public static final Type object = new Type("object", null); // ?    
 
     public static final Type err = new Type("err", null);
+    public static final Type voidType = new Type("void", null);
+    public static final Type unknown = new Type("unknown", null);
 
     private static final Pattern seperators = Pattern.compile(" *[,;] *");
 }

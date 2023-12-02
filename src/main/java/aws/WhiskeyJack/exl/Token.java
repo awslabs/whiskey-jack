@@ -9,17 +9,17 @@ import java.io.*;
 import java.util.*;
 
 public class Token {
-    public static final int identifierType = 0;
-    public static final int stringType = 1;
-    public static final int numberType = 2;
-    private static int typeSequence = numberType;
-    private final String body;
-    private final int type;
-    private final Number num;
-    private Token(String b, int t, Number n) {
+    public static final int identifierKind = 0;
+    public static final int stringKind = 1;
+    public static final int numberKind = 2;
+    private static final int firstToken = 3;
+    private static int kindSequence = firstToken;
+    private final Object body;
+    private final int kind;
+    private Token(Object b, int k) {
         body = b;
-        type = t;
-        num = n;
+        assert b!=null;
+        kind = k;
     }
     @Override
     public String toString() {
@@ -28,81 +28,62 @@ public class Token {
     public StringBuilder appendTo(StringBuilder sb) {
         if(sb == null) sb = new StringBuilder();
         if(body != null)
-            if(type == stringType) try {
+            if(kind == stringKind) try {
                 sb.append('"');
                 Utils.deepToStringQuoted(body, sb, 99999);
                 sb.append('"');
             } catch(IOException ex) {
             } else sb.append(body);
-        else sb.append(num);
         return sb;
     }
-    private static Token of(String s, int t) {
-        return cache.computeIfAbsent(s, S -> new Token(S, t, null));
+    private static Token of(String s, int k) {
+        return cache.computeIfAbsent(s, S -> new Token(s, k));
     }
     public static Token string(String s) {
-        return new Token(s, stringType, null);
+        return new Token(s, stringKind);
     }
     public static Token identifier(String s) {
-        return of(s, identifierType);
+        return of(s, identifierKind);
     }
     public static Token keyword(String s) {
-        return of(s, ++typeSequence);
+        return of(s, kindSequence++);
     }
     public static Token number(Number n) {
-        return new Token(null, numberType, n);
+        return cache.computeIfAbsent(n, N -> new Token(n, numberKind));
     }
-    private static final Map<String, Token> cache = new HashMap<>();
+    private static final Map<Object, Token> cache = new HashMap<>();
     public String getBody() {
-        return body;
+        return String.valueOf(body);
     }
-    public int getType() {
-        return type;
+    public int getKind() {
+        return kind;
     }
     public Number getNum() {
-        return num;
+        return (Number)body;
     }
     @Override
     public int hashCode() {
-        return switch(type) {
-            case identifierType ->
-                body.hashCode();
-            case stringType ->
-                body.hashCode();
-            case numberType ->
-                num.hashCode();
-            default ->
-                type;
-        };
+        return body.hashCode();
     }
     @Override
     public boolean equals(Object t) {
-        return t == this
-                ? true
-                : t instanceof Token T
-                        ? switch(type) {
-            case stringType ->
-                body.equals(T.body);
-            case numberType ->
-                num.equals(T.num);
-            default ->
-                false;
-        }
-                : false;
+        return t == this ? true
+            : t instanceof Token T ? kind==T.kind && body.equals(T.body)
+            : false;
     }
     public boolean isIdentifier() {
-        return type == identifierType;
+        return kind == identifierKind;
     }
     public boolean isString() {
-        return type == stringType;
+        return kind == stringKind;
     }
     public boolean isNumber() {
-        return type == numberType;
+        return kind == numberKind;
     }
     public boolean isKeyword() {
-        return type > numberType;
+        return kind >= firstToken;
     }
-    public static int typeTableSize() {
-        return typeSequence + 1;
+    public static int kindTableSize() {
+        return kindSequence;
     }
 }

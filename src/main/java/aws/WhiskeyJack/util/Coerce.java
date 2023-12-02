@@ -142,7 +142,7 @@ public final class Coerce {
         if(o instanceof Topic topic)
             o = topic.getOnce();
         if(o == null)
-            return new String[0];
+            return emptyStrings;
         if(o instanceof String[] strings)
             return strings;
         if(o.getClass().isArray()) {
@@ -162,9 +162,10 @@ public final class Coerce {
             body = uw.group(1);
         body = body.trim();
         if(isEmpty(body))
-            return new String[0];
+            return emptyStrings;
         return SEPARATORS.split(body);
     }
+    private static final String[] emptyStrings = new String[0];
 
     /**
      * Convert object to a list of strings.
