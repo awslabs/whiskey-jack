@@ -11,6 +11,13 @@ import java.util.concurrent.*;
 /**
  * Right now this is essentially just an enum, but I've built it as a class
  * because it'll get more flexible and extensible in the future.
+ * 
+ * Names:<dl>
+ * <dn>simpleName<dd>A straightforward domain like a device or a cloud
+ * <dn>parent/simpleName<dd>A domain that's a member of a larger class of domains
+ *              (eg. device/rudderController)
+ * <dn>name|name<dd>A set of possible domains, useful for nodes that can appear
+ *          in multiple domains. (not implemented)
  */
 public class Domain extends Collectable {
     private final Domain parent;

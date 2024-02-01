@@ -19,6 +19,7 @@ public class Vocabulary {
     public static final Token CAST = Token.keyword("case");
     public static final Token COLON = operator(":");
     public static final Token COMMA = operator(",");
+    public static final Token COMMENT = operator("🤔 ");
     public static final Token DECLARE = operator("var");
     public static final Token DECLAREASSIGN = operator(":=");
     public static final Token DECLAREASSIGNFINAL = operator(":==");
@@ -70,6 +71,7 @@ public class Vocabulary {
     private static final boolean[] flatten;
     private static final int[] priority;
     private static final boolean[] rightAssoc;
+    private static final boolean[] hasSideEffect;
     private static final Type[] likelyType;
     
     public static int getPriority(Token op) {
@@ -81,6 +83,9 @@ public class Vocabulary {
     }
     public static boolean isRightAssoc(Token op) {
         return rightAssoc[op.getKind()];
+    }
+    public static boolean hasSideEffect(Token op) {
+        return hasSideEffect[op.getKind()];
     }
     public static Type likelyType(Token op) {
         return likelyType[op.getKind()];
@@ -130,6 +135,12 @@ public class Vocabulary {
             p[DECLAREASSIGN.getKind()] = true;
             p[DECLAREASSIGNFINAL.getKind()] = true;
             rightAssoc = p;
+        }
+        {
+            boolean[] p = new boolean[Token.kindTableSize()];
+            p[ASSIGN.getKind()] = true;
+            p[INVOKE.getKind()] = true;
+            hasSideEffect = p;
         }
         {
             boolean[] p = new boolean[Token.kindTableSize()];

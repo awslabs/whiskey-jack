@@ -66,7 +66,7 @@ public class ExpressionEvolutionCollector {
         }
         if(dinfo.prev!=null) {
             var diff = current.toString().replace(codeExt, diffExt);
-            var pb = new ProcessBuilder( "/bin/sh","-c","exec /usr/bin/diff -u "+dinfo.prev+" "+current+" >"+diff);
+            var pb = new ProcessBuilder( "/bin/sh","-c","exec /usr/bin/diff -U 10 "+dinfo.prev+" "+current+" >"+diff);
             pb.directory(root.toFile());
             try {
                 pb.start();

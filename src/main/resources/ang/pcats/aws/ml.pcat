@@ -1,22 +1,35 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 ---
+domain: any
 children:
     model:
-        domain: with neighbor
         description: The model data that is output from training for use in recognition
         in:
             id: string
         out:
             model: 
                 type: mlmodel
-    imageRecognizer:
+    image_recognizer:
         description: |-
             An algorithm that takes in some model data to use in recognizing
             images and emit events describing everything recognized.        
         in:
             image:
                 type: image
+            model:
+                type: mlmodel
+        out:
+            recognition:
+                type: event
+
+    timeseries_recognizer:
+        description: |-
+            An algorithm that takes in some model data to use to
+            emit events describing patterns recognized.        
+        in:
+            data:
+                type: double
             model:
                 type: mlmodel
         out:

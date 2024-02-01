@@ -13,6 +13,7 @@ public abstract class ExpressionDump implements Closeable {
     private static final int tabsize = 4;
     private Appendable out;
     private int col;
+    private int commentDepth = 0;
     public ExpressionDump to(Appendable o) {
         out = o;
         return this;
@@ -26,10 +27,16 @@ public abstract class ExpressionDump implements Closeable {
         append("\n// code for " + dc.domain + "\n");
         if(!dc.declarations.isEmpty()) {
             append("\n// Declarations\n");
-            for(var e: dc.declarations) {
-                System.out.println("DCL " + e);
+            for(var e: dc.declarations) if(dc.used(e)) {
+//                System.out.println("DCL " + e);
                 append(e);
                 append('\n');
+            }
+            else {
+//                System.out.println("DCL unused "+e);
+                toCol(0).startComment().append(" unused ");
+                append(e);
+                endComment();
             }
         }
         if(!dc.setup.isEmpty()) {
@@ -39,7 +46,7 @@ public abstract class ExpressionDump implements Closeable {
         if(!dc.functionInfo.isEmpty()) {
             append("\n// Functions\n");
             for(var e: dc.functionInfo.values())
-                append(e);
+                toCol(0).append(e);
         }
         return this;
     }
@@ -71,6 +78,16 @@ public abstract class ExpressionDump implements Closeable {
     protected ExpressionDump toCol(int n) {
         if(n < col) append('\n');
         while(col < n) append(' ');
+        return this;
+    }
+    protected String commentStartString() { return "/* "; }
+    protected String commentEndString() { return " */"; }
+    protected ExpressionDump startComment() {
+        if(++commentDepth==1) append(commentStartString());
+        return this;
+    }
+    protected ExpressionDump endComment() {
+        if(--commentDepth==0) append(commentEndString());
         return this;
     }
     @Override

@@ -48,39 +48,39 @@ public class JavaTarget extends CodeTarget {
             appendDoubleQuoted(e.getOperator().getBody());
         };
         append1[Vocabulary.INVOKE.getKind()] = e->{
-            append(e.arg(0));
+            append(e.get(0));
             append('(');
-            for(var i = 1; i<e.length(); i++) {
+            for(var i = 1; i<e.size(); i++) {
                 if(i>1) append(", ");
-                append(e.arg(i));
+                append(e.get(i));
             }
             append(')');
         };
         append1[Vocabulary.DOT.getKind()] = e->{
-            append(e.arg(0), e);
-            for(var i = 1; i<e.length(); i++) {
+            append(e.get(0), e);
+            for(var i = 1; i<e.size(); i++) {
                 append(".");
-                append(e.arg(i));
+                append(e.get(i));
             }
         };
         append1[Vocabulary.BLOCK.getKind()] = e->{
             nl().append("{\n").indent();
-            for(var i = 0; i<e.length(); i++)
-                append(e.arg(i)).append(";\n");
+            for(var i = 0; i<e.size(); i++)
+                append(e.get(i)).append(";\n");
             outdent().append("}\n");
         };
         append1[Vocabulary.RETURN.getKind()] = e->{
             append("return");
-            if(e.length()>0) {
+            if(e.size()>0) {
                 append(' ');
-                append(e.arg(0));
+                append(e.get(0));
             }
         };
         append1[Vocabulary.NEW.getKind()] = e->{
             append("new");
-            if(e.length()>0) {
+            if(e.size()>0) {
                 append(' ');
-                append(e.arg(0));
+                append(e.get(0));
             }
         };
         append1[Vocabulary.NULL.getKind()] = e->{

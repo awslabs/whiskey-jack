@@ -31,6 +31,8 @@ children:
     streamManager:
         cname: aws.greengrass.StreamManager
         domain: device
+        state: streamManager :== new StreamManager()
+        code: streamManager.sendTo(in, out);
         in:
             in:
                 type: any

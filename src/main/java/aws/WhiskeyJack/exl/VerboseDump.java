@@ -4,6 +4,8 @@
  */
 package aws.WhiskeyJack.exl;
 
+import aws.WhiskeyJack.nodegraph.*;
+
 public class VerboseDump extends ExpressionDump {
     @Override
     public void append(Expression e) {
@@ -11,20 +13,23 @@ public class VerboseDump extends ExpressionDump {
     }
     @Override
     public void append(DomainCode.FunctionInfo e) {
-        append(e.returnType.getName())
-            .append(' ')
-            .append(e.name)
-            .append('(');
-        var first = true;
-        for(var arg: e.args) {
-            if(first) first = false;
-            else append(',');
-            append(arg, 0, 0);
-        }
-        append(") {\n");
-        appendStatement(e.body, 1);
-        toCol(0);
-        append("}\n");
+        if(e.used) {
+            toCol(0).append(e.returnType.getName())
+                .append(' ')
+                .append(e.name);
+            if(!e.used) append(" /*UNUSED*/ ");
+            append('(');
+            var first = true;
+            for(var arg: e.args) {
+                if(first) first = false;
+                else append(',');
+                append(arg, 0, 0);
+            }
+            append(") {\n");
+            appendStatement(e.body, 1);
+            toCol(0);
+            append("}\n");
+        } else toCol(0).startComment().append("Unused: ").append(e.name).endComment();
     }
     private void appendStatement(Expression e, int indent) {
         if(e != null) {
@@ -42,20 +47,27 @@ public class VerboseDump extends ExpressionDump {
                 append('{');
                 for(var arg: e.asArray())
                     appendStatement(arg, indent + 1);
+                toTab(indent);
                 append('}');
-            } else if(op == Vocabulary.DECLARE) {
-                append("var ").append(e.getType().toString());
-                for(var arg: e.asArray()) {
-                    append(" ");
-                    append(arg, indent + 1, 0);
+            } else if(DomainCode.DeclarationInfo.of(e) instanceof DomainCode.DeclarationInfo decl) {
+                if(decl.isFinal) append("final ");
+                append(decl.type == Type.any || decl.type == Type.unknown ? "var"
+                    : decl.type == null ? "VAR? "
+                    : decl.type.toString());
+                append(' ');
+                append(decl.name);
+                if(decl.initialValue != null) {
+                    append(" = ");
+                    append(decl.initialValue);
                 }
+                append(';');
             } else if(op == Vocabulary.INVOKE) {
                 var args = e.asArray();
                 var len = args.length;
-                append(args[0],indent+1,0);
+                append(args[0], indent + 1, 0);
                 append('(');
-                for(var i=1; i<len; i++) {
-                    if(i>1) append(',');
+                for(var i = 1; i < len; i++) {
+                    if(i > 1) append(',');
                     append(args[i], indent + 1, 0);
                 }
                 append(')');
@@ -80,6 +92,7 @@ public class VerboseDump extends ExpressionDump {
                     for(var arg: args) {
                         if(first) first = false;
                         else append(op.getBody());
+                        if("var".equals(op.getBody())) append('?');
                         append(arg, indent + 1, prior);
                     }
                     if(paren) append(')');

@@ -8,7 +8,7 @@ import aws.WhiskeyJack.util.*;
 import java.io.*;
 import java.util.*;
 
-public class Token {
+public final class Token {
     public static final int identifierKind = 0;
     public static final int stringKind = 1;
     public static final int numberKind = 2;
@@ -23,7 +23,7 @@ public class Token {
     }
     @Override
     public String toString() {
-        return "〖" + (getBody() != null ? getBody() : getNum()) + "〗";
+        return "〖" + body + "〗";
     }
     public StringBuilder appendTo(StringBuilder sb) {
         if(sb == null) sb = new StringBuilder();
