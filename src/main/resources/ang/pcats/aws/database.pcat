@@ -33,6 +33,7 @@ children:
             name: string
         out:
             out: table
+            stream: double
         
 
     fleetwise:

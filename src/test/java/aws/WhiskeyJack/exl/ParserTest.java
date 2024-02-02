@@ -71,16 +71,16 @@ public class ParserTest {
     public void t6() throws IOException {
         var a = x("a+b");
         var b = x("a+c");
-        Map<String, Object> map = new HashMap<>();
-        map.put("c", 42);
-        map.put("b", "c");
+        Map<String, Expression> map = new HashMap<>();
+        map.put("c", Expression.of(Token.number(42)));
+        map.put("b", Expression.of(Token.identifier("c")));
         System.out.println("T6\t" + a + "\n\t" + b);
         var A = a.rename(map);
         var B = b.rename(map);
         System.out.println("=>\t" + A + "\n\t" + B);
         assertEquals(A, B);
         assertEquals(A, x("a+42"));
-        map.put("a", 666);
+        map.put("a", Expression.of(Token.number(666)));
         var C = a.rename(map);
         System.out.println(C);
         assertEquals(x("666+42"), C);

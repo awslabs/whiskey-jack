@@ -207,7 +207,7 @@ public class Expression extends ArrayList<Expression> { //TODO pick a less crypt
         if(isLeaf()) operator.appendTo(sb);
         else {
             sb.append('(');
-            sb.append(getType().toString()).append(":");
+//            sb.append(getType().toString()).append(":");
             operator.appendTo(sb);
             for(var a: this)
                 a.appendTo(sb.append(' '));
@@ -286,7 +286,7 @@ public class Expression extends ArrayList<Expression> { //TODO pick a less crypt
                 var foundValue = m.get(nm);
                 if(foundValue != null) {
                     msg("  becomes " + foundValue);
-                    return foundValue.duplicate();
+                    return foundValue.duplicate().rename(m);  //TODO: this could recurse infinitely
                 }
             }
             return exNode;
