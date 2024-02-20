@@ -13,8 +13,11 @@ public class Layout {
     static final double xpad = 30;
     static final double ypad = 25;
     List<LDomain> domains = new ArrayList<>();
+    boolean changed = false;
     private final ArrayList<LNode> allNodes = new ArrayList<>();
+    private final Collection<NodeView> nodes0;
     public Layout(Collection<NodeView> nodes) {
+        nodes0 = nodes;
         final var nmap = new HashMap<Domain,ArrayList<NodeView>>();
         nodes.forEach(n->nmap.computeIfAbsent(n.getDomain(), nm->new ArrayList<NodeView>()).add(n));
         nmap.forEach((k,v)->domains.add(new LDomain().setNodes(v)));
@@ -26,6 +29,11 @@ public class Layout {
     public void apply() {
         var pt = new ParallelTransition();
         domains.forEach(d -> d.apply(pt));
+        pt.setOnFinished(eh->{
+            if(changed) {
+                new Layout(nodes0).trivialLayout().center().apply();
+            }
+        });
         pt.play();
     }
     public Layout center() {
@@ -157,6 +165,8 @@ public class Layout {
                     }
                     @Override
                     protected void interpolate(double frac) {
+                        if(n.w != n.view.getView().getWidth())
+                            changed = true;
                         n.view.getView().setLayoutX(n.x0 * (1 - frac) + n.x1 * frac);
                         n.view.getView().setLayoutY(n.y0 * (1 - frac) + n.y1 * frac);
                     }
@@ -216,12 +226,10 @@ public class Layout {
             h = view.getView().getHeight();
         }
         public void addUpstream(LNode u) {
-            if(u != null)
-                if(!upstream.contains(u)) {
-                    upstream.add(u);
-                    u.directDownstream++;
-                } else
-                    System.out.println("Duplicate upstream: " + view.getName() + "->" + u.view.getName());
+            if(u != null && !upstream.contains(u)) {
+                upstream.add(u);
+                u.directDownstream++;
+            }
         }
         @Override
         public String toString() {

@@ -27,17 +27,17 @@ public abstract class ExpressionDump implements Closeable {
         append("\n// code for " + dc.domain + "\n");
         if(!dc.declarations.isEmpty()) {
             append("\n// Declarations\n");
-            for(var e: dc.declarations) if(dc.used(e)) {
+            for(var e: dc.declarations)
+                if(dc.used(e)) {
 //                System.out.println("DCL " + e);
-                append(e);
-                append('\n');
-            }
-            else {
-//                System.out.println("DCL unused "+e);
-                toCol(0).startComment().append(" unused ");
-                append(e);
-                endComment();
-            }
+                    append(e);
+                    append('\n');
+                }
+            /*else {
+            toCol(0).startComment().append(" unused ");
+            append(e);
+            endComment();
+            }*/
         }
         if(!dc.setup.isEmpty()) {
             append("\n// Setup\n");
@@ -80,14 +80,18 @@ public abstract class ExpressionDump implements Closeable {
         while(col < n) append(' ');
         return this;
     }
-    protected String commentStartString() { return "/* "; }
-    protected String commentEndString() { return " */"; }
+    protected String commentStartString() {
+        return "/* ";
+    }
+    protected String commentEndString() {
+        return " */";
+    }
     protected ExpressionDump startComment() {
-        if(++commentDepth==1) append(commentStartString());
+        if(++commentDepth == 1) append(commentStartString());
         return this;
     }
     protected ExpressionDump endComment() {
-        if(--commentDepth==0) append(commentEndString());
+        if(--commentDepth == 0) append(commentEndString());
         return this;
     }
     @Override

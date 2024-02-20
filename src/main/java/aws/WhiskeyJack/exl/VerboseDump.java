@@ -13,11 +13,10 @@ public class VerboseDump extends ExpressionDump {
     }
     @Override
     public void append(DomainCode.FunctionInfo e) {
-        if(e.used) {
+        if(e.isUsed()) {
             toCol(0).append(e.returnType.getName())
                 .append(' ')
                 .append(e.name);
-            if(!e.used) append(" /*UNUSED*/ ");
             append('(');
             var first = true;
             for(var arg: e.args) {
@@ -29,7 +28,8 @@ public class VerboseDump extends ExpressionDump {
             appendStatement(e.body, 1);
             toCol(0);
             append("}\n");
-        } else toCol(0).startComment().append("Unused: ").append(e.name).endComment();
+        }
+//        else toCol(0).startComment().append("Unused: ").append(e.name).endComment();
     }
     private void appendStatement(Expression e, int indent) {
         if(e != null) {

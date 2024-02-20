@@ -34,6 +34,7 @@ public class TypeCheck {
             if(!ok) errors.add(a);
             if(!sb.isEmpty())
                 a.setMessage(ec, sb.toString());
+            else a.setMessage(null);
         });
         g.allOK = errors.isEmpty();
         g.disconnectedPorts.clear();

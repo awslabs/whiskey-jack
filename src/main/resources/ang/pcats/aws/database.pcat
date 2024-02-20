@@ -32,9 +32,10 @@ children:
             db: database
             name: string
         out:
-            out: table
-            stream: double
-        
+            table: table
+            stream: 
+                type: double
+                unboundok: true
 
     fleetwise:
         in:

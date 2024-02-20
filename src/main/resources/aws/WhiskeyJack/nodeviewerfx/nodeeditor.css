@@ -31,14 +31,8 @@
     -fx-text-fill: #fff;
     color: #FFF;
     -fx-fill: #fff;
-}
-.fgtitletext {
-    -fx-background-insets: 0 0 0 15;
-}
-.arrow {
-    -fx-background-insets: 20 0 0 0;
-}
-.port {
+    -fx-spacing: 5;
+    -fx-alignment: center;
 }
 .port.error {
     -fx-background-color: #fbb;
@@ -62,6 +56,7 @@
     -fx-background-color: #DDFFDD;
     -fx-font-size: 13;
 }
+/*
 .selected {
     -fx-background-image: url(Checkmark.png);
     -fx-background-position: right top;
@@ -71,6 +66,7 @@
     -fx-stroke-width: 5;
     -fx-view-order: -2;
 }
+*/
 CubicCurve {
     -fx-fill: transparent;
     -fx-stroke: #FF9900;

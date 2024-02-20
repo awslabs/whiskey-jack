@@ -31,8 +31,8 @@ children:
     streamManager:
         cname: aws.greengrass.StreamManager
         domain: device
-        state: streamManager :== new StreamManager()
-        code: streamManager.sendTo(in, out);
+        state: streamManager :== new StreamManager(out())
+        code: streamManager.send(in);
         in:
             in:
                 type: any
@@ -45,6 +45,19 @@ children:
                 type: ggnucleus
             tes: 
                 type: tokenexchange
+    kinesisVideo:
+        cname: aws.greengrass.KinesisVideo
+        domain: device
+        state: kvs :== new KinesisVideo(out())
+        code: kvs.send(in);
+        in:
+            in:
+                type: image
+                domain: device
+        out:
+            out:
+                type: image
+                domain: cloud
     graphana:
         Type: AWS::Grafana::Workspace
         Properties: 

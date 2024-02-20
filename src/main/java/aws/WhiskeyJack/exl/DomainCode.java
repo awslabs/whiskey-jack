@@ -43,6 +43,7 @@ public class DomainCode {
     final Map<Port, PortInfo> globals = new HashMap<>();
     final Map<String, AtomicInteger> uniqueNameMap = new HashMap<>();
     final Set<String> usedVars = new HashSet<>();
+    boolean usageValid = false;
     Domain domain = Domain.err;
     public DomainCode(Collection<Node> nodes) {
         nodes.forEach(n -> codes.put(n.getUid(), new NodeCode(n)));
@@ -64,6 +65,7 @@ public class DomainCode {
         } while(changed && laps < 5);
         markUsedFunctions();
         markUsedVariables();
+        usageValid = true;
         eliminateDeadGlobalAssignments();
         out.dump(this);
     }
@@ -117,9 +119,10 @@ public class DomainCode {
         for(var a: e)
             if(a != skip) markUsedVariables(a);
     }
-    public boolean used(String name) { return usedVars.contains(name); }
+    public boolean used(String name) { return !usageValid || usedVars.contains(name); }
     public boolean used(Expression e) {
         if(e==null) return false;
+        if(!usageValid) return true;
         var op = e.getOperator();
         if(op.isIdentifier()) return used(op.getBody());
         if(op==Vocabulary.DECLARE && !e.isEmpty())
@@ -378,7 +381,7 @@ public class DomainCode {
         Expression body;
         Expression[] args;
         Type returnType;
-        boolean used;
+        private boolean used = true;
         FunctionInfo(String nm, Type t, Expression b, Expression... a) {
             name = nm;
             returnType = t;
@@ -395,6 +398,7 @@ public class DomainCode {
                 body = nb;
             }
         }
+        boolean isUsed() { return used; }
         @Override
         public String toString() {
             return name + "(...)";
@@ -421,7 +425,8 @@ public class DomainCode {
             var argSubstitutions = new HashMap<String, Expression>();
             var newBody = block();
             for(var i = 0; i < nargs; i++) {
-                var formalParameterName = fi.args[i].getOperator().getBody();
+                var formalParameter = fi.args[i];
+                var formalParameterName = formalParameter.getOperator().getBody();
                 var actualParameter = n.get(i + 1);
                 if(actualParameter.complex()) {
                     var localCaptureName = uniqueName(formalParameterName);
@@ -429,7 +434,9 @@ public class DomainCode {
                     newBody.add(declare(null, localCaptureExpression, actualParameter, true));
                     argSubstitutions.put(formalParameterName, localCaptureExpression);
                 } else
-                    argSubstitutions.put(formalParameterName, actualParameter);
+                    if(!formalParameter.equals(actualParameter))
+                        argSubstitutions.put(formalParameterName, actualParameter);
+                    else System.out.println("rename to self blocked: "+formalParameter);
             }
             System.out.println("rename map:");
             argSubstitutions.forEach((k, v) ->

@@ -36,12 +36,8 @@ public class Type extends Collectable {
                 bool;
             case String _ ->
                 string;
-            case Map _ ->
-                tuple;
-            case null ->
-                any;
             default ->
-                object;
+                tuple;
         };
     }
     @Override
@@ -140,6 +136,7 @@ public class Type extends Collectable {
     }
     public boolean compatibleWith(Type t) {
         return t == this || t == any || this == any
+               || t==tuple || this==tuple
                || t == err || this == err;
     }
 

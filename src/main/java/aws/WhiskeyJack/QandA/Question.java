@@ -63,11 +63,9 @@ public class Question implements Comparable<Question> {
         return QuestionsByTag.byTag.values().stream().filter(pred).sorted().toList();
     }
     public static Question question(String tag) {
-        System.out.println("Question: "+tag+": "+QuestionsByTag.get(tag));
         return QuestionsByTag.get(tag);
     }
     public static Question question(String tag, Domain d) {
-        System.out.println("Question: "+tag+"@"+d+": "+QuestionsByTag.get(tag,d));
         return QuestionsByTag.get(tag, d);
     }
     public synchronized void listen(Consumer<Question> listener) {

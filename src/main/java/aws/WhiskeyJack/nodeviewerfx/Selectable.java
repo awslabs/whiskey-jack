@@ -13,6 +13,7 @@ public interface Selectable {
     public void setTag(String tag);
     default public boolean canDrag() { return false; }
     public Domain getDomain();
+    default public Domain getMetaDomain() { return Domain.err; }
     default public void endDrag() {
         var v = getView();
         v.setLayoutX(v.getLayoutX() + v.getTranslateX());

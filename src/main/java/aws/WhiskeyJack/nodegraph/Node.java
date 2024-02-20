@@ -15,6 +15,7 @@ public class Node<T extends Node> extends GraphPart<T> {
     private final Graph context;
     public final MetaNode metadata;
     public Node<T> copiedFrom;
+    private boolean inferred;
     public final Map<String, Port> ports = new LinkedHashMap<>();
     @SuppressWarnings({"LeakingThisInConstructor", "OverridableMethodCallInConstructor"})
     public Node(@Nonnull Graph parent, MetaNode mn) {
@@ -70,6 +71,9 @@ public class Node<T extends Node> extends GraphPart<T> {
     }
     public Domain getDomain() {
         return domain == Domain.unknown ? metadata.getDomain() : domain;
+    }
+    public Domain getDomain0() {
+        return domain;
     }
     public T setDomain(Domain d) {
 //        System.out.println("Set domain " + getName() + "->" + d);
@@ -140,6 +144,9 @@ public class Node<T extends Node> extends GraphPart<T> {
         putOpt(map, "uid", getUid());
         putOpt(map, "meta", metadata.getUid());
         putOpt(map, "metapath", metadata.getPath());
+        putOpt(map, "inferred", inferred);
+        var d = getDomain();
+        if(d!=metadata.getDomain()) putOpt(map, "domain", d);
     }
     public Port defaultPort(boolean in) {
         var dp = metadata.defaultPort(in);
@@ -151,6 +158,8 @@ public class Node<T extends Node> extends GraphPart<T> {
         assert !hasUid();
         setUid(other.getUid());
         copiedFrom = other;
+        setInferred(other.isInferred());
+        setDomain(other.getDomain());
         forEachPort(p -> p.populateFrom(other.getPort(p.getName())));
     }
     public Port getPort(String s) {
@@ -165,10 +174,17 @@ public class Node<T extends Node> extends GraphPart<T> {
     public void populateFrom(Map map) {
         super.populateFrom(map);
         setUid(get(map, "uid", null));
+        setInferred(getBooleanProp("inferred", false));
+        setDomain(Domain.of(getStringProp("domain", getDomain().toString())));
         populatePorts(map, "ports", false, false);
         populatePorts(map, "in", true, true); // these two lines are compatibility with an old format
         populatePorts(map, "out", false, true);
     }
+    public Node setInferred(boolean b) {
+        inferred = b;
+        return this;
+    }
+    public boolean isInferred() { return inferred; }
     private void populatePorts(Map map, String key, boolean input, boolean rename) {
         getMap(map, key).forEach((k, v) -> {
             if(rename && k.equals("v"))

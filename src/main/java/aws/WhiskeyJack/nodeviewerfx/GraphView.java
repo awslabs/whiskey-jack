@@ -33,6 +33,8 @@ import javafx.scene.layout.*;
 import javafx.stage.*;
 
 public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> implements Initializable {
+    static final String appName = "WhiskeyJack";
+    public static final RecentFiles rf = new RecentFiles();
     public final static PseudoClass HOVER_PSEUDO_CLASS = PseudoClass.getPseudoClass("hover");
     public GraphView() {
         super(NodeView.class, PortView.class, ArcView.class);
@@ -71,11 +73,11 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     public void appendRefTo(StringBuilder sb) {
         sb.append("GraphView?");
     }
-
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         Thread.setDefaultUncaughtExceptionHandler((t, error) ->
-                Dlg.error("In " + t.getName(), error));
+            Dlg.error("In " + t.getName(), error));
         NodeLibrary.singleton.initialize();
         mNodeTreeModel.initialize(navTree, this);
         NodeLibrary.singleton.forAll(n -> {
@@ -86,7 +88,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         });
         var run = new MenuItem("Run");
         run.setOnAction(ae ->
-                new OverallCodeGenerationDriver().compileEverything(this));
+            new OverallCodeGenerationDriver().compileEverything(this));
         run.setAccelerator(KeyCombination.valueOf("Shortcut+R"));
         contextMenu.getItems().add(run);
         var infer = new MenuItem("Fix");
@@ -96,13 +98,15 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         var fileActions = new Menu("File");
         contextMenu.getItems().add(fileActions);
         fileActions.getItems().addAll(
-                mkaction("Open...", this::openAction, KeyCode.O),
-                mkaction("Save", this::saveAction, KeyCode.S),
-                mkaction("Save As..", this::saveAsAction, null),
-                mkaction("New", this::newAction, KeyCode.N),
-                mkaction("Layout", e -> layoutNodes(true), KeyCode.L),
-                mkaction("Export All Meta", NodeLibrary.singleton::exportAction, KeyCode.X),
-                mkaction("Quit", this::quitAction, KeyCode.Q)
+            mkaction("Open...", this::openAction, KeyCode.O),
+            recentMenu(),
+            mkaction("Save", this::saveAction, KeyCode.S),
+            mkaction("Save As..", this::saveAsAction, null),
+            mkaction("New", this::newAction, KeyCode.N),
+            mkaction("Select Inferred", this::selectInferred, KeyCode.I),
+            mkaction("Layout", e -> layoutNodes(true), KeyCode.L),
+            mkaction("Export All Meta", NodeLibrary.singleton::exportAction, KeyCode.X),
+            mkaction("Quit", this::quitAction, KeyCode.Q)
         );
         scrollPane.viewportBoundsProperty().addListener(b -> {
             var z = scrollPane.getViewportBounds();
@@ -136,7 +140,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         });
         if(createNotifier != null)
             createNotifier.accept(this);
-
+        
         tabpane.getSelectionModel().selectedIndexProperty().addListener((cl, was, is) ->
         {
             if(propboxVisible = (is.intValue() == 1)) populatePropbox();
@@ -144,28 +148,39 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         selection.addDomainListener(l -> {
             if(propboxVisible) populatePropbox();
         });
-        
+
         // I hate this, but it works:
         new Thread() {
-            { setPriority(MIN_PRIORITY); setName("Metadata error messages"); }
-            @Override @SuppressWarnings("SleepWhileInLoop")
+            {
+                setPriority(MIN_PRIORITY);
+                setName("Metadata error messages");
+            }
+            @Override
+            @SuppressWarnings("SleepWhileInLoop")
             public void run() {
                 while(true) {
                     try {
-                        sleep(1000);
-                    } catch(InterruptedException ex) { }
-                    var w = rootWindow();
-                    if(w==null || !w.isShowing()) continue;
-                    List<aws.WhiskeyJack.nodegraph.Type> typeErrors = new ArrayList<>();
-                    aws.WhiskeyJack.nodegraph.Type.forEachErroredType(t->typeErrors.add(t));
-                    System.out.println(typeErrors.isEmpty() ? "No errors in metadata type names"
+                        try {
+                            sleep(1000);
+                        } catch(InterruptedException ex) {
+                        }
+                        var w = rootWindow();
+                        if(w == null || !w.isShowing()) continue;
+                        List<aws.WhiskeyJack.nodegraph.Type> typeErrors = new ArrayList<>();
+                        aws.WhiskeyJack.nodegraph.Type.forEachErroredType(t ->
+                            typeErrors.add(t));
+                        System.out.println(typeErrors.isEmpty() ? "No errors in metadata type names"
                             : "Errors found in metadata type names");
-                    if(!typeErrors.isEmpty())
-                        error("The following types were found in the metadata",
+                        if(!typeErrors.isEmpty())
+                            error("The following types were found in the metadata",
                                 "whose name was probably misspelt", typeErrors);
+                        setCurrentFile(currentFile); // sic
+                    } catch(Throwable t) {
+                        t.printStackTrace(System.out);
+                    }
                     break;
-                } 
-            } 
+                }
+            }
         }.start();
     }
     private void addMenu(MetaNode n, String[] names) {
@@ -189,6 +204,22 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             items.add(mi);
         }
         mi.setOnAction(evt -> make(n));
+    }
+    MenuItem recentMenu() {
+        var menu = new Menu("Open Recent");
+        menu.getItems().add(new MenuItem("[rubbish]"));
+        menu.setOnShowing(evt -> {
+            var items = menu.getItems();
+            items.clear();
+            System.out.println("Reloading menu");
+            for(var f: rf.sorted()) {
+                System.out.println("  item " + f.getKey() + ": " + f.getPath());
+                var item = new MenuItem(f.getKey());
+                items.add(item);
+                item.setOnAction(oa -> loadFile(f.getPath().toString()));
+            }
+        });
+        return menu;
     }
     void keyTyped(KeyEvent c) {
         System.out.println("Typed " + c);
@@ -223,7 +254,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         var m = new MenuItem(name);
         if(code != null)
             m.setAccelerator(new KeyCodeCombination(code, KeyCombination.META_DOWN));
-        m.setOnAction(evt);
+        if(evt != null) m.setOnAction(evt);
         return m;
     }
     public static Window rootWindow() {
@@ -232,69 +263,88 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         return s == null ? null : s.getWindow();
     }
     private static final Path dfltFile = Exec.deTilde("~/untitled." + graphFileExtension);
-    private static String currentFile;
+    private static RecentFiles.RecentFile currentFile;
     void openAction(ActionEvent evt) {
-        var preferred = new File(currentFile != null ? currentFile : pref.get("lastFile", dfltFile.toString()));
+        var preferred = new File(currentFile != null ? currentFile.toString() : pref.get("lastFile", dfltFile.toString()));
         var fileChooser = new FileChooser();
         fileChooser.setTitle("Open Architecture Diagram");
         fileChooser.setInitialDirectory(preferred.getParentFile());
         fileChooser.setInitialFileName(preferred.getName());
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Architecture Diagrams", "*." + graphFileExtension),
-                new FileChooser.ExtensionFilter("All Files", "*.*"));
+            new FileChooser.ExtensionFilter("Architecture Diagrams", "*." + graphFileExtension),
+            new FileChooser.ExtensionFilter("All Files", "*.*"));
         var selectedFile = fileChooser.showOpenDialog(rootWindow()).toString();
         pref.put("lastFile", selectedFile);
         if(selectedFile != null)
             loadFile(selectedFile);
-
+        
     }
     void openDefault() {
         if(loadFile(pref.get("lastFile", null)))
             return;
         if(loadFile(dfltFile.toString()))
             return;
-        loadFile(this.getClass().getResource("/ang/untitled.ade"));
+        loadFile(this.getClass().getResource("/ang/untitled." + graphFileExtension));
     }
     void saveAction(ActionEvent evt) {
-        if(currentFile == null || currentFile.startsWith("untitled"))
+        if(currentFile == null || currentFile.getKey().startsWith("untitled"))
             saveAsAction(evt);
-        else saveFile(currentFile);
+        else saveFile(currentFile.toString());
     }
     void saveAsAction(ActionEvent evt) {
-        var preferred = new File(currentFile != null ? currentFile : pref.get("lastFile", dfltFile.toString()));
+        var preferred = new File(currentFile != null ? currentFile.toString() : pref.get("lastFile", dfltFile.toString()));
         var fileChooser = new FileChooser();
         fileChooser.setTitle("Save Architecture Diagram");
         fileChooser.setInitialDirectory(preferred.getParentFile());
         fileChooser.setInitialFileName(preferred.getName());
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Architecture Diagrams", "*." + graphFileExtension),
-                new FileChooser.ExtensionFilter("All Files", "*.*"));
+            new FileChooser.ExtensionFilter("Architecture Diagrams", "*." + graphFileExtension),
+            new FileChooser.ExtensionFilter("All Files", "*.*"));
         saveFile(fileChooser.showSaveDialog(rootWindow()).toString());
     }
     boolean saveFile(String file) {
-        if(DataIO.yaml.write(collect(), Path.of(file))) {
-            currentFile = file;
+        if(file != null && DataIO.yaml.write(collect(), Path.of(file))) {
+            setCurrentFile(rf.get(Path.of(file)).markUsed());
             pref.put("lastFile", file);
             note("Saved", file);
             return true;
         } else return false;
+    }
+    void setTitle(String title) {
+        Platform.runLater(() -> {
+            var scene = scrollPane.getScene();
+            if(scene != null)
+                ((Stage) scene.getWindow()).setTitle(title);
+        });
     }
     void quitAction(ActionEvent evt) {
         ((Stage) scrollPane.getScene().getWindow()).close();
     }
     void newAction(ActionEvent evt) {
         clearAll();
+        setCurrentFile(rf.get(dfltFile));
+    }
+    void selectInferred(ActionEvent evt) {
+        selection.clear();
+        forEachNode(n->{
+            if(n.isInferred()) selection.add((Selectable) n);
+        });
     }
     public boolean loadFile(String p) {
         if(p != null) try {
             var ret = loadFile(new File(p).toURI().toURL());
-            currentFile = p;
+            setCurrentFile(rf.get(p).markUsed());
             return ret;
         } catch(MalformedURLException ex) {
         }
         return false;
     }
+    void setCurrentFile(RecentFiles.RecentFile f) {
+        currentFile = f;
+        setTitle(appName + " " + f.getKey());
+    }
     public boolean loadFile(URL p) {
+        clearAll();
         var received = DataIO.yaml.read(p);
         if(received == null) return false;
         clearConnections();
@@ -305,11 +355,11 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         adjustArcs();
         System.out.println("Loaded " + p);
         setSrc("file".equals(p.getProtocol())
-                ? Path.of(p.getPath())
-                : Exec.deTilde("~/untitled.ade"));
+            ? Path.of(p.getPath())
+            : dfltFile);
         return true;
     }
-
+    
     public final Map<Domain, DomainView> domains = new HashMap<>();
     DomainView getDomainView(Domain d) {
         return domains.computeIfAbsent(d, D -> new DomainView(this, D));
@@ -396,7 +446,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             adjustArcsQueued.set(false);
             var t = getView().getLocalToSceneTransform();
             nByUid.values().forEach(n ->
-                    n.forEachPort(a -> ((PortView) a).reposition(t)));
+                n.forEachPort(a -> ((PortView) a).reposition(t)));
             domains.values().forEach(d -> d.reposition());
         });
     }
@@ -406,7 +456,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             Platform.runLater(() -> {
                 adjustNamesQueued.set(false);
                 nByUid.values().forEach(n ->
-                        n.forEachPort(port -> ((PortView) port).setViewText()));
+                    n.forEachPort(port -> ((PortView) port).setViewText()));
             });
     }
     private final AtomicBoolean checkTypes = new AtomicBoolean(false);
@@ -422,13 +472,12 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     private final AtomicBoolean doInferIntermediates = new AtomicBoolean(false);
     @Override
     public void inferIntermediates() {
-        if(!doInferIntermediates.getAndSet(true)) {
+        if(!doInferIntermediates.getAndSet(true))
             Platform.runLater(() -> {
                 doInferIntermediates.set(false);
                 new InferIntermediates().Scan(this);
                 adjustNames();
             });
-        }
     }
     private final AtomicBoolean doLayoutNodes = new AtomicBoolean(false);
     @Override
@@ -467,14 +516,16 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     public javafx.scene.Node[] allNodeViews() {
         return getView().getChildren().stream()
-                .filter(n -> n.getUserData() instanceof NodeView)
-                .toArray(n -> new javafx.scene.Node[n]);
+            .filter(n -> n.getUserData() instanceof NodeView)
+            .toArray(n -> new javafx.scene.Node[n]);
     }
     public void makeDraggable(Selectable s) {
         final var dragInfo = new Object() {
             double x0;
             double y0;
             boolean dragging;
+            Domain dm;
+            Domain d0;
         };
         final var tp = s.getView();
         tp.setOnMousePressed(mouseEvent -> {
@@ -482,6 +533,8 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             dragInfo.x0 = mouseEvent.getSceneX();
             dragInfo.y0 = mouseEvent.getSceneY();
             dragInfo.dragging = false;
+            dragInfo.dm = s.getMetaDomain();
+            dragInfo.d0 = s.getDomain();
             tp.setCursor(Cursor.OPEN_HAND);
             mouseEvent.consume();
             if(!mouseEvent.isShiftDown()) selection.clear();
@@ -494,7 +547,22 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 selection.add(s);
             else
                 selection.forEach(sel -> sel.endDrag());
-//            if(!mouseEvent.isShiftDown()) selection.clear();
+            if(dragInfo.dm == Domain.any && s instanceof NodeView nv) {
+                // can be moved to another domain
+                var sx = mouseEvent.getSceneX();
+                var sy = mouseEvent.getSceneY();
+                var other = dragInfo.d0;
+                for(var d: domains.values())
+                    if(d.getView().getBoundsInParent().contains(sx, sy)) {
+                        if(d.getDomain() != dragInfo.d0)
+                            other = d.getDomain();
+                    }
+                if(other != dragInfo.d0) {
+                    nv.setDomain(other);
+                    checkTypes();
+                    layoutNodes(false);
+                }
+            }
         });
         tp.setOnMouseDragged(mouseEvent -> {
             if(dragInfo.dragging || selection.canDrag()) {
@@ -529,7 +597,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         selection.clear();
         domains.clear();
     }
-
+    
     static private int ix = 0;
     private static MenuItem find(List<MenuItem> items, String name) {
         for(var mi: items)
@@ -537,16 +605,16 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 return mi;
         return null;
     }
-
+    
     public static void dump(String label, int depth, javafx.scene.Node node, Set<javafx.scene.Node> skip) {
         if(node != null && !skip.contains(node)) {
             skip.add(node);
             pln(depth, label + " " + node.getClass().getSimpleName());
             node.lookupAll("*").forEach(n ->
-                    dump(toString(node.getStyleClass()).toString(), depth + 1, n, skip));
+                dump(toString(node.getStyleClass()).toString(), depth + 1, n, skip));
             if(node instanceof Parent p)
                 p.getChildrenUnmodifiable().forEach(n ->
-                        dump("*", depth + 1, n, skip));
+                    dump("*", depth + 1, n, skip));
         }
     }
     private static void pln(int depth, CharSequence s) {
@@ -646,7 +714,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                     });
                     n = b;
                 }
-
+                
             }
             label.setMaxWidth(Double.MAX_VALUE);
             n.setMaxWidth(Double.MAX_VALUE);

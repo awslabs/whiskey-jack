@@ -23,6 +23,7 @@ public class InferIntermediates {
             var candidates = new ArrayList<CandidateSolution>();
             var seen = new DTMap<Boolean>();
             var fixes = 0;
+            System.out.println(g.typeMismatches.size()+" type mismatch errors");
             for(var a: (List<Arc>) g.typeMismatches) {
                 /* search for a path through all possible metanodes that minimizes
              * the weighted length of the path */
@@ -57,6 +58,7 @@ public class InferIntermediates {
                                 System.out.println(cs.out.compatibleWith(target) + " " + cs.out + "->" + target);
                                 workablePaths.add(cs);
                             } else if(seen.getExact(cs.out) == null) {
+                                System.out.println("# . "+workablePaths.size());
                                 candidates.add(cs);
                                 seen.putExact(cs.out, Boolean.TRUE);
                             } else
@@ -89,24 +91,24 @@ public class InferIntermediates {
                             n = search;
                             break;
                         }
-                    if(n == null) n = context.newNode(serviceNode);
+                    if(n == null) n = context.newNode(serviceNode).setInferred(true);
                     p.connectTo(n.getPort(servicePort.getName()));
                     fixes++;
                 }
-                if(fixes == 0) break;
                 totalFixes += fixes;
             }
+            if(fixes == 0) break;
         }
         if(laps <= 0) context.error("Lap count exceeded");
         if(totalFixes > 0) g.layoutNodes(false);
-        else
-            context.note("No errors were fixed");
     }
 
     private void applyPath(Port origin, CandidateSolution s, Port target) {
+        var created = new ArrayList<Node>();
         while(s != null)
             if(s.candidate != null) {
                 var n = context.newNode(s.candidate);
+                created.add(n);
                 n.getPort(s.out.getName()).connectTo(target);
                 target = n.getPort(s.in.getName());
                 s = s.comesFrom;
@@ -114,7 +116,7 @@ public class InferIntermediates {
                 origin.connectTo(target);
                 break;
             }
-
+        created.forEach(n->n.setInferred(true));  // done in seperate loop so arcs are all set up
     }
 
     @SuppressWarnings("unused")
@@ -133,6 +135,7 @@ public class InferIntermediates {
             weight = (c != null ? c.getWeight() : 0) + (cf != null ? cf.weight : 0);
             name = (cf != null ? cf.name + "-" : "") + (c != null ? c.getName() : "∅");
             depth = cf != null ? cf.depth + 1 : 0;
+            System.out.println("New candidate: "+this);
         }
         @Override
         public String toString() {

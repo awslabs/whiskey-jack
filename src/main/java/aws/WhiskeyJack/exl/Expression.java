@@ -245,6 +245,10 @@ public class Expression extends ArrayList<Expression> { //TODO pick a less crypt
     }
     static int D = 0;
     public Expression rewrite(Rewriter rewriter) {
+        if(D>40) {
+            new IllegalCallerException("rewrite loop!!!").printStackTrace(System.out);
+            return this;
+        }
         D++;
         msg("Rewrite " + this);
         var chg = this;

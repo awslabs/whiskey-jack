@@ -9,18 +9,26 @@ import java.util.*;
 
 public class ErrorCode {
     private final String name;
+    private final boolean warning;
     @SuppressWarnings("LeakingThisInConstructor")
-    private ErrorCode(String n) {
+    private ErrorCode(String n, boolean w) {
         name = n;
+        warning = w;
     }
     private static final Map<String, ErrorCode> errorCodes = new HashMap<>();
-    public static final ErrorCode of(String name) {
-        return errorCodes.computeIfAbsent(name, n->new ErrorCode(n));
+    public static final ErrorCode error(String name) {
+        return errorCodes.computeIfAbsent(name, n->new ErrorCode(n, false));
     }
-    public static final ErrorCode allIsWell = of("allIsWell");
-    public static final ErrorCode typeMismatch = of("typeMismatch");
-    public static final ErrorCode valueExpected = of("valueExpected");
-    public static final ErrorCode crossDomain = of("crossDomain");
+    public static final ErrorCode warning(String name) {
+        return errorCodes.computeIfAbsent(name, n->new ErrorCode(n, true));
+    }
+    public boolean isWarning() { return warning; }
+    public static final ErrorCode allIsWell = error("allIsWell");
+    public static final ErrorCode typeMismatch = error("typeMismatch");
+    public static final ErrorCode valueExpected = error("valueExpected");
+    public static final ErrorCode crossDomain = error("crossDomain");
+    public static final ErrorCode highBandwidth = warning("highBandwidth");
+    public static final ErrorCode highCompute = warning("highCompute");
     @Override
     public String toString() {
         return name;

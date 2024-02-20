@@ -88,4 +88,5 @@ public class DomainView implements Selectable {
             if(n instanceof Selectable s) s.setDrag(dx, dy);
         });
     }
+    @Override public String toString() { return "DomainView:"+domain; }
 }

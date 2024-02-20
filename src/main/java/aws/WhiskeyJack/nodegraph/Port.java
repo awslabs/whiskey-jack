@@ -12,7 +12,7 @@ import java.util.function.*;
 
 public class Port extends Collectable {
     public final MetaPort metadata;
-    public Domain domain = Domain.unknown;
+    private Domain domain = Domain.unknown;
     private ErrorCode errorCode;
     public final Node within;
     private Object value; // used when disconnected
@@ -26,7 +26,7 @@ public class Port extends Collectable {
     }
     public void populateFrom(Port other) {
         value = other.value;
-        domain = other.domain;
+        setDomain(other.domain);
         other.forEachArc(a -> System.out.println("  mk arc " + a));
     }
     public void populateFrom(Map values) {
