@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 
 public class InferIntermediates {
-    TreeSet<CandidateSolution> workablePaths = new TreeSet<>(byWeight);
     Graph context;
     public void Scan(Graph g) {
         System.out.println("Inferring intermediates");
@@ -34,6 +33,7 @@ public class InferIntermediates {
                 candidates.add(new CandidateSolution(null, null, null, origin));
                 seen.clear();
                 seen.putExact(origin, Boolean.TRUE);
+                TreeSet<CandidateSolution> workablePaths = new TreeSet<>(byWeight);
                 while(workablePaths.isEmpty()) {
                     var toScan = candidates.toArray(n -> new CandidateSolution[n]);
                     if(toScan.length == 0) break;

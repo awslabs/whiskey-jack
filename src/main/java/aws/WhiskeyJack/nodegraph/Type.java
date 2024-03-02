@@ -136,7 +136,8 @@ public class Type extends Collectable {
     }
     public boolean compatibleWith(Type t) {
         return t == this || t == any || this == any
-               || t==tuple || this==tuple
+               || t==tuple && this!=table
+               || t!=table && this==tuple
                || t == err || this == err;
     }
 

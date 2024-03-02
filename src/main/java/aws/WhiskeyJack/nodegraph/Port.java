@@ -130,7 +130,7 @@ public class Port extends Collectable {
     }
     public boolean isCode() { return metadata.isCode(); }
     public Port setDomain(Domain d) {
-        if(d==within.getDomain()) d = Domain.unknown;
+        if(d==within.getDomain() || d==Domain.any) d = Domain.unknown;
         domain = d;
         return this;
     }

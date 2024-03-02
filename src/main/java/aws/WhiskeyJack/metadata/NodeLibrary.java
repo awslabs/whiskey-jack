@@ -111,6 +111,7 @@ public class NodeLibrary {
     public static final NodeLibrary singleton = new NodeLibrary();
     private Map<Domain, Map<Type, List<MetaNode>>> dtInMap;
     public void forEachNodeThatTakes(Domain d, Type t, Consumer<MetaNode> f) {
+        System.out.println("Searching for node that takes "+d+","+t);
         if(t == Type.any)
             for(var t0: Type.allInteresting())
                 getNodesThatTake(d, t0).forEach(f);
@@ -128,23 +129,21 @@ public class NodeLibrary {
         var dtim = dtInMap;
         if(dtim == null) {
             dtInMap = dtim = new HashMap<>();
-//            System.out.println("Init DT map");
+            System.out.println("Init DT map");
             forAll(mn -> {
                 var din = mn.defaultPort(true);
                 var dout = mn.defaultPort(false);
                 if(din != null && dout != null) {
                     if(dout.compatibleWith(din)) {
-//                        System.out.println("NOP " + mn.getName() + " " + din.getDomain() + "," + din.getType().getName()
-//                                           + " -> " + dout.getDomain() + "," + dout.getType().getName());
+                        System.out.println("NOP " + mn.getName() + " " + din.getDomain() + "," + din.getType().getName()
+                                           + " -> " + dout.getDomain() + "," + dout.getType().getName());
                         return;
                     }
-                    var nd = din.getDomain();
-                    var nt = din.getType();
-                    var dmap = dtInMap.get(nd);
-                    if(dmap == null) dtInMap.put(nd, dmap = new HashMap<>());
-                    var list = dmap.get(nt);
-                    if(list == null) dmap.put(nt, list = new ArrayList<>());
-                    list.add(mn);
+                    System.out.println("TRANSFORM " + mn.getName() + " " + din.getDomain() + "," + din.getType().getName()
+                                           + " -> " + dout.getDomain() + "," + dout.getType().getName());
+                    dtInMap.computeIfAbsent(din.getDomain(), k->new HashMap<>())
+                        .computeIfAbsent(din.getType(), k->new ArrayList<>())
+                        .add(mn);
                 }
             });
         }

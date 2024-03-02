@@ -47,7 +47,7 @@ children:
                 type: tokenexchange
     kinesisVideo:
         cname: aws.greengrass.KinesisVideo
-        domain: device
+        domain: cloud
         state: kvs :== new KinesisVideo(out())
         code: kvs.send(in);
         in:
