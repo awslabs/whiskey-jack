@@ -6,14 +6,12 @@
 package aws.WhiskeyJack.code;
 
 import aws.WhiskeyJack.code.OverallCodeGenerationDriver.StrategyPath;
-import aws.WhiskeyJack.nodegraph.*;
-import java.util.*;
+import aws.WhiskeyJack.exl.*;
 
 
 public interface DomainGenerationController {
     default void prescan(){}
     public void setStrategyPath(StrategyPath p);
-    public void generate(List<Node> nodes, CodeTarget target);
+    public void generate(DomainCode nodes);
     default void close(){}
-    CodeTarget makeOutput();
 }

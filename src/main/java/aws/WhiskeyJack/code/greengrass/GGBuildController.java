@@ -6,6 +6,7 @@ package aws.WhiskeyJack.code.greengrass;
 
 import aws.WhiskeyJack.QandA.*;
 import aws.WhiskeyJack.code.*;
+import aws.WhiskeyJack.exl.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Utils.*;
@@ -16,8 +17,8 @@ import java.util.regex.*;
 
 @GeneratesCodeFor("*/greengrass/*")
 public class GGBuildController implements DomainGenerationController,
-        OverallCodeGenerationDriver.needsOuterBuildController {
-    private final Map<String,Map<String,String>> dependencies = new HashMap();
+    OverallCodeGenerationDriver.needsOuterBuildController {
+    private final Map<String, Map<String, String>> dependencies = new HashMap();
 //    String description = "xyzzy";
     OuterBuildController context;
     DomainGenerationController subController;
@@ -25,15 +26,16 @@ public class GGBuildController implements DomainGenerationController,
     private GGTarget out;
     @Override
     public void close() {
-        subController.close();
-        out.dumpComments();
-        var root = m(
-        "RecipeFormatVersion", "2020-01-25",
-        "ComponentName", Question.question("name").asString(),
-        "ComponentVersion", Question.question("version").asString(),
-        "ComponentDescription", Question.question("description").asString(),
-        "ComponentPublisher", Question.question("author").asString(),
-        "ComponentDependencies", dependencies);
+        if(false) { //TODO
+            subController.close();
+            out.dumpComments();
+            var root = m(
+                "RecipeFormatVersion", "2020-01-25",
+                "ComponentName", Question.question("name").asString(),
+                "ComponentVersion", Question.question("version").asString(),
+                "ComponentDescription", Question.question("description").asString(),
+                "ComponentPublisher", Question.question("author").asString(),
+                "ComponentDependencies", dependencies);
 //        root.put("ComponentConfiguration", "");
 //  DefaultConfiguration:
 //    Message: "World"
@@ -43,23 +45,21 @@ public class GGBuildController implements DomainGenerationController,
 //      - URI: "s3://BUCKET_NAME/COMPONENT_NAME/COMPONENT_VERSION/HelloWorld-1.0.0.jar"
 //    Lifecycle:
 //      Run: "java -cp {artifacts:path}/HelloWorld-1.0.0.jar com.hello.App {configuration:/Message}"%   
-        try {
-            DataIO.yaml.write(root, out.getWriter());
-        } catch(IOException ex) {
-            ex.printStackTrace(System.out);
+            try {
+                DataIO.yaml.write(root, out.getWriter());
+            } catch(IOException ex) {
+                ex.printStackTrace(System.out);
+            }
         }
     }
     @Override
-    public void generate(List<Node> nodes, CodeTarget target) {
-        var sco = subController.makeOutput();
-        sco.start(target.getDomain());
-        System.out.println("GG BC "+sco.getDomain());
-        subController.generate(nodes, sco);
-        nodes.forEach(n -> {
+    public void generate(DomainCode nodes) {
+        subController.generate(nodes);
+        nodes.getNodes().forEach(n -> {
             var cname = n.getStringProp("cname", null);
             System.out.println("GG generate " + n.getName() + " cn " + cname);
             if(!isEmpty(cname)) {
-                var m = new HashMap<String,String>();
+                var m = new HashMap<String, String>();
                 var match = vnamepat.matcher(cname);
                 var version = "*";
                 if(match.matches()) {
@@ -67,10 +67,9 @@ public class GGBuildController implements DomainGenerationController,
                     version = match.group(2);
                 }
                 m.put("VersionRequirement", version);
-                dependencies.put(cname,m);
+                dependencies.put(cname, m);
             }
         });
-        sco.close();
     }
     private static final Pattern vnamepat = Pattern.compile("([^- ]+) *-[ vV]*(.+)");
     private Object dup(Node context, Object o) {
@@ -128,21 +127,17 @@ public class GGBuildController implements DomainGenerationController,
         System.out.println("  GG generator followon path " + p);
         strategyPath = p;
         subController = p.findPlugin(DomainGenerationController.class);
-        System.out.println("GG subcontroller = "+subController);
+        System.out.println("GG subcontroller = " + subController);
     }
     @Override
     public void setOuterBuildController(OuterBuildController cg) {
         context = cg;
     }
     @Override
-    public CodeTarget makeOutput() {
-        return out = new GGTarget(context);
-    }
-    @Override
     public void prescan() {
-        if(subController==null)
-            context.error("Couldn't resolve code generator for "+strategyPath);
-        else subController.prescan();        
+        if(subController == null)
+            context.error("Couldn't resolve code generator for " + strategyPath);
+        else subController.prescan();
     }
     private static Map m(Object... kv) {
         var ret = new LinkedHashMap();

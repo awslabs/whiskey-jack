@@ -43,12 +43,19 @@ public class DomainCode {
     final Map<Port, PortInfo> globals = new HashMap<>();
     final Map<String, AtomicInteger> uniqueNameMap = new HashMap<>();
     final Set<String> usedVars = new HashSet<>();
+    private final Collection<Node> nodes;
     boolean usageValid = false;
-    Domain domain = Domain.err;
-    public DomainCode(Collection<Node> nodes) {
+    private final Domain domain;
+    public DomainCode(Collection<Node> N) {
+        nodes = N;
         nodes.forEach(n -> codes.put(n.getUid(), new NodeCode(n)));
+        var n0 = nodes.stream().findFirst();
+        domain = n0.isEmpty() ? Domain.err : n0.get().getDomain();
         codes.values().forEach(nc -> nc.addCode());
     }
+    public Collection<Node> getNodes() { return nodes; }
+    public Domain getDomain() { return domain; }
+
     static final private ExpressionEvolutionCollector out = new ExpressionEvolutionCollector();
     private boolean changed;
     public void optimize() {
@@ -68,6 +75,10 @@ public class DomainCode {
         usageValid = true;
         eliminateDeadGlobalAssignments();
         out.dump(this);
+    }
+    
+    public void show() { 
+        out.show(this);
     }
 
     public void markUsedFunctions() {
@@ -146,6 +157,7 @@ public class DomainCode {
     private Expression nonnull(Expression e) {
         return e==null ? block() : e;
     }
+    @Override public String toString() { return getDomain().toString(); }
 
     class NodeCode {
         private final Map<String, PortInfo> portInfo = new HashMap<>();
@@ -157,7 +169,6 @@ public class DomainCode {
         final Node node;
         NodeCode(Node n) {
             node = n;
-            domain = n.getDomain();
             n.forEachPort((Consumer<Port>) p -> {
                 var pi = new PortInfo(p);
                 portInfo.put(p.getName(), pi);
@@ -247,47 +258,47 @@ public class DomainCode {
                 else setup.add(e);
         }
     }
-    static Expression block(Expression... a) {
+    public static Expression block(Expression... a) {
         var ret = of(Vocabulary.BLOCK);
         for(var f: a)
             ret.add(f);
         return ret;
     }
-    static Expression block(Collection<Expression> a) {
+    public static Expression block(Collection<Expression> a) {
         var ret = of(Vocabulary.BLOCK);
         for(var f: a)
             ret.add(f);
         return ret;
     }
-    static Expression invoke(Expression... a) {
+    public static Expression invoke(Expression... a) {
         return of(Vocabulary.INVOKE, a);
     }
-    static Expression comment(String comment) {
+    public static Expression comment(String comment) {
         var ret = of(Vocabulary.COMMENT).add1(of(Token.string(comment)));
         System.out.println("COMMENT "+ret+"\n\t"+comment);
         return ret;
     }
-    static Expression declare(Type t, Expression name, Expression init, boolean finale) {
+    public static Expression declare(Type t, Expression name, Expression init, boolean finale) {
         if(init != null && (t == null || t == Type.any)) t = init.getType();
         if(t == null) t = Type.any;
         return of(Vocabulary.DECLARE, name, init, finale ? Vocabulary.finalMarker : null).setType(t);
     }
-    static Expression declare(Type t, Expression name) {
+    public static Expression declare(Type t, Expression name) {
         return declare(t, name, null, false);
     }
-    static Expression assign(Expression name, Expression value) {
+    public static Expression assign(Expression name, Expression value) {
         return of(Vocabulary.ASSIGN, name, value);
     }
-    static Expression NE(Expression a, Expression b) {
+    public static Expression NE(Expression a, Expression b) {
         return of(Vocabulary.NE, a, b);
     }
-    static Expression ide(String s) {
+    public static Expression ide(String s) {
         return of(Token.identifier(s));
     }
-    static Expression ife(Expression cond, Expression then, Expression els) {
+    public static Expression ife(Expression cond, Expression then, Expression els) {
         return of(Vocabulary.IF, cond, then, els);
     }
-    static Expression ife(Expression cond, Expression then) {
+    public static Expression ife(Expression cond, Expression then) {
         return ife(cond, then, null);
     }
     public String uniqueName(String s) {

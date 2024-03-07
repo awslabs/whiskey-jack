@@ -24,74 +24,92 @@ public abstract class ExpressionDump implements Closeable {
     abstract public void append(Expression e);
     abstract public void append(FunctionInfo e);
     public ExpressionDump append(DomainCode dc) {
-        append("\n// code for " + dc.domain + "\n");
+        fileHeader(dc);
         if(!dc.declarations.isEmpty()) {
-            append("\n// Declarations\n");
+            comment("Declarations");
             for(var e: dc.declarations)
-                if(dc.used(e)) {
-//                System.out.println("DCL " + e);
-                    append(e);
-                    append('\n');
-                }
-            /*else {
-            toCol(0).startComment().append(" unused ");
-            append(e);
-            endComment();
-            }*/
+                if(dc.used(e)) declareGlobal(e);
         }
         if(!dc.setup.isEmpty()) {
-            append("\n// Setup\n");
-            append(Expression.of(Vocabulary.BLOCK, dc.setup));
+            comment("Setup");
+            appendSetup(Expression.of(Vocabulary.BLOCK, dc.setup));
         }
         if(!dc.functionInfo.isEmpty()) {
-            append("\n// Functions\n");
+            comment("Functions");
             for(var e: dc.functionInfo.values())
                 toCol(0).append(e);
         }
+        fileEnder(dc);
         return this;
     }
-    protected ExpressionDump append(char c) {
+    public ExpressionDump append(char c) {
         try {
             out.append(c);
+            if(c == '\n') {
+                col = 0;
+                if(commentDepth > 0) out.append(commentContinuer());
+            } else col++;
         } catch(IOException ex) {
         }
-        col = c == '\n' ? 0 : col + 1;
         return this;
     }
-    protected ExpressionDump append(CharSequence s) {
+    public void appendSetup(Expression e) {
+        append(e);
+    }
+    public ExpressionDump append(CharSequence s) {
         var limit = s.length();
         for(var i = 0; i < limit; i++)
             append(s.charAt(i));
         return this;
     }
-    protected ExpressionDump appendQuoted(CharSequence s) {
+    public ExpressionDump appendQuoted(CharSequence s) {
         try {
             Utils.deepToStringQuoted(s, out, Integer.MAX_VALUE);
         } catch(IOException ex) {
         }
         return this;
     }
-    protected ExpressionDump toTab(int n) {
+    public void fileHeader(DomainCode dc) {
+        comment("Code for domain " + dc.getDomain());
+    }
+    public void fileEnder(DomainCode dc) {
+    }
+    public void declareGlobal(Expression e) {
+        append(e);
+        append('\n');
+    }
+    public ExpressionDump toTab(int n) {
         toCol(n * tabsize);
         return this;
     }
-    protected ExpressionDump toCol(int n) {
+    public ExpressionDump toCol(int n) {
         if(n < col) append('\n');
         while(col < n) append(' ');
         return this;
     }
-    protected String commentStartString() {
+    public String commentStartString() {
         return "/* ";
     }
-    protected String commentEndString() {
+    public String commentEndString() {
         return " */";
     }
-    protected ExpressionDump startComment() {
+    public String commentContinuer() {
+        return " * ";
+    }
+    public ExpressionDump startComment() {
         if(++commentDepth == 1) append(commentStartString());
         return this;
     }
-    protected ExpressionDump endComment() {
+    public ExpressionDump endComment() {
         if(--commentDepth == 0) append(commentEndString());
+        return this;
+    }
+    public ExpressionDump comment(String s) {
+        toCol(0);
+        startComment();
+        append(s);
+        endComment();
+        toCol(0);
         return this;
     }
     @Override

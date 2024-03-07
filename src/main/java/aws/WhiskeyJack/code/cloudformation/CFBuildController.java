@@ -5,6 +5,7 @@
 package aws.WhiskeyJack.code.cloudformation;
 
 import aws.WhiskeyJack.code.*;
+import aws.WhiskeyJack.exl.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Utils.*;
@@ -19,21 +20,21 @@ public class CFBuildController implements DomainGenerationController,
 //    String description = "xyzzy";
     OuterBuildController context;
 //    private Path rootGenerationDirectory;
-    private CFTarget out;
     @Override
     public void close() {
         var root = new LinkedHashMap<String, Object>();
-        root.put("Description", deepToString(out.comments));
+//        root.put("Description", deepToString(out.comments));
         root.put("Resources", resources);
-        try {
+        try (var out = new CFTarget(context)){
+            out.start(Domain.cloud);
             DataIO.yaml.write(root, out.getWriter());
         } catch(IOException ex) {
             ex.printStackTrace(System.out);
         }
     }
     @Override
-    public void generate(List<Node> nodes, CodeTarget target) {
-        nodes.forEach(n -> {
+    public void generate(DomainCode code) {
+        code.getNodes().forEach(n -> {
 //            System.out.println("CF generate " + n.getName());
             var resource = new LinkedHashMap<String, Object>();
             resources.put(n.getName(), resource);
@@ -99,10 +100,6 @@ public class CFBuildController implements DomainGenerationController,
     @Override
     public void setOuterBuildController(OuterBuildController cg) {
         context = cg;
-    }
-    @Override
-    public CodeTarget makeOutput() {
-        return out = new CFTarget(context);
     }
     @Override
     public void prescan() {

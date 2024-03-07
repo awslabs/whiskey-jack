@@ -55,11 +55,6 @@ public class GradleBuildController implements OuterBuildController,
         } catch(IOException ex) {
             error(ex);
         }
-        // TODO: this is just debug code
-        domains.forEach(d->{
-            var dc = new DomainCode(d.getNodes());
-            dc.optimize();
-        });
     }
     @Override
     public Graph getWholeGraph() {

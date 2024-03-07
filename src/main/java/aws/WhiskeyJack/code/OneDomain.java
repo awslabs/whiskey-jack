@@ -5,8 +5,8 @@
 package aws.WhiskeyJack.code;
 
 import aws.WhiskeyJack.QandA.*;
+import aws.WhiskeyJack.exl.*;
 import aws.WhiskeyJack.nodegraph.*;
-import aws.WhiskeyJack.util.*;
 import java.io.*;
 import java.util.*;
 
@@ -15,8 +15,8 @@ public class OneDomain implements Closeable {
     final Domain domain;
     String targetToken;
     final List<Node> nodes = new ArrayList<>();
-    private CodeTarget out;
     private final OverallCodeGenerationDriver controller;
+    private DomainCode code;
     OneDomain(OverallCodeGenerationDriver cg, Domain d) {
         controller = cg;
         domain = d;
@@ -38,20 +38,18 @@ public class OneDomain implements Closeable {
         return g;
     }
     public void prescan() {
+        code = new DomainCode(nodes);
+        code.optimize();
+        code.show();
         generator().prescan();
     }
     public void generate() {
-        out = generator().makeOutput();
-        out.start(domain);
-        controller.message("Generating " + out.getPath());
         controller.message(domain + ": " + nodes.size() + " nodes");
-        out.comment("Code for domain " + domain);
-        generator().generate(nodes, out);
+        generator().generate(code);
     }
     public Collection<Node> getNodes() { return nodes; }
     @Override
     public void close() {
         generator().close();
-        Utils.close(out);
     }
 }

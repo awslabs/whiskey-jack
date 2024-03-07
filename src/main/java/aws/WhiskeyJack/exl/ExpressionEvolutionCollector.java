@@ -5,6 +5,7 @@
 package aws.WhiskeyJack.exl;
 
 import aws.WhiskeyJack.nodegraph.*;
+import aws.WhiskeyJack.util.*;
 import java.io.*;
 import java.nio.file.*;
 import static java.nio.file.FileVisitResult.*;
@@ -55,10 +56,11 @@ public class ExpressionEvolutionCollector {
         }
     }
     public void dump(DomainCode dc) {
-        var dinfo = prevMap.computeIfAbsent(dc.domain, k->new DInfo());
+        var domain = dc.getDomain();
+        var dinfo = prevMap.computeIfAbsent(domain, k->new DInfo());
         var nm = dinfo.seq<26 ? Character.toString('a'+dinfo.seq) : Integer.toString(dinfo.seq);
         dinfo.seq++;
-        current = root.resolve(dc.domain+"-"+nm+codeExt);
+        current = root.resolve(domain+"-"+nm+codeExt);
         try {
             new VerboseDump().to(current).append(dc).close();
         } catch(IOException ex) {
@@ -75,6 +77,9 @@ public class ExpressionEvolutionCollector {
             }
         }
         dinfo.prev = current;
+    }
+    public void show(DomainCode dc) {
+        Exec.edit(prevMap.computeIfAbsent(dc.getDomain(), k->new DInfo()).prev);
     }
     class DInfo {
         Path prev = null;

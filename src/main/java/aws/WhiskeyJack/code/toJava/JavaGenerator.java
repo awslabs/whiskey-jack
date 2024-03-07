@@ -10,175 +10,122 @@ import aws.WhiskeyJack.exl.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
 import java.io.*;
+import java.nio.file.*;
 //import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
-import java.util.regex.*;
 
 @GeneratesCodeFor("*/java")
 public class JavaGenerator implements DomainGenerationController,
     OverallCodeGenerationDriver.needsOuterBuildController {
-    CodeTarget out;
     Set<String> imports = new HashSet<>();
     Set<String> libraries = new HashSet<>();
     Set<String> dependencies = new HashSet<>();
     String className;
     String packageName = "ade.gen";
+    Path outName;
+    DomainCode code;
     @Override
-    public void generate(List<Node> nodes, CodeTarget out) {
-        this.out = out;
-        if(false) {
-            // TODO aws.WhiskeyJack.code.toJava.JavaGenerator.generate Not implemented
-            System.out.println("  Whoo! " + this);
-            var m = Pattern.compile("^([^.]*)\\..*").matcher(out.getPath().getFileName().toString());
-            className = m.group(m.matches() ? 1 : 0);
-            nodes.forEach((Node n) -> {
-                n.sidecar(NodeGenerationInfo.class);
-            });
-            nodes.forEach((Node n) -> {
-                imports.addAll(n.getStringListProp("import"));
-                libraries.addAll(n.getStringListProp("library"));
-                dependencies.addAll(n.getStringListProp("dependencies"));
-            });
-            out.append("package ").append(packageName).append(";\n");
-            imports.forEach((String im) -> {
-                out.append("import ").append(im).append(";\n");
-            });
-            out.comment(libraries);
-            out.append("public class ")
-                .append(className)
-                .append(" {\n")
-                .indent();
-            nodes.forEach((Node n) -> {
-                Collection<String> header = new ArrayList<>();
-                var info = n.sidecar(NodeGenerationInfo.class);
-                header.add("Node " + n.getName() + " (" + n.getUid() + ")");
-                n.forEachPort((Consumer<Port>) (p -> {
-                    header.add((p.isInputSide() ? "in  " : "out ") + p.getType()
-                               + '\t' + p.getName()
-                               + '\t' + p.getValue()
-                               + '\t' + p.isConnected());
-                }));
-                info.inputs.forEach(input -> header.add("input " + input));
-                info.outputs.forEach(output -> header.add("output " + output));
-                context.message(n.getUid());
-                out.ln().comment(header);
-                var code = n.getStringProp("code", null);
-                var state = n.getStringProp("state", null);
-                var callback = n.getStringProp("callback", null);
-                if(state != null)
-                    forAllBaseExpressionsIn(parse(state),
-                        ist0 -> {
-                        var ist = info.rewritePorts(ist0);
-                        var t = ist.getOperator();
-                        if(t == Vocabulary.DECLAREASSIGN || t == Vocabulary.DECLAREASSIGNFINAL) {
-                            flushPendingInit();
-                            var name = ist.get(0);
-                            var exp = ist.get(1);
-                            out.append("private ");
-                            if(t == Vocabulary.DECLAREASSIGNFINAL)
-                                out.append("final ");
-                            out.append(typeFrom(exp))
-                                .append(' ')
-                                .append(name)
-                                .append(" = ")
-                                .append(exp)
-                                .append(';')
-                                .nl();
-                        } else pendingInit.add(ist);
-                    });
-                if(callback != null)
-                    forAllBaseExpressionsIn(parse(callback),
-                        ist -> pendingInit.add(info.rewritePorts(ist)));
-                flushPendingInit();
-                info.inputs.forEach(input -> {
-                    var nm = NodeGenerationInfo.uniqueName(input);
-                    var type = typeFrom(input.getType());
-                    out.nl().append("private ").append(type).append(' ')
-                        .append(nm).append("; // TODO: initial value\n");
-                    out.append("private void ").append(nm)
-                        .append('(').append(type).append(" v) ")
-                        .openBrace()
-                        .append("if(v != ").append(nm)
-                        .append(") ").openBrace()
-                        .append(nm).append(" = v;").nl()
-                        .append("compute_").append(n.getUid()).append("();\n")
-                        .closeBrace().closeBrace();
-                });
-                info.outputs.forEach(output -> {
-                    var nm = NodeGenerationInfo.uniqueName(output);
-                    var type = typeFrom(output.getType());
-                    out.nl().append("private ").append(type).append(' ')
-                        .append(nm).append("; // TODO: initial value\n");
-                    out.append("private void ").append(nm)
-                        .append('(').append(type).append(" v) ")
-                        .openBrace()
-                        .append("if(v != ").append(nm)
-                        .append(") ").openBrace()
-                        .append(nm).append(" = v;").nl();
-                    output.forEachArc(arc -> {
-                        var receiver = arc.otherEnd(output);
-                        var rnm = NodeGenerationInfo.uniqueName(receiver);
-                        out.append(rnm).append("(v);\n");
-                    });
-                    out.closeBrace().closeBrace();
-                });
-                if(!Utils.isEmpty(code)) {
-                    out.append("void ").append("compute_" + n.getUid()).append("() ").openBrace();
-                    var parsed = info.rewritePorts(parse(code));
-                    out.append(clean(parsed))
-                        .append(";");
-                    out.closeBrace();
-                }
-                var errors = info.getErrors();
-                if(errors != null) {
-                    out.comment(errors);
-                    context.error(errors);
-                }
-            });
-            out.nl().append("public static void main(String [] args)")
-                .openBrace()
-                .append("var v = new ").append(className).append("();")
-                .closeBrace();
-            out.setIndent(0).append("}\n");
-            // generatePOM();
-            context.generateJavaPartBuild(out.getCodeRootDirectory(),
-                packageName + "." + className, dependencies);
-
-            nodes.forEach(n -> n.removeSidecar(NodeGenerationInfo.class));
-//        return error;
+    public void generate(DomainCode c) {
+        var codeRootDirectory = context
+            .getCodePartDirectory(c.getDomain(), "code")
+            .resolve(packageName);
+        try {
+            Files.createDirectories(codeRootDirectory);
+        } catch(IOException ex) {
         }
+        outName = codeRootDirectory.resolve(c.getDomain() + ".java");
+        var encoder = new VerboseDump() {
+            @Override
+            public void fileHeader(DomainCode dc) {
+                super.fileHeader(dc);
+                append("package ").append(packageName).append(";\n");
+                imports.forEach(i -> append("import ").append(i).append(";\n"));
+                append("class " + c.getDomain() + " {\n");
+            }
+            @Override
+            public void fileEnder(DomainCode dc) {
+                append("}");
+            }
+            @Override
+            public void declareGlobal(Expression e) {
+                toTab(1);
+                append(e);
+                append(";\n");
+            }
+            public void appendSetup(Expression e) {
+                toCol(1);
+                appendStatement(e, 1);
+            }
+            @Override
+            protected void appendStatement(Expression e, int indent) {
+                if(e != null) {
+                    var op = e.getOperator();
+                    if(op == Vocabulary.BLOCK) {
+                        append('{');
+                        for(var arg: e.asArray())
+                            appendStatement(arg, indent);
+                        toTab(indent - 1);
+                        append('}');
+                        return;
+                    }
+                    toTab(indent);
+                    if(op == Vocabulary.IF) {
+                        var cond = e.getOK(0);
+                        var then = e.getOK(1);
+                        var elze = e.getOK(2);
+                        append("if(");
+                        append(cond, indent + 1, 0);
+                        append(") ");
+                        if(then == null) append("{}");
+                        else
+                            appendStatement(then.endsWithIf() ?
+                                DomainCode.block(then) : then,
+                                indent + 1);
+                        if(elze != null) {
+                            toTab(indent);
+                            append("else ");
+                            appendStatement(elze, indent + 1);
+                        }
+                    } else {
+                        append(e, indent, 0);
+                        append(';');
+                    }
+                }
+            }
+            @Override
+            public void append(Expression e, int indent, int outerprior) {
+                if(e != null) {
+                    var op = e.getOperator();
+                    if(op == Vocabulary.NEW) {
+                        append("new ");
+                        append(e.get(0));
+                        var sz = e.size();
+                        append('(');
+                        for(var i = 1; i < sz; i++) {
+                            if(i > 1) append(", ");
+                            append(e.get(i));
+                        }
+                        append(')');
+                    } else super.append(e, indent, outerprior);
+                }
+            }
+        };
+        try {
+            encoder.to(outName);
+            encoder.append(c);
+            encoder.close();
+            Exec.edit(outName);
+        } catch(IOException ex) {
+            ex.printStackTrace(System.out);
+        }
+        code = c;
+        System.out.println("Generating java code for " + c.toString());
     }
-//    private StrategyPath strategyPath;
     @Override
     public void setStrategyPath(StrategyPath p) {
 //        System.out.println("  java generator followon path "+p);
 //        strategyPath = p;
-    }
-    private Expression parse(String s) {
-        try {
-            if(s.indexOf(';') >= 0)
-                s = "{" + s + ";}";
-            return new Parser(new Tokenizer(s)).expression();
-        } catch(IOException ex) {
-            ex.printStackTrace(System.out);
-            var msg = List.of("Error parsing", s, ex.toString());
-            out.comment(msg);
-            context.message(msg);
-            return clean(Expression.of(Token.string(s)));
-        }
-    }
-    static Expression clean(Expression e) {
-        return e == null || e.getOperator() != Vocabulary.BLOCK || e.size() != 1
-            ? e
-            : clean(e.get(0));
-    }
-    private final Collection<Expression> pendingInit = new ArrayList<>();
-    private void flushPendingInit() {
-        if(!pendingInit.isEmpty()) {
-            out.nl().append(Expression.of(Vocabulary.BLOCK, pendingInit)).nl();
-            pendingInit.clear();
-        }
     }
     private static String typeFrom(Type e) {
         if(e == Type.number) return "double";
@@ -206,124 +153,12 @@ public class JavaGenerator implements DomainGenerationController,
                     forAllBaseExpressionsIn(e2, func);
             else func.accept(e);
     }
-//    void generatePOM() {
-//
-//        try(var pom = Files.newBufferedWriter(out.getCodeRootDirectory().resolve("pom.xml"),
-//                StandardOpenOption.CREATE,
-//                StandardOpenOption.TRUNCATE_EXISTING)) {
-//            pom.append(
-//                    """
-//<?xml version="1.0" encoding="UTF-8"?>
-//<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-//    <modelVersion>4.0.0</modelVersion>
-//    <groupId>ade.exp</groupId>
-//    <artifactId>adeWhatever</artifactId>
-//    <version>1.0-SNAPSHOT</version>
-//    <packaging>jar</packaging>
-//    <properties>
-//        <maven.compiler.source>21</maven.compiler.source>
-//        <maven.compiler.target>21</maven.compiler.target>
-//    </properties>
-//                       """);
-//            if(!dependencies.isEmpty()) {
-//                pom.append("    <dependencies>\n");
-//                dependencies.forEach(d -> {
-//                    try {
-//                        pom.append("\t<dependency>\n\t  " + d + "\n\t</dependency>\n");
-//                    } catch(IOException ioe) {
-//                    }
-//                });
-//                pom.append("    </dependencies>\n");
-//            }
-//            pom.append("</project>\n");
-//        } catch(IOException ex) {
-//            out.comment(ex.toString());
-//        }
-//    }
-    @Override
-    public CodeTarget makeOutput() {
-        assert context != null;
-//        var src = context.getWholeGraph().getSrc();
-//        System.out.println("SRC " + src + "; " + src.getFileName());
-        return new JavaTarget(context, packageName);
-    }
     OuterBuildController context;
     @Override
     public void setOuterBuildController(OuterBuildController cg) {
         System.out.println("setOuterBuildController " + cg);
         assert cg != null;
         context = cg;
-    }
-
-    public static class NodeGenerationInfo {
-        private final Map<String, Expression> portValues = new HashMap<>();
-        Collection<Port> inputs = new ArrayList<>();
-        Collection<Port> outputs = new ArrayList<>();
-
-        public NodeGenerationInfo(Node n) {
-            n.forEachPort((Consumer<Port>) p -> {
-                var t = p.getType();
-                var k = p.getName();
-                if(p.isConnected()) {
-                    (p.isInputSide() ? inputs : outputs).add(p);
-                    portValues.put(k, Expression.of(Token.identifier(uniqueName(p))));
-                } else {
-                    var nv = p.getValue();
-                    System.out.println("Constant port " + p.getFullName() + " = " + nv);
-                    var v = switch(nv) {
-                        case String str ->
-                            t == Type.string
-                            ? Expression.of(Token.string(str))
-                            : parse(str);
-                        case Expression ev ->
-                            ev;
-                        case Number num ->
-                            Expression.of(Token.number(num));
-                        case null ->
-                            Expression.of(t == Type.string ? emptyString : Vocabulary.NULL);
-                        default ->
-                            Expression.of(Token.string(String.valueOf(nv)));
-                    };
-                    System.out.println("rewrite " + k + " to " + v);
-                    portValues.put(k, v);
-                }
-            });
-        }
-        Expression rewritePorts(Expression e) {
-            return e.rewrite((Expression exNode) -> {
-                var op = exNode.getOperator();
-                if(op.isIdentifier()) {
-                    System.out.println("Found Identifier " + exNode);
-                    var foundValue = portValues.get(op.getBody());
-                    if(foundValue != null) {
-                        System.out.println("  with value " + foundValue);
-                        return foundValue;
-                    }
-                }
-                return exNode;
-            });
-        }
-        private Expression parse(String s) {
-            try {
-                if(s.indexOf(';') >= 0)
-                    s = "{" + s + ";}";
-                return new Parser(new Tokenizer(s)).expression();
-            } catch(IOException ex) {
-                ex.printStackTrace(System.out);
-                if(errors == null) errors = new ArrayList<>();
-                errors.add("Error parsing " + s);
-                errors.add(ex.toString());
-                return JavaGenerator.clean(Expression.of(Token.string(s)));
-            }
-        }
-        private List<String> errors;
-        public Collection<String> getErrors() {
-            return errors;
-        }
-        static String uniqueName(Port p) {
-            return p == null ? "NULLPORT" : p.within.getUid() + "_" + p.getName();
-        }
-        private static final Token emptyString = Token.string("");
     }
 
 }

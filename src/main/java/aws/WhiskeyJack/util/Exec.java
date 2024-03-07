@@ -2,7 +2,6 @@
  * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package aws.WhiskeyJack.util;
 
 import java.io.*;
@@ -60,7 +59,6 @@ public class Exec implements Closeable {
     private AtomicInteger numberOfCopiers;
     protected String[] cmds;
 
-
     protected File dir = userdir;
     private long timeout = -1;
     private TimeUnit timeunit = TimeUnit.SECONDS;
@@ -73,11 +71,10 @@ public class Exec implements Closeable {
     }
 
     public Exec setenv(String key, CharSequence value) {
-        if(environment==null) environment = new HashMap<>();
+        if(environment == null) environment = new HashMap<>();
         environment.put(key, value instanceof String ? (String) value : Coerce.toString(value));
         return this;
     }
-
 
     public String cmd(String... command) throws InterruptedException, IOException {
         return withExec(command).execAndGetStringOutput();
@@ -110,45 +107,59 @@ public class Exec implements Closeable {
      * @param fn0 command to lookup.
      * @return the Path of the command, or null if not found.
      */
-
     @Nullable
     public Path which(String fn0) {
         var fn = deTilde(fn0);
-        if (fn.startsWith("/"))
+        if(fn.startsWith("/"))
             return Files.isExecutable(fn) ? fn : null;
-        for (var d : paths) {
+        for(var d: paths) {
             var f = d.resolve(fn);
-            if (Files.isExecutable(f)) {
+            if(Files.isExecutable(f))
                 return f;
-            }
         }
         return null;
     }
-    
+
     public static Path deTilde(String s) {
-        if (s.startsWith("~/")) {
+        if(s.startsWith("~/"))
             return Utils.HOME_PATH.resolve(s.substring(2));
-        }
         return Path.of(s);
+    }
+    public static void edit(Path file) {
+        if(file != null) edit(file.toString());
+    }
+    public static void edit(File file) {
+        if(file != null) edit(file.toString());
+    }
+    public static void edit(String file) {
+        if(file != null)
+        try {
+            new Exec().withExec("open", "-t", file.toString())
+                .withErr(s -> System.out.println("Err: " + s))
+                .withOut(s -> System.out.println("Out: " + s))
+                .background(n -> {
+                    if(n != 0)
+                        System.out.println("Result open failed->" + n);
+                });
+        } catch(IOException | InterruptedException ex) {
+            ex.printStackTrace(System.out);
+        }
     }
 
     protected static void addPathEntries(String path) {
-        if (path != null && path.length() > 0) {
-            for (var f : path.split("[" + PATH_SEP + ",] *")) {
+        if(path != null && path.length() > 0)
+            for(var f: path.split("[" + PATH_SEP + ",] *")) {
                 var p = deTilde(f);
-                if (!paths.contains(p)) {
+                if(!paths.contains(p))
                     paths.add(p);
-                }
             }
-        }
     }
 
     protected static void computeDefaultPathString() {
         var sb = new StringBuilder();
         paths.forEach(p -> {
-            if (sb.length() > 5) {
+            if(sb.length() > 5)
                 sb.append(PATH_SEP);
-            }
             sb.append(p.toString());
         });
         setDefaultEnv(PATH_ENVVAR, sb.toString());
@@ -161,9 +172,8 @@ public class Exec implements Closeable {
      * @return this.
      */
     public Exec cd(File f) {
-        if (f != null) {
+        if(f != null)
             dir = f;
-        }
         return this;
     }
 
@@ -182,6 +192,7 @@ public class Exec implements Closeable {
 
     /**
      * Set the command to execute.
+     *
      * @param c a command.
      * @return this.
      */
@@ -215,7 +226,8 @@ public class Exec implements Closeable {
 
     @SuppressWarnings("PMD.SystemPrintln")
     public Exec withDumpOut() {
-        return withOut(l -> System.out.println("stderr: " + l)).withErr(l -> System.out.println("stdout: " + l));
+        return withOut(l -> System.out.println("stderr: " + l)).withErr(l ->
+            System.out.println("stdout: " + l));
     }
 
     public Exec withOut(Consumer<CharSequence> o) {
@@ -229,7 +241,8 @@ public class Exec implements Closeable {
     }
 
     /**
-     * Get the command to execute. This will be decorated if shell and user/group have been provided.
+     * Get the command to execute. This will be decorated if shell and
+     * user/group have been provided.
      *
      * @return the command.
      */
@@ -247,29 +260,27 @@ public class Exec implements Closeable {
     @SuppressWarnings("PMD.AvoidRethrowingException")
     public Optional<Integer> exec() throws InterruptedException, IOException {
         // Don't run anything if the current thread is currently interrupted
-        if (Thread.currentThread().isInterrupted()) {
+        if(Thread.currentThread().isInterrupted())
             throw new InterruptedException();
-        }
         process = createProcess();
 
         stderrc = new Copier(process.getErrorStream(), stderr);
         stdoutc = new Copier(process.getInputStream(), stdout);
         stderrc.start();
         stdoutc.start();
-        if (whenDone == null) {
+        if(whenDone == null) {
             try {
-                if (timeout < 0) {
+                if(timeout < 0)
                     process.waitFor();
-                } else {
-                    if (!process.waitFor(timeout, timeunit)) {
+                else
+                    if(!process.waitFor(timeout, timeunit)) {
                         (stderr == null ? stdout : stderr).accept("\n[TIMEOUT]\n");
                         process.destroy();
                     }
-                }
-            } catch (InterruptedException ie) {
+            } catch(InterruptedException ie) {
                 // We just got interrupted by something like the cancel(true) in setBackingTask
                 // Give the process a touch more time to exit cleanly
-                if (!process.waitFor(5, TimeUnit.SECONDS)) {
+                if(!process.waitFor(5, TimeUnit.SECONDS)) {
                     (stderr == null ? stdout : stderr).accept("\n[TIMEOUT after InterruptedException]\n");
                     process.destroyForcibly();
                 }
@@ -288,13 +299,11 @@ public class Exec implements Closeable {
      * @return child process
      * @throws IOException if IO error occurs
      */
-
-    
     protected Process createProcess() throws IOException {
         var command = getCommand();
         var pb = new ProcessBuilder();
         pb.environment().putAll(defaultEnvironment);
-        if(environment!=null) pb.environment().putAll(environment);
+        if(environment != null) pb.environment().putAll(environment);
         process = pb.directory(dir).command(command).start();
         return process;
     }
@@ -303,7 +312,7 @@ public class Exec implements Closeable {
      *
      * @return String of output.
      * @throws InterruptedException if thread is interrupted while executing
-     * @throws IOException          if execution of the process fails to start
+     * @throws IOException if execution of the process fails to start
      */
     public String execAndGetStringOutput() throws InterruptedException, IOException {
         var sb = new StringBuilder();
@@ -319,13 +328,12 @@ public class Exec implements Closeable {
 
     @SuppressWarnings("PMD.NullAssignment")
     void setClosed() {
-        if (!isClosed.get()) {
+        if(!isClosed.get()) {
             final var wd = whenDone;
             final var exit = process == null ? -1 : process.exitValue();
             isClosed.set(true);
-            if (wd != null) {
+            if(wd != null)
                 wd.accept(exit);
-            }
         }
     }
 
@@ -345,7 +353,7 @@ public class Exec implements Closeable {
     @Override
     public void close() {
         var p = process;
-        if(!isClosed.getAndSet(true) && p!=null) {
+        if(!isClosed.getAndSet(true) && p != null) {
             p.destroy();
             try {
                 p.destroyForcibly().waitFor();
@@ -376,23 +384,21 @@ public class Exec implements Closeable {
             out = s;
             // Set as a daemon thread so that it dies when the main thread exits
             setDaemon(true);
-            if (whenDone != null) {
-                if (numberOfCopiers == null) {
+            if(whenDone != null)
+                if(numberOfCopiers == null)
                     numberOfCopiers = new AtomicInteger(1);
-                } else {
+                else
                     numberOfCopiers.incrementAndGet();
-                }
-            }
         }
 
         @Override
         public void run() {
-            try (var br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8), 200)) {
+            try(var br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8), 200)) {
                 var sb = new StringBuilder();
                 var cr = false;
-                while (true) {
+                while(true) {
                     int c;
-                    for (c = br.read(); c >= 0 && c != '\n' && c != '\r'; c = br.read()) {
+                    for(c = br.read(); c >= 0 && c != '\n' && c != '\r'; c = br.read()) {
                         sb.append((char) c);
                         cr = false;
                     }
@@ -400,35 +406,31 @@ public class Exec implements Closeable {
                     // Append a newline to our builder if we get \n or if we are seeing \r for the first time.
                     // This prevents \r\n from causing 2 lines to be logged.
                     // If cr is true and we see another \r, we will append a newline (\r\r is 2 lines).
-                    if (c >= 0 && !cr || c == '\r') {
+                    if(c >= 0 && !cr || c == '\r') {
                         // Split on cr too, this protects us from having crazy long lines from a console application
                         // which is using \r to rewrite the last line, ex updating download status.
-                        if (c == '\r') {
+                        if(c == '\r')
                             cr = true;
-                        }
                         sb.append('\n');
                         nlines++;
                     }
-                    if (out != null && sb.length() > 0) {
+                    if(out != null && sb.length() > 0)
                         out.accept(sb);
-                    }
                     sb.setLength(0);
-                    if (c < 0) {
+                    if(c < 0)
                         break;
-                    }
                 }
-            } catch (Throwable ignore) {
+            } catch(Throwable ignore) {
                 // nothing that can go wrong here worries us, they're
                 // all EOFs
             }
-            if (whenDone != null && numberOfCopiers.decrementAndGet() <= 0) {
+            if(whenDone != null && numberOfCopiers.decrementAndGet() <= 0)
                 try {
                     process.waitFor();
                     setClosed();
-                } catch (InterruptedException ignore) {
+                } catch(InterruptedException ignore) {
                     // Ignore as this thread is done running anyway and will exit
                 }
-            }
         }
         private int getNlines() {
             return nlines;

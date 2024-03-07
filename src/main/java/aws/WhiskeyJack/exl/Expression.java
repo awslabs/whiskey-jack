@@ -66,6 +66,9 @@ public class Expression extends ArrayList<Expression> { //TODO pick a less crypt
         addAll(expressions);
         return this;
     }
+    public Expression getOK(int ix) {
+        return ix<size() ? get(ix) : null;
+    }
     @SuppressWarnings({"UseSpecificCatch"})
     public static Expression of(Object o) {
         return switch(o) {
@@ -99,6 +102,12 @@ public class Expression extends ArrayList<Expression> { //TODO pick a less crypt
         assert t!=null;
         type = t;
         return this;
+    }
+    public boolean endsWithIf() {
+        if(operator==Vocabulary.IF)
+            return size()!=3 || get(2).endsWithIf();
+        // TODO will need more complexity if statements like 'for' or 'while' happen
+        return false;
     }
     public final Token getOperator() {
         return operator;

@@ -170,15 +170,6 @@ public abstract class CodeTarget implements Closeable {
     @SuppressWarnings({"PMD.AvoidCatchingThrowable", "UseSpecificCatch"})
     public void close() {
         Utils.close(out);
-        try {
-            new Exec().withExec("/usr/bin/open", destination.toString()).background(n ->
-            {
-                if(n != 0)
-                    System.out.println("Result open failed->" + n);
-            });
-        } catch(Throwable ex) {
-            ex.printStackTrace(System.out);
-        }
     }
     public CodeTarget comment(Collection<String> s) {
         if(s != null && !s.isEmpty()) {

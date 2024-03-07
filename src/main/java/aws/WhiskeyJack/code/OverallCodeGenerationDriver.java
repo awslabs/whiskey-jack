@@ -5,6 +5,7 @@
 package aws.WhiskeyJack.code;
 
 import aws.WhiskeyJack.QandA.*;
+import aws.WhiskeyJack.exl.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
 import static aws.WhiskeyJack.util.Utils.*;
@@ -63,7 +64,7 @@ public class OverallCodeGenerationDriver {
     }
     private final Map<Domain, OneDomain> domains = new HashMap<>();
     private static void initPlugins() {
-        var result = new ArrayList<>();
+        var result = new ArrayList<CodeGeneratorPlugin>();
         /* This is somewhat carefully done to ensure that the plugin classes
          * are not initialized unless they are actually used */
         try(var scanResult = new ClassGraph()
@@ -199,6 +200,10 @@ public class OverallCodeGenerationDriver {
 
     public interface needsCodeGenerator {
         public void setCodeGenerator(OverallCodeGenerationDriver cg);
+    }
+    
+    public interface needsCode {
+        public void setCode(DomainCode cg);
     }
 
     public interface needsOuterBuildController {

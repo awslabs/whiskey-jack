@@ -14,7 +14,7 @@ public class VerboseDump extends ExpressionDump {
     @Override
     public void append(DomainCode.FunctionInfo e) {
         if(e.isUsed()) {
-            toCol(0).append(e.returnType.getName())
+            toTab(1).append(e.returnType.getName())
                 .append(' ')
                 .append(e.name);
             append('(');
@@ -22,22 +22,36 @@ public class VerboseDump extends ExpressionDump {
             for(var arg: e.args) {
                 if(first) first = false;
                 else append(',');
-                append(arg, 0, 0);
+                append(arg.getType().toString());
+                append(' ');
+                append(arg, 0, 2);
             }
             append(") {\n");
-            appendStatement(e.body, 1);
-            toCol(0);
+            appendStatement(e.body, 2);
+            toTab(1);
             append("}\n");
         }
 //        else toCol(0).startComment().append("Unused: ").append(e.name).endComment();
     }
-    private void appendStatement(Expression e, int indent) {
+    protected void appendStatement(Expression e, int indent) {
         if(e != null) {
             toTab(indent);
             append(e, indent, 0);
         }
     }
-    private void append(Expression e, int indent, int outerprior) {
+    public void appendDeclaration(DomainCode.DeclarationInfo decl) {
+        if(decl.isFinal) append("final ");
+        append(decl.type == Type.any || decl.type == Type.unknown ? "var"
+            : decl.type == null ? "VAR? "
+                : decl.type.toString());
+        append(' ');
+        append(decl.name);
+        if(decl.initialValue != null) {
+            append(" = ");
+            append(decl.initialValue);
+        }
+    }
+    public void append(Expression e, int indent, int outerprior) {
         if(e != null) {
             var op = e.getOperator();
             if(e.isLeaf())
@@ -49,19 +63,9 @@ public class VerboseDump extends ExpressionDump {
                     appendStatement(arg, indent + 1);
                 toTab(indent);
                 append('}');
-            } else if(DomainCode.DeclarationInfo.of(e) instanceof DomainCode.DeclarationInfo decl) {
-                if(decl.isFinal) append("final ");
-                append(decl.type == Type.any || decl.type == Type.unknown ? "var"
-                    : decl.type == null ? "VAR? "
-                    : decl.type.toString());
-                append(' ');
-                append(decl.name);
-                if(decl.initialValue != null) {
-                    append(" = ");
-                    append(decl.initialValue);
-                }
-                append(';');
-            } else if(op == Vocabulary.INVOKE) {
+            } else if(DomainCode.DeclarationInfo.of(e) instanceof DomainCode.DeclarationInfo decl)
+                appendDeclaration(decl);
+            else if(op == Vocabulary.INVOKE) {
                 var args = e.asArray();
                 var len = args.length;
                 append(args[0], indent + 1, 0);
