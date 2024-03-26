@@ -266,9 +266,15 @@
                             </additionalResource>
                         </additionalResources>
                     </dmg>
+                    <rules>
+                        <requireOS>
+                            <family>mac</family>
+                        </requireOS>
+                    </rules>
                 </configuration>
                 <executions>
                     <execution>
+                        <id>mac</id>
                         <phase>package</phase>
                         <goals>
                             <goal>bundle</goal>
