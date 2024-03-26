@@ -66,7 +66,9 @@ public class Question implements Comparable<Question> {
         return QuestionsByTag.get(tag);
     }
     public static Question question(String tag, Domain d) {
-        return QuestionsByTag.get(tag, d);
+        var ret = QuestionsByTag.get(tag, d);
+        System.out.println("Q.question("+tag+","+d+") => "+ret);
+        return ret;
     }
     public synchronized void listen(Consumer<Question> listener) {
         if(listeners == null) listeners = new CopyOnWriteArraySet<>();

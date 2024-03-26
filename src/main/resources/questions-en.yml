@@ -3,9 +3,22 @@
 ---
 -   tag: implang
     label: Implementation Language
-    type: [ Java, Rust, Python ]
+    type: [ Java, C ]
     priority: 51
+    Default: C
     domain: device
+-   tag: implang
+    label: Implementation Language
+    type: [ Java, Python, C ]
+    priority: 51
+    domain: cloud
+    default: C
+-   tag: implang
+    label: Implementation Language
+    type: [ JavaScript, html ]
+    priority: 51
+    domain: browser
+    default: javascript
 -   tag: version
     label: App Version
     type: string
@@ -25,11 +38,6 @@
     type: string
     default: anonymous
     priority: 51
--   tag: implang
-    label: Implementation Language
-    type: [ Java, Python ]
-    priority: 51
-    domain: cloud
 -   tag: buildsys
     label: Build system
     default: unknown
@@ -57,4 +65,9 @@
     default: CloudFormation
     type: [CloudFormation]
     domain: cloud
+-   tag: runtime
+    label: Browser runtime framework
+    default: jquery
+    type: [ JQuery, REACT ]
+    domain: browser
 

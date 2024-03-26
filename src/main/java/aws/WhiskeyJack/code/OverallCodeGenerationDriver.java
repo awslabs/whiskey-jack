@@ -36,7 +36,7 @@ public class OverallCodeGenerationDriver {
             outerBuildController = obc;
             System.out.println("outerBuildController " + obc + " " + rootToken);
             seperateDomains();
-            if(domains.isEmpty()) messages.add("Nothing to run");
+            if(domains.isEmpty()) errors.add("Nothing to run");
             else {
                 obc.handleDomains(domains.values());
                 if(errors.isEmpty() && Question.question("autorun").isTrue())

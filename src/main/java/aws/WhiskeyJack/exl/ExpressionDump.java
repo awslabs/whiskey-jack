@@ -70,7 +70,8 @@ public abstract class ExpressionDump implements Closeable {
         return this;
     }
     public void fileHeader(DomainCode dc) {
-        comment("Code for domain " + dc.getDomain());
+        comment("Code for domain " + dc.getDomain()
+        + "\nFrom "+dc.toString());
     }
     public void fileEnder(DomainCode dc) {
     }

@@ -9,6 +9,7 @@ import aws.WhiskeyJack.exl.*;
 import aws.WhiskeyJack.nodegraph.*;
 import java.io.*;
 import java.util.*;
+import java.util.function.*;
 
 public class OneDomain implements Closeable {
     private DomainGenerationController generator;
@@ -17,39 +18,48 @@ public class OneDomain implements Closeable {
     final List<Node> nodes = new ArrayList<>();
     private final OverallCodeGenerationDriver controller;
     private DomainCode code;
+    private boolean errorSent;
     OneDomain(OverallCodeGenerationDriver cg, Domain d) {
         controller = cg;
         domain = d;
-        cg.message(" target token: " + targetToken);
     }
-    private DomainGenerationController generator() {
+    private void generator(Consumer<DomainGenerationController> op) {
         var g = generator;
         if(g == null) {
-        // TODO This still feels like a bucket of total hacks
-            java.lang.String framework = 
-                    Question.question("runtime", domain).asString().toLowerCase();
-            java.lang.String style = "app";
-            java.lang.String language = "java";
+            // TODO This still feels like a bucket of total hacks
+            var framework
+                = Question.question("runtime", domain).asString().toLowerCase();
+            var style = "app";
+            var language = Question.question("implang", domain).asString().toLowerCase();
             var path = controller.rootPath.append(domain + "/" + framework + "/" + style + "/" + language);
             generator = g = path.findPlugin(DomainGenerationController.class);
-            g.setStrategyPath(path);
-
+            if(g != null)
+                g.setStrategyPath(path);
+            else if(!errorSent) {
+                controller.error("Can't find code generator for " + framework
+                                 + " " + style
+                                 + " for the " + language + " language",
+                    "Using path: " + path.toString());
+                errorSent = true;
+            }
         }
-        return g;
+        if(g != null) op.accept(g);
     }
     public void prescan() {
         code = new DomainCode(nodes);
         code.optimize();
         code.show();
-        generator().prescan();
+        generator(g -> g.prescan());
     }
     public void generate() {
-        controller.message(domain + ": " + nodes.size() + " nodes");
-        generator().generate(code);
+//        controller.message(domain + ": " + nodes.size() + " nodes");
+        generator(g -> g.generate(code));
     }
-    public Collection<Node> getNodes() { return nodes; }
+    public Collection<Node> getNodes() {
+        return nodes;
+    }
     @Override
     public void close() {
-        generator().close();
+        generator(g -> g.close());
     }
 }

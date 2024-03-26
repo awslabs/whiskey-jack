@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText:  Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package aws.WhiskeyJack.code.toJava;
+package aws.WhiskeyJack.languages;
 
 import aws.WhiskeyJack.code.*;
 import aws.WhiskeyJack.code.OverallCodeGenerationDriver.StrategyPath;

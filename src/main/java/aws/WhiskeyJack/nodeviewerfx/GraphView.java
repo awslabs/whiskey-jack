@@ -46,7 +46,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     @Override
     public String getName() {
-        return "View";
+        return currentFile==null ? "untitled" : currentFile.getKey();
     }
     @FXML
     private AnchorPane view;

@@ -80,6 +80,13 @@ public class DomainCode {
     public void show() { 
         out.show(this);
     }
+    public void rewriteAllCode(Rewriter visitor) {
+        setup = forceBlock(setup.rewrite(visitor));
+        declarations = forceBlock(declarations.rewrite(visitor));
+        functionInfo.values().forEach(fi->{
+            if(fi.used && fi.body!=null) fi.body = fi.body.rewrite(visitor);
+        });
+    }
 
     public void markUsedFunctions() {
         var toMark = new LinkedList<FunctionInfo>();
@@ -154,10 +161,14 @@ public class DomainCode {
             return e;
         });
     }
-    private Expression nonnull(Expression e) {
+    public static Expression nonnull(Expression e) {
         return e==null ? block() : e;
     }
+    public static Expression forceBlock(Expression e) {
+        return e==null ? block() : e.getOperator()==Vocabulary.BLOCK ? e : block(e);
+    }
     @Override public String toString() { return getDomain().toString(); }
+    static boolean checkInputs = false;
 
     class NodeCode {
         private final Map<String, PortInfo> portInfo = new HashMap<>();
@@ -189,7 +200,7 @@ public class DomainCode {
             if(s == null) return null;
             System.out.println(node.getName() + "." + k + " = " + s);
             var r0 = parse(s);
-            var ret = s == null ? null : rewritePorts(r0);
+            var ret = rewritePorts(r0);
             System.out.println("Port rewrite "+txt(r0)+" => "+txt(ret));
             portExpressions.forEach((var,value)->System.out.println("\t"+var+" => "+txt(value)));
             return ret;
@@ -199,18 +210,23 @@ public class DomainCode {
             inputs.forEach(in -> {
                 var t = in.getType();
                 var arg = ide(in.port.getName());
-                functionInfo.put(in.funcName,
-                    new FunctionInfo(in.funcName, t,
-                        ife(NE(in.varExpr, arg),
-                            block(
+                var body = block(
                                 assign(in.varExpr, arg),
-                                invoke(ide(computeName)))),
+                                invoke(ide(computeName)));
+                if(checkInputs) {
+                    System.out.println("[] before "+body);
+                    body = ife(NE(in.varExpr, arg),
+                            body);
+                    System.out.println("[] after "+body);
+                }
+                add(new FunctionInfo(in.funcName, t,
+                        body,
                         arg));
             });
             outputs.forEach(out -> {
                 var t = out.getType();
                 var arg = ide(out.port.getName());
-                var body = new ArrayList<Expression>();
+                var body = block();
                 body.add(assign(out.varExpr, arg));
                 var callsrc = arg.isLeaf() ? arg : out.varExpr;
                 for(var arc: out.port.allArcs()) {
@@ -219,6 +235,11 @@ public class DomainCode {
                     if(ininfo != null)
                         body.add(invoke(ininfo.funcExpr, callsrc));
                     else System.out.println("  Missing info for " + in);
+                }
+                if(!checkInputs)  {
+                    System.out.println("[] before "+body);
+                    body = ife(NE(out.varExpr,arg), body);
+                    System.out.println("[] after "+body);
                 }
                 functionInfo.put(out.funcName,
                     new FunctionInfo(out.funcName, t,
@@ -264,12 +285,6 @@ public class DomainCode {
             ret.add(f);
         return ret;
     }
-    public static Expression block(Collection<Expression> a) {
-        var ret = of(Vocabulary.BLOCK);
-        for(var f: a)
-            ret.add(f);
-        return ret;
-    }
     public static Expression invoke(Expression... a) {
         return of(Vocabulary.INVOKE, a);
     }
@@ -295,8 +310,8 @@ public class DomainCode {
     public static Expression ide(String s) {
         return of(Token.identifier(s));
     }
-    public static Expression ife(Expression cond, Expression then, Expression els) {
-        return of(Vocabulary.IF, cond, then, els);
+    public static Expression ife(Expression cond, Expression then, Expression elze) {
+        return of(Vocabulary.IF, cond, then, elze);
     }
     public static Expression ife(Expression cond, Expression then) {
         return ife(cond, then, null);
@@ -308,10 +323,10 @@ public class DomainCode {
     }
 
     public static class DeclarationInfo {
-        Expression name;
-        Expression initialValue;
-        boolean isFinal;
-        Type type = Type.any;
+        public Expression name;
+        public Expression initialValue;
+        public boolean isFinal;
+        public Type type = Type.any;
         public static DeclarationInfo of(Expression e) {
             return e.getOperator() != Vocabulary.DECLARE ? null
                 : new DeclarationInfo(e);
@@ -388,18 +403,18 @@ public class DomainCode {
     }
 
     public class FunctionInfo {
-        final String name;
-        Expression body;
-        Expression[] args;
-        Type returnType;
+        private String name;
+        public Expression body;
+        public Expression[] args;
+        public Type returnType;
         private boolean used = true;
-        FunctionInfo(String nm, Type t, Expression b, Expression... a) {
+        public FunctionInfo(String nm, Type t, Expression b, Expression... a) {
             name = nm;
             returnType = t;
             body = b;
             args = a;
         }
-        FunctionInfo(String nm, Expression b, Expression... a) {
+        public FunctionInfo(String nm, Expression b, Expression... a) {
             this(nm, Type.voidType, b, a);
         }
         void inlineBodyFunctions() {
@@ -409,11 +424,14 @@ public class DomainCode {
                 body = nb;
             }
         }
-        boolean isUsed() { return used; }
+        public boolean isUsed() { return used; }
         @Override
         public String toString() {
-            return name + "(...)";
+            return name;
         }
+    }
+    public void add(FunctionInfo fi) {
+        functionInfo.put(fi.toString(), fi);
     }
     private Expression inlineFunctions(Expression body) {
         if(body == null) return null;

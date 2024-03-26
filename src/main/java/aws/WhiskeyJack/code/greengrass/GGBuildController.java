@@ -54,6 +54,7 @@ public class GGBuildController implements DomainGenerationController,
     }
     @Override
     public void generate(DomainCode nodes) {
+        if(subController==null) return;
         subController.generate(nodes);
         nodes.getNodes().forEach(n -> {
             var cname = n.getStringProp("cname", null);

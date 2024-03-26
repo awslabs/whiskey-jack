@@ -30,7 +30,8 @@ public class Parser {
             ret = parseList(null, Vocabulary.ARRAYLITERAL, Vocabulary.RSQUARE);
         else if(tok == Vocabulary.NEW) {
             tok = src.get();
-            ret = Expression.of(Vocabulary.NEW, term());
+            ret = Expression.of(Vocabulary.NEW);
+            ret.addAll(term());
         } else if(tok.isKeyword())
             if(tok == Vocabulary.NOT || tok == Vocabulary.MINUS || tok == Vocabulary.PLUS) {
                 var t = tok;

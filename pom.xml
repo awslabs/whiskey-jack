@@ -235,6 +235,48 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>de.perdian.maven.plugins</groupId>
+                <artifactId>macosappbundler-maven-plugin</artifactId>
+                <version>1.20.0</version>
+                <configuration>
+                    <plist>
+                        <CFBundleIconFile>src/artwork/WhiskeyJackIcon.icns</CFBundleIconFile>
+                        <CFBundleDisplayName>Whiskey-Jack</CFBundleDisplayName>
+                        <CFBundleDevelopmentRegion>English</CFBundleDevelopmentRegion>
+                        <CFBundleURLTypes>
+                            <string>msa</string>
+                        </CFBundleURLTypes>
+                        <JVMMainModuleName>aws.WhiskeyJack:${appMainClass}</JVMMainModuleName>
+                        <JVMVersion>21+</JVMVersion>
+                        <JVMOptions>
+                            <string>-Dfoo=bar</string>
+                            <string>-Dx=y</string>
+                        </JVMOptions>
+                        <JVMArguments>
+                            <string>-example</string>
+                            <string>${someProperty}</string>
+                        </JVMArguments>
+                    </plist>
+                    <dmg>
+                        <generate>true</generate>
+                        <additionalResources>
+                            <additionalResource>
+                                <directory>src/bundle/macos/distribution</directory>
+                            </additionalResource>
+                        </additionalResources>
+                    </dmg>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
     <name>WhiskeyJack</name>

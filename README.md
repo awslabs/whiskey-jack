@@ -46,3 +46,16 @@ The IDE I use is [Netbeans](https://netbeans.apache.org), so you'll find a few c
 The structure of this project is rubbish.  It's all one repo.  It should be
 broken up into multiple hierarchic repos. And it should someday be changed to use
 Gradle instead of Maven. Mañana
+
+## On Sacred Cows
+This implementation treads on two sacred cows:
+
+1. It is a desktop app.  It doesn't need to be, it could become a web app, but it
+would suffer.  Desktop apps have extremely fluid interactivity.  And they have
+instantaneous access to the whole sematic model during interactions.  Things like
+instantaneous error&problem feedback as the mouse moves.
+
+2. It doesn't use genAI in any significant way.  It is the stylish trendy technology
+of the day, but it has a drawback that makes using it challenging: it hallucinates,
+it is challenging to make it trustworthy.  This is a domain where correctness is
+important.

@@ -175,6 +175,13 @@
                 <argLine>--enable-preview</argLine>
             </properties>
         </action>
+        <action>
+            <actionName>CUSTOM-Package</actionName>
+            <displayName>Package</displayName>
+            <goals>
+                <goal>package</goal>
+            </goals>
+        </action>
         
         
         

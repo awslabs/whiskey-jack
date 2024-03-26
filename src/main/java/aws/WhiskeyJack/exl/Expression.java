@@ -42,8 +42,11 @@ public class Expression extends ArrayList<Expression> { //TODO pick a less crypt
     }
     @Override public boolean add(Expression e) {
         if(e==null) return true;
-        if(getOperator()==Vocabulary.BLOCK && e.getOperator()==Vocabulary.BLOCK)
+        if(getOperator()==Vocabulary.BLOCK && e.getOperator()==Vocabulary.BLOCK) {
+            System.out.println("[] inlining add "+e+"\n\tinto "+this);
+            new Throwable().fillInStackTrace().printStackTrace();
             for(var se:e) add(se);
+        }
         else
             if(!isEmpty(e)) super.add(e);
         return true;
@@ -63,7 +66,8 @@ public class Expression extends ArrayList<Expression> { //TODO pick a less crypt
         return this;
     }
     public Expression add(Collection<Expression> expressions) {
-        addAll(expressions);
+        if(expressions instanceof Expression e) add(e);
+        else addAll(expressions);
         return this;
     }
     public Expression getOK(int ix) {
@@ -182,10 +186,8 @@ public class Expression extends ArrayList<Expression> { //TODO pick a less crypt
         return ret;
     }
     public Expression finish() {
-        if(getOperator()==Vocabulary.NEW && size()==1) {
+        if(getOperator()==Vocabulary.NEW && !isEmpty()) {
             var typeExpr = getFirst();
-            if(typeExpr.getOperator()==Vocabulary.INVOKE && !typeExpr.isEmpty())
-                typeExpr = typeExpr.get(0);
             var nm = typeExpr.asName();
             setType(Type.of(nm));
             System.out.println("Finish: "+nm+" >> "+this);

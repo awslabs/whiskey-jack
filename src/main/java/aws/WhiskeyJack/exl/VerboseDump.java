@@ -16,7 +16,7 @@ public class VerboseDump extends ExpressionDump {
         if(e.isUsed()) {
             toTab(1).append(e.returnType.getName())
                 .append(' ')
-                .append(e.name);
+                .append(e.toString());
             append('(');
             var first = true;
             for(var arg: e.args) {
