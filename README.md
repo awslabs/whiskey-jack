@@ -60,5 +60,5 @@ of the day, but it has a drawback that makes using it challenging: it hallucinat
 it is challenging to make it trustworthy.  This is a domain where correctness is
 important.
 
-[^1]: <span style="font:italic 20pt serif"> BEWARE This is a Work-In-Progress.
+[^1]: <span style='font-family:"Times New Roman"'>Xspan style="font:italic 20pt serif"> BEWARE: This is a Work-In-Progress.
   It does <b>not</b> usefully work.  Careful demos succeed, but it's very much an experiment</span>
