@@ -1,6 +1,4 @@
- > > # **BEWARE** *This is a Work-In-Progress.  It does not usefully work.  Careful demos succeed, but it's very much an experiment*
-
-# Architecture Diagram Editor ([WhiskeyJack](AboutTheName.md))
+# Architecture Diagram Editor ([WhiskeyJack](AboutTheName.md))[^1]
 
 	Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 	SPDX-License-Identifier: Apache-2.0
@@ -61,3 +59,6 @@ instantaneous error&problem feedback as the mouse moves.
 of the day, but it has a drawback that makes using it challenging: it hallucinates,
 it is challenging to make it trustworthy.  This is a domain where correctness is
 important.
+
+[^1]: <span style="font:italic 20pt serif"> BEWARE This is a Work-In-Progress.
+  It does <b>not</b> usefully work.  Careful demos succeed, but it's very much an experiment</span>
