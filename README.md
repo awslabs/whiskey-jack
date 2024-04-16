@@ -1,3 +1,5 @@
+ > > # **BEWARE** *This is a Work-In-Progress.  It does not usefully work.  Careful demos succeed, but it's very much an experiment*
+
 # Architecture Diagram Editor ([WhiskeyJack](AboutTheName.md))
 
 	Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.

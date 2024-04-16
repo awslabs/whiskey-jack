@@ -11,7 +11,7 @@ children:
             query: 0
 
     timestream:
-        Type: AWS::Timestream::Database
+        typeName: AWS::Timestream::Database
         Properties:
             DatabaseName: $name
             KmsKeyID: foo
@@ -20,7 +20,7 @@ children:
         out:
             out: database
     tstable:
-        Type: AWS::Timestream::Table
+        typeName: AWS::Timestream::Table
         Properties:
             TableName: $name
             DatabaseName: $db.name

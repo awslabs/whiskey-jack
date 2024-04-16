@@ -7,21 +7,21 @@ package aws.WhiskeyJack.metadata;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.nodeviewerfx.*;
 import aws.WhiskeyJack.util.*;
+import static aws.WhiskeyJack.util.EZOutput.*;
 import java.io.*;
 import static java.nio.file.FileVisitResult.*;
 import java.nio.file.*;
-import static java.nio.file.FileVisitResult.*;
 import java.nio.file.attribute.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.regex.*;
 
 public class Config {
-    public static final Path configDir = Utils.homePath("."+Graph.graphFileExtension);
+    public static final Path configDir = Utils.homePath("." + Graph.graphFileExtension);
     private static final Path propFile = configDir.resolve("config.properties");
     private static final Properties props = new Properties();
     static {
-        try( Reader in = Files.newBufferedReader(propFile)) {
+        try(Reader in = Files.newBufferedReader(propFile)) {
             props.load(in);
         } catch(IOException ioe) {
         }
@@ -48,7 +48,7 @@ public class Config {
         sync();
     }
     private static void sync() {
-        try( var out = CommitableWriter.abandonOnClose(propFile)) {
+        try(var out = CommitableWriter.abandonOnClose(propFile)) {
             props.store(out, "Flowgraph Editor Config");
             out.commit();
         } catch(IOException ioe) {
@@ -56,8 +56,9 @@ public class Config {
         }
     }
     public static Path scanConfig(String kind, BiConsumer<String, String> func) {
-        var dir = configDir.resolve(kind + "s");
+        var dir = configDir.resolve(kind);
         var pfxlen = dir.toString().length();
+        var work = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
         var ext = Pattern.compile("/*([^.].*)\\." + kind, Pattern.CASE_INSENSITIVE).matcher("");
         try {
             if(!Files.isDirectory(dir))
@@ -75,7 +76,7 @@ public class Config {
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     var fn = file.toString();
                     if(ext.reset(fn).matches())
-                        func.accept(ext.group(1).substring(pfxlen), fn);
+                        work.put(ext.group(1).substring(pfxlen), fn);
                     return CONTINUE;
                 }
                 @Override
@@ -83,6 +84,7 @@ public class Config {
                     return CONTINUE;
                 }
             });
+            work.forEach((tag, path) -> func.accept(tag, path));
         } catch(IOException ex) {
             Dlg.error("Error walking " + dir, ex);
         }

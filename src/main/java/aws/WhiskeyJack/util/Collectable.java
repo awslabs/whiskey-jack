@@ -9,6 +9,7 @@ import static aws.WhiskeyJack.util.Collectable.*;
 import static aws.WhiskeyJack.util.Utils.*;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.stream.*;
 
 /**
@@ -199,6 +200,9 @@ public abstract class Collectable {
                 if(!m.containsKey(k))
                     m.put(k, v);
             });
+    }
+    public void forAllProperties(BiConsumer<? super Object,? super Object> func) {
+        properties.forEach(func);
     }
     public <T> T sidecar(Class<T> cl) {
         return (T)properties.computeIfAbsent(cl, kcl->{

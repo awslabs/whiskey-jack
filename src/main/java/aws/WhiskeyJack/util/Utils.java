@@ -110,6 +110,9 @@ public final class Utils {
     public static boolean isEmpty(CharSequence s) {
         return s == null || s.length() == 0;
     }
+    public static boolean isBlank(String s) {
+        return s == null || s.isBlank();
+    }
 
     public static CharSequence nullEmpty(CharSequence s) {
         return s == null || s.length() == 0 ? null : s;

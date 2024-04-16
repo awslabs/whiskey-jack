@@ -326,7 +326,7 @@ public class DomainCode {
         public Expression name;
         public Expression initialValue;
         public boolean isFinal;
-        public Type type = Type.any;
+        public Type type = Type.unknown;
         public static DeclarationInfo of(Expression e) {
             return e.getOperator() != Vocabulary.DECLARE ? null
                 : new DeclarationInfo(e);
@@ -337,6 +337,7 @@ public class DomainCode {
                 if(arg == Vocabulary.finalMarker) isFinal = true;
                 else if(name == null) name = arg;
                 else initialValue = arg;
+            if(type.isBoring() && initialValue!=null) type = initialValue.getType();
         }
     }
 

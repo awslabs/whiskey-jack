@@ -38,7 +38,7 @@ public class CFBuildController implements DomainGenerationController,
 //            System.out.println("CF generate " + n.getName());
             var resource = new LinkedHashMap<String, Object>();
             resources.put(n.getName(), resource);
-            resource.put("Type", n.getStringProp("Type", "AWS::missing::type"));
+            resource.put("typeName", n.getStringProp("typeName", "AWS::missing::type"));
             var props = n.getMapProp("Properties", null);
             if(props == null) props = Map.of("error",
                         "Properties missing from catalog entry "

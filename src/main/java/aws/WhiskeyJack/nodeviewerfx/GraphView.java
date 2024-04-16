@@ -10,6 +10,7 @@ import aws.WhiskeyJack.infer.*;
 import aws.WhiskeyJack.metadata.*;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.util.*;
+import static aws.WhiskeyJack.util.EZOutput.*;
 import static aws.WhiskeyJack.util.Utils.*;
 import java.io.*;
 import java.lang.reflect.*;
@@ -31,6 +32,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.stage.*;
+import javafx.util.*;
 
 public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> implements Initializable {
     static final String appName = "WhiskeyJack";
@@ -46,7 +48,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     @Override
     public String getName() {
-        return currentFile==null ? "untitled" : currentFile.getKey();
+        return currentFile == null ? "untitled" : currentFile.getKey();
     }
     @FXML
     private AnchorPane view;
@@ -73,7 +75,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     public void appendRefTo(StringBuilder sb) {
         sb.append("GraphView?");
     }
-    
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         Thread.setDefaultUncaughtExceptionHandler((t, error) ->
@@ -140,7 +142,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         });
         if(createNotifier != null)
             createNotifier.accept(this);
-        
+
         tabpane.getSelectionModel().selectedIndexProperty().addListener((cl, was, is) ->
         {
             if(propboxVisible = (is.intValue() == 1)) populatePropbox();
@@ -277,7 +279,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         pref.put("lastFile", selectedFile);
         if(selectedFile != null)
             loadFile(selectedFile);
-        
+
     }
     void openDefault() {
         if(loadFile(pref.get("lastFile", null)))
@@ -326,7 +328,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     }
     void selectInferred(ActionEvent evt) {
         selection.clear();
-        forEachNode(n->{
+        forEachNode(n -> {
             if(n.isInferred()) selection.add((Selectable) n);
         });
     }
@@ -359,7 +361,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
             : dfltFile);
         return true;
     }
-    
+
     public final Map<Domain, DomainView> domains = new HashMap<>();
     DomainView getDomainView(Domain d) {
         return domains.computeIfAbsent(d, D -> new DomainView(this, D));
@@ -553,10 +555,9 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 var sy = mouseEvent.getSceneY();
                 var other = dragInfo.d0;
                 for(var d: domains.values())
-                    if(d.getView().getBoundsInParent().contains(sx, sy)) {
+                    if(d.getView().getBoundsInParent().contains(sx, sy))
                         if(d.getDomain() != dragInfo.d0)
                             other = d.getDomain();
-                    }
                 if(other != dragInfo.d0) {
                     nv.setDomain(other);
                     checkTypes();
@@ -597,7 +598,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         selection.clear();
         domains.clear();
     }
-    
+
     static private int ix = 0;
     private static MenuItem find(List<MenuItem> items, String name) {
         for(var mi: items)
@@ -605,7 +606,7 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
                 return mi;
         return null;
     }
-    
+
     public static void dump(String label, int depth, javafx.scene.Node node, Set<javafx.scene.Node> skip) {
         if(node != null && !skip.contains(node)) {
             skip.add(node);
@@ -666,65 +667,38 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
     public AnchorPane getView() {
         return view;
     }
+    private Collection<javafx.scene.Node> props;
+    private int row;
     private void populatePropbox() {
-        Collection<javafx.scene.Node> props = new ArrayList<>();
+        row = 0;
+        props = new ArrayList<>();
         var s = getSelection().getFirstSelected();
         var domain = s == null ? Domain.any : s.getDomain();
-        System.out.println("Populate propbox domain " + domain);
-        var row = 0;
-        for(var q: Question.extract(q -> q.getDomain() == domain)) {
-            Region n;
-            var label = new Label(q.get("label", "No label"));
-            var type = q.get("type", (Object) null);
-            if(type == null) type = "string";
-            if(type instanceof Collection c) {
-                var ol = FXCollections.observableArrayList(c);
-                var b = new ChoiceBox(ol);
-                var vpos = ol.indexOf(q.getValue());
-                var sel = b.getSelectionModel();
-                sel.select(vpos >= 0 ? vpos : 0);
-                sel.selectedItemProperty().addListener((cl, was, is) -> {
-//                    System.out.println("Changed choice " + is.toString() + " " + cl);
-                    q.setValue(is.toString());
+        D."Populate propbox domain \{domain}";
+        if(s instanceof aws.WhiskeyJack.nodegraph.Node node) {
+            node.forAllProperties((k, v) ->
+                addProp(Coerce.toString(k), "string", v, nv ->
+                    node.putProp(k, nv)));
+            node.metadata.forAllProperties((k, v) -> {
+                if(!"properties".equals(k))
+                    addProp(Coerce.toString(k), "string", v, nv ->
+                        node.putProp(k, nv));
+            });
+            if(node.metadata.getProp("properties", null) instanceof Map m)
+                m.forEach((k, v) -> {
+                    D."\{k} is a \{v.getClass()}";
+                    addProp(Coerce.toString(k), "string", v, nv ->
+                        node.putProp(k, nv));
                 });
-                n = b;
-            } else switch(type.toString()) {
-                case "boolean" -> {
-                    var b = new CheckBox();
-                    b.setSelected(Coerce.toBoolean(q.getValue()));
-                    b.selectedProperty().addListener((cl, was, is) -> {
-//                        System.out.println("Changed bool " + is + " " + cl);
-                        q.setValue(is);
-                    });
-                    n = b;
-                }
-                case "int" -> {
-                    var b = new Slider(0, 1, Coerce.toDouble(q.getValue()));
-                    b.valueProperty().addListener((cl, was, is) -> {
-//                        System.out.println("Changed int " + is + " " + cl);
-                        q.setValue(is);
-                    });
-                    n = b;
-                }
-                default -> {
-                    var b = new TextField(Coerce.toString(q.getValue()));
-                    b.textProperty().addListener((cl, was, is) -> {
-//                        System.out.println("Changed string " + is + " " + cl);
-                        q.setValue(is);
-                    });
-                    n = b;
-                }
-                
+        } else for(var q: Question.extract(q -> q.getDomain() == domain)) {
+                var label = q.get("label", null);
+                if(isEmpty(label))
+                    if(isEmpty(label = q.get("tag", "")))
+                        if(isEmpty(label = q.get("description", null)))
+                            label = "No Name";
+                var type = q.get("type", (Object) null);
+                addProp(label, type, q.getValue(), v -> q.setValue(v));
             }
-            label.setMaxWidth(Double.MAX_VALUE);
-            n.setMaxWidth(Double.MAX_VALUE);
-            GridPane.setConstraints(label, 0, row, 1, 1, HPos.LEFT, VPos.BASELINE, Priority.ALWAYS, Priority.NEVER);
-            GridPane.setConstraints(n, 1, row, 1, 1, HPos.CENTER, VPos.BASELINE, Priority.ALWAYS, Priority.NEVER);
-            row++;
-            props.add(label);
-            props.add(n);
-        }
-        propbox.getChildren().setAll(props);
         propbox.setMaxWidth(Double.MAX_VALUE);
         var c1 = new ColumnConstraints();
         c1.setPercentWidth(60);
@@ -733,5 +707,80 @@ public class GraphView extends Graph<NodeView, PortView, ArcView, GraphView> imp
         c2.setHgrow(Priority.ALWAYS);
         propbox.getColumnConstraints().setAll(c1, c2);
         propbox.getChildren().setAll(props);
+        props = null;
+    }
+    private void addProp(String s, Object type, Object value, Consumer<Object> setter) {
+        Region valueNode;
+        var labelNode = new Label(s);
+        var tooltip = "";
+        var pattern = "";
+        if(value instanceof Map m) {
+            var t = m.get("type");
+            if(t != null) type = Coerce.toString(t);
+            t = m.get("description");
+            if(t != null) tooltip = Coerce.toString(t);
+            t = m.get("pattern");
+            if(t != null) pattern = Coerce.toString(t);
+            m.forEach((k, v) -> {
+                if(!"type".equals(k) && !"description".equals(k) && !"pattern".equals(k))
+                    D."prop key \{s} \{k}:\{v}";
+            });
+            value = "";
+        }
+        if(type == null) type = "string";
+        if(type instanceof Collection c) {
+            var ol = FXCollections.observableArrayList(c);
+            var b = new ChoiceBox(ol);
+            var vpos = ol.indexOf(value);
+            var sel = b.getSelectionModel();
+            sel.select(vpos >= 0 ? vpos : 0);
+            sel.selectedItemProperty().addListener((cl, was, is) -> {
+//                    System.out.println("Changed choice " + is.toString() + " " + cl);
+                setter.accept(is.toString());
+            });
+            valueNode = b;
+        } else switch(type.toString()) {
+            case "boolean" -> {
+                var b = new CheckBox();
+                b.setSelected(Coerce.toBoolean(value));
+                b.selectedProperty().addListener((cl, was, is) -> {
+//                        System.out.println("Changed bool " + is + " " + cl);
+                    setter.accept(is);
+                });
+                valueNode = b;
+            }
+            case "int" -> {
+                var b = new Slider(0, 1, Coerce.toDouble(value));
+                b.valueProperty().addListener((cl, was, is) -> {
+//                        System.out.println("Changed int " + is + " " + cl);
+                    setter.accept(is);
+                });
+                valueNode = b;
+            }
+            default -> {
+                var b = new TextField(Coerce.toString(value));
+                if(!isBlank(pattern)) b.setPromptText(pattern);
+                b.textProperty().addListener((cl, was, is) -> {
+//                        System.out.println("Changed string " + is + " " + cl);
+                    setter.accept(is);
+                });
+                valueNode = b;
+            }
+        }
+        if(!isBlank(tooltip)) {
+            var tt = new Tooltip(tooltip);
+            tt.setShowDuration(Duration.seconds(45));
+            tt.setWrapText(true);
+            tt.setPrefWidth(600);
+            Tooltip.install(labelNode, tt);
+            Tooltip.install(valueNode, tt);
+        }
+//        labelNode.setMaxWidth(Double.MAX_VALUE);
+        valueNode.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setConstraints(labelNode, 0, row, 1, 1, HPos.LEFT, VPos.BASELINE, Priority.ALWAYS, Priority.NEVER);
+        GridPane.setConstraints(valueNode, 1, row, 1, 1, HPos.CENTER, VPos.BASELINE, Priority.ALWAYS, Priority.NEVER);
+        row++;
+        props.add(labelNode);
+        props.add(valueNode);
     }
 }

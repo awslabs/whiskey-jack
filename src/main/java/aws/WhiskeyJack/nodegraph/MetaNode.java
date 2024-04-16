@@ -4,11 +4,14 @@
  */
 package aws.WhiskeyJack.nodegraph;
 
+import aws.WhiskeyJack.util.*;
+import static aws.WhiskeyJack.util.EZOutput.*;
+import static aws.WhiskeyJack.util.Utils.*;
 import java.util.*;
 import java.util.function.*;
 
 public class MetaNode extends Node<MetaNode> {
-    private final Map<String, MetaNode> subnodes = new HashMap<>();
+    private final Map<String, MetaNode> subnodes = new LinkedHashMap<>();
     private final MetaNode parent;
     private String description;
     private String pathName;
@@ -67,6 +70,12 @@ public class MetaNode extends Node<MetaNode> {
         setDescription(get(values, "description", getDescription()));
         populateSubnodes(values, "subnodes");
         populateSubnodes(values, "children"); // compatibility for old name
+        var label = values.get("label");
+        if(label!=null) {
+            var ls = Coerce.toString(label);
+            D."\{getName()} is labelled \{ls}";
+            if(!isBlank(ls)) putProp("label", ls);
+        }
     }
     private void populateSubnodes(Map values, String key) {
         getMap(values, key).forEach((k, v) -> {
@@ -108,11 +117,9 @@ public class MetaNode extends Node<MetaNode> {
     }
     @Override
     public Object getProp(String s, Object dflt) {
-        var verbose = "domain".equals(s) && getName().equals("temperature");
         var mn = this;
         while(mn!=null) {
             var ret = mn.getProp0(s, dflt);
-            if(verbose) System.out.println("***** "+mn.getName()+": "+ret);
             if(ret!=dflt) return ret;
             var p = mn.parent;
             if(p==mn) return dflt;

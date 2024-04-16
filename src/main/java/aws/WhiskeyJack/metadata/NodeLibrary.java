@@ -7,6 +7,7 @@ package aws.WhiskeyJack.metadata;
 import aws.WhiskeyJack.nodegraph.*;
 import aws.WhiskeyJack.nodeviewerfx.*;
 import aws.WhiskeyJack.util.*;
+import static aws.WhiskeyJack.util.EZOutput.*;
 import static aws.WhiskeyJack.util.Utils.*;
 import io.github.classgraph.*;
 import java.io.*;
@@ -70,8 +71,8 @@ public class NodeLibrary {
         if(v instanceof Map m) {
             var rootName = Coerce.get(m, "name", "");
             var node = (!rootName.isEmpty() ? createIfAbsent(rootName)
-                    : !isEmpty(tag) ? createIfAbsent(tag)
-                    : MetaNode.metaMeta);
+                : !isEmpty(tag) ? createIfAbsent(tag)
+                : MetaNode.metaMeta);
             if(from != null)
                 loadedFrom.put(node, from);
             node.populateFrom(m);
@@ -84,24 +85,27 @@ public class NodeLibrary {
         System.out.println("_____\nLoading standard library");
         try(var scanResult = new ClassGraph().acceptPaths("ang/pcats").scan()) {
             scanResult.getResourcesWithExtension("pcat")
-                    .getURIs().forEach(uri ->
-                    {
-                        try {
-                            var tag = "unknown";
-                            var m = tagPart.matcher(uri.toString());
-                            if(m.find()) {
-                                tag = m.group(1);
-                            } else
-                                System.out.println("Unexpected resource: "+uri);
-                            var l = uri.toURL();
-                            load(tag, null, l.openStream());
-                        } catch(IOException ex) {
-                            Dlg.error("Couldn't read default parts catalog ", ex);
-                        }
-                    });
+                .getURIs().forEach(uri ->
+                {
+                    try {
+                        var tag = "unknown";
+                        var m = tagPart.matcher(uri.toString());
+                        if(m.find())
+                            tag = m.group(1);
+                        else
+                            System.out.println("Unexpected resource: " + uri);
+                        var l = uri.toURL();
+                        load(tag, null, l.openStream());
+                    } catch(IOException ex) {
+                        Dlg.error("Couldn't read default parts catalog ", ex);
+                    }
+                });
         }
         try {
-            Config.scanConfig("pcat", (a, b) -> load(a, Path.of(b)));
+            Config.scanConfig("pcat", (a, b) -> {
+                D."load config \{a} from \{b}";
+                load(a, Path.of(b));
+            });
         } catch(Throwable t) {
             Dlg.error("Couldn't scan parts catalog", t);
         }
@@ -111,7 +115,7 @@ public class NodeLibrary {
     public static final NodeLibrary singleton = new NodeLibrary();
     private Map<Domain, Map<Type, List<MetaNode>>> dtInMap;
     public void forEachNodeThatTakes(Domain d, Type t, Consumer<MetaNode> f) {
-        System.out.println("Searching for node that takes "+d+","+t);
+        System.out.println("Searching for node that takes " + d + "," + t);
         if(t == Type.any)
             for(var t0: Type.allInteresting())
                 getNodesThatTake(d, t0).forEach(f);
@@ -140,9 +144,10 @@ public class NodeLibrary {
                         return;
                     }
                     System.out.println("TRANSFORM " + mn.getName() + " " + din.getDomain() + "," + din.getType().getName()
-                                           + " -> " + dout.getDomain() + "," + dout.getType().getName());
-                    dtInMap.computeIfAbsent(din.getDomain(), k->new HashMap<>())
-                        .computeIfAbsent(din.getType(), k->new ArrayList<>())
+                                       + " -> " + dout.getDomain() + "," + dout.getType().getName());
+                    dtInMap.computeIfAbsent(din.getDomain(), k ->
+                        new HashMap<>())
+                        .computeIfAbsent(din.getType(), k -> new ArrayList<>())
                         .add(mn);
                 }
             });
@@ -152,18 +157,19 @@ public class NodeLibrary {
         var ret = dm.get(t);
         return ret == null ? Collections.EMPTY_LIST : ret;
     }
-    private HashMap<Type,MetaPort> serviceProviders;
+    private HashMap<Type, MetaPort> serviceProviders;
     public MetaPort getServiceProvider(Type t) {
-        if(serviceProviders==null) {
+        if(serviceProviders == null) {
             serviceProviders = new HashMap<>();
-            forAll(mn->{
-                mn.forEachPort(p->{
+            forAll(mn -> {
+                mn.forEachPort(p -> {
                     if(p.isInputSide())
-                        serviceProviders.merge(p.getType(), (MetaPort)p, (a,b)->MetaPort.markerMetaPort);
+                        serviceProviders.merge(p.getType(), (MetaPort) p, (a, b) ->
+                            MetaPort.markerMetaPort);
                 });
             });
         }
         var ret = serviceProviders.get(t);
-        return ret==MetaPort.markerMetaPort ? null : ret;
+        return ret == MetaPort.markerMetaPort ? null : ret;
     }
 }

@@ -59,7 +59,7 @@ children:
                 type: image
                 domain: cloud
     graphana:
-        Type: AWS::Grafana::Workspace
+        typeName: AWS::Grafana::Workspace
         Properties: 
             AccountAccessType: CURRENT_ACCOUNT
             AuthenticationProviders: 

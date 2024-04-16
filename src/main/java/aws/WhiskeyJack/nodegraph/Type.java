@@ -14,11 +14,16 @@ public class Type extends Collectable {
     private final String name;
     private final Object dflt;
     private boolean error = false;
+    private final boolean boring;
     @SuppressWarnings("")
-    private Type(String n, Object d) {
+    private Type(String n, Object d, boolean b) {
         name = n;
         dflt = d;
+        boring = b;
         all.put(n, this);
+    }
+    private Type(String n, Object d) {
+        this(n,d,false);
     }
     public Object coerce(Object v) {
         return coerce(v, null);
@@ -125,13 +130,13 @@ public class Type extends Collectable {
     public boolean isPrimitive() {
         return dflt!=null;
     }
+    public boolean isBoring() { return boring; }
     public boolean valueCompatibleWith(Object v) {
         return true;
     }
     public static Type[] allInteresting() {
         if(interesting == null)
-            interesting = all.values().stream().filter(f ->
-                    f != any && f != err).toArray(n -> new Type[n]);
+            interesting = all.values().stream().filter(f -> !f.isBoring()).toArray(n -> new Type[n]);
         return interesting;
     }
     public boolean compatibleWith(Type t) {
@@ -143,7 +148,7 @@ public class Type extends Collectable {
 
     private static final Map<String, Type> all = new HashMap();
     private static Type[] interesting;
-    public static final Type any = new Type("any", "");
+    public static final Type any = new Type("any", "", true);
     public static final Type bool = new Type("boolean", false) {
         @Override
         public Boolean coerce(Object v, Object alternate) {
@@ -174,9 +179,9 @@ public class Type extends Collectable {
     public static final Type mlmodel = new Type("mlmodel", null);
     public static final Type object = new Type("object", null); // ?    
 
-    public static final Type err = new Type("err", null);
+    public static final Type err = new Type("err", null, true);
     public static final Type voidType = new Type("void", null);
-    public static final Type unknown = new Type("unknown", null);
+    public static final Type unknown = new Type("unknown", null, true);
 
     private static final Pattern seperators = Pattern.compile(" *[,;] *");
 }

@@ -82,7 +82,7 @@ public class NodeView extends Node implements Selectable {
         titleIcon.setPreserveRatio(true);
         titleIcon.setOnMouseReleased(e -> setExpanded(!isExpanded()));
         establishIcon();
-        setTitle(metadata.getName());
+        setTitle(getStringProp("label", getName()));
         setTooltip(metadata.getDescription());
         installPorts();
         setExpanded(true);

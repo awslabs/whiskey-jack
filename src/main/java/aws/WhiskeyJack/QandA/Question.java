@@ -17,6 +17,7 @@ import java.util.function.*;
 
 public class Question implements Comparable<Question> {
     private final int priority;
+    private final String tag;
     private Type type;
 //    private public boolean requested;
     private Object value = "<uninit>";
@@ -27,12 +28,14 @@ public class Question implements Comparable<Question> {
 
     Question(Map m) {
         fields = m;
+        tag = get("tag", "tagless");
         setValue(get("default", "<missing>"));
         priority = get("priority", 50);
         nodeMatch = Glob.compile(get("node", "*"));
         domain = Domain.of(get("domain","any"), Domain.any);
     }
-    public Question(String tag) {
+    public Question(String t) {
+        tag = t;
         fields = Map.of("label", "Placeholder for "+tag);
         priority = 10;
         nodeMatch = Glob.compile(get("node", "*"));
